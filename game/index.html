@@ -307,6 +307,19 @@ input{font:inherit;color:inherit}
 .signin .card-sign .field{margin-top:20px}
 .signin .card-sign .small{color:#55607a;text-align:center;font-size:16px;margin-top:18px}
 .signin .card-sign .small a{color:#2f6fe8;text-decoration:underline}
+
+/* Storm Watch operate sidebar: mission goal checklist */
+.gl-sum{display:flex;align-items:center;justify-content:space-between;cursor:pointer;list-style:none}
+.gl-sum::-webkit-details-marker{display:none}
+.gl-sum .n{font-size:12px;color:var(--muted);font-weight:600}
+.gl-sum::after{content:'▸';color:var(--blue);margin-left:8px}
+details[open]>.gl-sum::after{content:'▾'}
+.gl-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:7px}
+.gl-list li{display:flex;align-items:center;gap:9px;font-size:12.5px;line-height:1.4}
+.gl-dot{flex:none;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--line2);display:grid;place-items:center;font-size:12px;font-weight:800}
+.gl-dot.ok{border-color:var(--good);background:var(--good);color:#032015}
+.gl-dot.x{border-color:var(--bad);background:var(--bad);color:#2a0905}
+.gl-list li.ok span{color:var(--muted);text-decoration:line-through;text-decoration-color:#ffffff33}
 </style>
 </head>
 <body>
@@ -487,9 +500,17 @@ function predict(){const o=S.ops,c=o.choice[o.ci],ci=o.ci;
   if(ci===1)return `Storage growth ${c[0]==='high'?'fast':'slow'} · When full: ${c[1]==='keep'?'refuse new images':'drop low-value images'}`;
   if(ci===2)return `Battery drain ${c[0]==='normal'?'high':'moderate'} · Images ${c[1]==='freq'?(c[0]==='save'?'some':'many'):'few'}`;
   return `Sending speed ${c[0]==='fast'?(c[1]==='eco'?'medium-high':'high'):(c[1]==='eco'?'low':'medium')} · Power use ${c[0]==='fast'&&c[1]==='full'?'high':'lower'}`;}
+function goalChecklist(){const o=S.ops,M=o.M,sc=ENG.score(M),x=live(D());
+ const g4=M.failed?'x':(x.t>=24-1e-9&&sc.gates.G4)?'ok':'';
+ const items=[['Observe the storm in at least 3 of 4 phases',sc.gates.G2?'ok':''],['Deliver 12 science points to Earth',sc.gates.G1?'ok':''],['Send a late storm image before the deadline',sc.gates.G3?'ok':''],['Keep your satellite powered',g4]];
+ const dot=s=>s==='ok'?'<span class="gl-dot ok" aria-hidden="true">✓</span>':s==='x'?'<span class="gl-dot x" aria-hidden="true">✕</span>':'<span class="gl-dot" aria-hidden="true"></span>';
+ const n=items.filter(i=>i[1]==='ok').length;
+ return `<div class="glass dash"><details open><summary class="gl-sum"><h4 style="margin:0"><i></i>Mission checklist</h4><span class="n">${n} / 4</span></summary>
+  <ul class="gl-list">${items.map(i=>`<li class="${i[1]}">${dot(i[1])}<span>${i[0]}</span></li>`).join('')}</ul></details></div>`;}
 function dash(){const o=S.ops,d=o.delta,x=live(D());
  return `<div class="side">
   <div class="glass dash"><div class="mini-globe"><img src="${GLOBE}" alt=""><div class="orbit"></div><div class="sat"></div></div></div>
+  ${goalChecklist()}
   <div class="glass dash"><h4><i></i>Mission goal</h4>
    ${meter('Storm coverage',x.coveredPhases,4,v=>`<b>${v} / 4 phases</b>`,x.coveredPhases>=3?'':'warn',dlt(d.cov))}
    ${meter('Useful data delivered',x.deliveredScience,12,v=>`<b>${fmt(v)} / 12 pts</b>`,x.deliveredScience>=12?'':'warn',dlt(d.pts,' pts'))}</div>
