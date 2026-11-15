@@ -184,7 +184,7 @@ function ixReport() { const o = S.ops, M = o && o.M; if (!M || !o.ix) return; co
   add('Challenge 1: other image quality', (e, dd) => { dd[0][0] = dd[0][0] === 'std' ? 'high' : 'std'; });
   if (o.ix[1]) add('Challenge 2: no manual sorting', e => { if (!e[1].first.length && !e[1].drop.length) return false; e[1] = null; });
   add('Challenge 2: other image quality', (e, dd) => { dd[1][0] = dd[1][0] === 'std' ? 'high' : 'std'; }); add('Challenge 2: other full-storage rule', (e, dd) => { dd[1][1] = dd[1][1] === 'keep' ? 'prio' : 'keep'; });
-  if (o.ix[2]) [['All Full', Array(6).fill('full')], ['All Eco', Array(6).fill('eco')], ['image every other hour', ['one', 'rest', 'one', 'rest', 'one', 'rest']]].forEach(k => add('Challenge 3: ' + k[0], e => { if (e[2].sched.join() === k[1].join()) return false; e[2] = { sched: k[1] }; }));
+  if (o.ix[2]) [['Take Images every period', Array(6).fill('full')], ['Save Power every period', Array(6).fill('rest')], ['Take Images only in the Late period', ['rest', 'rest', 'rest', 'rest', 'full', 'full']]].forEach(k => add('Challenge 3: ' + k[0], e => { if (e[2].sched.join() === k[1].join()) return false; e[2] = { sched: k[1] }; }));
   if (o.ix[3]) add(`Challenge 4: new images ${o.ix[3].newFirst ? 'wait their turn' : 'jump the queue'}`, e => { e[3].newFirst = !e[3].newFirst; });
   add('Challenge 4: other downlink speed', (e, dd) => { dd[3][0] = dd[3][0] === 'std' ? 'fast' : 'std'; }); add('Challenge 4: other power mode', (e, dd) => { dd[3][1] = dd[3][1] === 'full' ? 'eco' : 'full'; });
   const best = rows.slice().sort((a, b) => b[1] - a[1])[0];
