@@ -47,7 +47,7 @@ const SIDE = [[/^Battery$/, 'Battery', 'Sunlight fills it. The computer, camera 
   [/^(Critical update|Town update|Final update|New-hotspot alert)$/, 'The delivery that matters most', 'People on the ground are waiting for this one. Miss it and the mission cannot be a full success.'],
   [/^(Mission time|Time left)$/, 'Mission clock', 'The mission lasts 24 hours, in four windows of 6 hours.'],
   [/^Next pass/, 'Passes and contacts', 'A low-orbit satellite sees the target only during a pass, and talks to the ground only during a contact.']];
-const OPTFACT = [[/radar|optical|cloud/i, 'July 2025, central Texas: cloud hid about 90% of the optical view, while radar mapped all of Kerr County.'],
+const OPTFACT = [[/radar|optical|cloud|water areas|image details/i, 'In the July 2025 Texas floods, clouds hid about 90% of what the optical satellites saw. Radar still mapped all of its Kerr County area.'],
   [/alert/i, 'NASA FIRMS shares satellite fire detections with the public.'],
   [/power|eco|save|battery/i, 'In eclipse season a GOES satellite runs on its battery for up to 72 minutes a day.'],
   [/resolution|detail|quality/i, 'VIIRS has a 375 m and a 750 m fire product: finer detail means more data.']];
@@ -57,7 +57,7 @@ function tipHtml(k, el) { const m = missionOfScreen() || S.mission || 'storm';
   if (k.startsWith('part:')) { const p = PART[partKey(k.slice(5))]; if (!p) return '<b>Spacecraft part</b>Better parts do more, but add mass and cost.'; return `<b>${p[0]}</b>${p[1]}${p[2][m] ? `<div class="real">🛰 Real mission: ${p[2][m]}</div>` : ''}`; }
   if (k.startsWith('side:')) { const s = SIDE[+k.slice(5)]; return `<b>${s[1]}</b>${s[2]}`; }
   if (k.startsWith('hud:')) { const [km] = ORB[m], w = k.slice(4); return w === 'alt' ? `<b>Altitude</b>Height above the ground. ${m === 'storm' ? 'High enough to turn with the Earth and watch one side of it all day.' : 'Low enough for sharp images, but each place is seen only on a short pass.'}` : w === 'spd' ? `<b>Orbital speed</b>${vOrb(km).toFixed(2)} km/s, from v = √(μ / r). The higher the orbit, the slower the satellite.` : `<b>One orbit</b>${Math.round(Prov.periodMin(km))} minutes, from Kepler's third law. ${m === 'storm' ? 'That is one turn of the Earth, so the satellite stays over the same spot.' : `About ${Math.round(1440 / Prov.periodMin(km))} orbits a day.`}`; }
-  const parts = k.split('||'); return (parts[1] ? `<b>${esc(parts[0])}</b>${esc(parts[1])}` : esc(parts[0])) + (parts[2] ? `<div class="real">🛰 Real data: ${esc(parts[2])}</div>` : ''); }
+  const parts = k.split('||'); return (parts[1] ? `<b>${esc(parts[0])}</b>${esc(parts[1])}` : esc(parts[0])) + (parts[2] ? `<div class="real">🛰 Real-world example:${esc(parts[2])}</div>` : ''); }
 function tipShow(el) { tipEl.innerHTML = tipHtml(el.dataset.tip, el); tipEl.style.display = 'block'; const r = el.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
   let x = Math.min(window.innerWidth - w - 10, Math.max(10, r.left + r.width / 2 - w / 2)), y = r.top - h - 10; if (y < 10) y = Math.min(window.innerHeight - h - 10, r.bottom + 10); tipEl.style.left = x + 'px'; tipEl.style.top = y + 'px'; }
 const tipHide = () => { tipEl.style.display = 'none'; };

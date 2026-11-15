@@ -811,8 +811,8 @@ const LCH=[
  {title:'Clouds over the valley',sub:'Evening storm bands roll back in.',hours:'16:00–22:00',win:'Passes 17:00 (70% cloud), 20:00 (twilight, 85% cloud)',
   alert:'Storm clouds cover most of the valley as evening falls. A camera only sees gaps in the clouds; radar sees through them but makes big files.',
   decide:'whether to process maps on board and what to do when storage is full.',
-  groups:[{lab:'Onboard processing',opts:[['raw','Raw imagery','Full size and quality'],['mask','Onboard water mask','30% of the size, 90% quality; drops cloudy optical maps']]},
-          {lab:'Storage policy',opts:[['keep','Keep all maps','Reject new maps when full'],['prio','Prioritize key maps','Drop low-value maps to fit better ones']]}],
+  groups:[{lab:'Onboard processing',opts:[['raw','Keep all image details','One full-quality picture per map, but it uses more storage'],['mask','Save flood maps only','Keeps just the detected water areas in smaller files <i class="tchip">70% less data</i> <i class="tchip">90% map quality</i>']]},
+          {lab:'Storage policy',opts:[['keep','Keep every map','New maps are turned away when storage is full'],['prio','Make room for the best maps','Drops the least useful map to fit a better one']]}],
   lesson:'A high-detail photo of clouds is worth almost nothing. Processing on board can save storage and downlink time.'},
  {title:'Power anomaly in the dark',sub:'Solar arrays misaligned: 25% power for 6 hours.',hours:'22:00–04:00',win:'Passes 23:00, 02:00 (night)',
   alert:'A solar-array drive fault leaves only 25% of normal power through the night. Below 10% battery the satellite enters safe mode and stops science until it recovers to 30%.',
@@ -910,19 +910,20 @@ function lsim(){const o=S.l,ci=o.ci,c=o.choice[ci],M=o.M,g=LCH[ci].groups,opt=M.
  const dsk=Object.fromEntries(Object.keys(M.skipped).map(k=>[k,M.skipped[k]-sk[k]]));
  const skTxt=Object.entries(dsk).filter(([k,v])=>v>0).map(([k,v])=>`${v} × ${({dark:'too dark',energy:'battery at reserve',storage:'storage full',screened:'screened as cloud',safe:'safe mode'})[k]}`).join(', ');
  const safeH=(M.safeSteps-safe0)*5/60,newZ=after.zonesQ.filter(z=>!before.zonesQ.includes(z)).map(z=>FL.ZNAME[z]);
- const pts=fresh.reduce((a,i)=>a+i.pts,0);
- let good=`${fresh.length} map(s) taken worth ${fmt(pts)} map points; ${qual.length} show water clearly enough to count.${newZ.length?` New zones mapped: ${newZ.join(', ')}.`:''} ${sent.length} map(s) reached responders.`;
- let trade=`${skTxt?`Not taken: ${skTxt}. `:''}Storage ${Math.round(before.storagePct)}% → ${Math.round(after.storagePct)}%, battery ${Math.round(before.batteryPct)}% → ${Math.round(after.batteryPct)}%.`;
- let met=true,badge='Objective met';
+ const skippedImg=Object.values(dsk).some(v=>v>0);
+ let good='',trade='',met=true,badge='Objective met';
  if(ci===0){met=newZ.length>0;badge=met?`${after.coveredZones}/3 zones mapped`:'No zone mapped';
-   trade=(c[1]==='wide'?'Wide maps covered every zone but with 80% detail. ':'Focused maps were sharp but each covered one zone. ')+trade;}
+   good=newZ.length?`Your scans gave responders their first clear maps of ${newZ.join(' and ')}.`:'You took pictures of the valley, but none showed the water clearly enough to count.';
+   trade=after.nOnboard>0?'But some maps are still on board, waiting their turn in the short ground contacts.':(c[1]==='wide'?'But wide maps show each area in less detail than a focused one.':'But the areas outside your chosen zone were not mapped at all.');}
  else if(ci===1){met=qual.length>0;badge=met?'Maps through the clouds':'Clouds won';
-   if(opt)trade='Thick cloud: a camera only sees gaps. '+trade;else trade='Radar saw through the clouds, but its maps are large. '+trade;}
+   good=opt?(qual.length?'Your camera found enough gaps in the clouds for a clear water map.':'You kept watching through the cloudy evening.'):'Your radar saw the flood straight through the clouds.';
+   trade=dsk.screened>0?'But some passes caught only cloud, so those pictures were thrown away.':dsk.storage>0?'But storage filled up and a new map had to be turned away.':opt&&!qual.length?'But the clouds hid the water, so little useful mapping got through.':!opt?'But radar maps are big files that wait longer in the sending queue.':'But every map still has to wait its turn to be sent to the ground.';}
  else if(ci===2){met=safeH===0;badge=safeH>0?`Safe mode ${fmt(safeH)} h`:'Anomaly managed';
-   trade=(opt?'Night: the camera cannot map. ':'Radar mapped at night on battery power. ')+trade+(safeH>0?` The satellite spent ${fmt(safeH)} h in safe mode with science paused.`:'');}
+   good=safeH>0?'The satellite survived the power emergency.':(fresh.length?'You balanced the battery and still collected maps in the dark.':'You protected the battery through the power emergency.');
+   trade=safeH>0?'But the battery ran too low and safe mode paused the science for a while.':dsk.dark>0?'But a camera cannot see at night, so no new maps were possible until morning.':skippedImg?'But you took fewer images, missing a chance to collect another flood map.':'But the battery you spent tonight must be earned back in the morning sun.';}
  else {met=after.town;badge=met?'Town update delivered':'Town update missed';
-   good+=after.town?` Fresh town map taken at ${lt(after.townRec.t)} reached responders at ${lt(after.townRec.deliveredAt)}.`:'';
-   trade=(after.town?'':'No fresh town map reached the ground by 10:00. ')+trade+` ${after.nOnboard} map(s) never left the satellite.`;}
+   good=after.town?'A fresh map of Riverside Town reached responders before the deadline.':(sent.length?'You pushed more maps down to the ground in the final hours.':'You tried to clear the backlog in the final hours.');
+   trade=after.town?(after.nOnboard>0?'But a few maps never left the satellite.':'You gave up very little: the downlink kept up with everything you mapped.'):'But no fresh town map reached the ground in time.';}
  o.delta={cov:after.coveredZones-before.coveredZones,pts:after.delivered-before.delivered,batt:after.batteryPct-before.batteryPct,st:after.storagePct-before.storagePct,health:after.health-before.health};
  o.log[ci]={choices:chName,good,trade,met,badge};}
 function showLAlert(){const o=S.l,ch=chx('flood',o.ci);

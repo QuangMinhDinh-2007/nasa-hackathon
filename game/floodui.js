@@ -20,6 +20,8 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .fbig .dfoot .btn.primary{height:52px;padding:0 30px;font-size:15px}
 @media(max-width:700px){.fm3{grid-template-columns:1fr}}
 @media (prefers-reduced-motion: reduce){.vzone .tkz{animation:none}}
+.tchip{display:inline-block;font-style:normal;font-size:11px;font-weight:600;color:var(--blue);border:1px solid #5aa9ff55;background:#5aa9ff14;border-radius:999px;padding:1px 8px;margin-top:3px}
+.opt.on::after{content:"✓";margin-left:auto;color:var(--blue);font-weight:800;font-size:15px;flex:none}
 </style>`);
 
 function floodC1Mount() {
