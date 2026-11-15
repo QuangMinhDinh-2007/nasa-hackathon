@@ -23,7 +23,19 @@
     return function (x, y, oct, lac, gain) { var a = .5, f = 1, s = 0, norm = 0; oct = oct || 4; lac = lac || 2; gain = gain || .5;
       for (var o = 0; o < oct; o++) { s += a * n2(x * f, y * f); norm += a; a *= gain; f *= lac; } return s / norm; };
   }
-  function seedOf(m) { try { return (S.scn && S.scn[m] && S.scn[m].seed) || 'PRACTICE'; } catch (e) { return 'PRACTICE'; } }
+  function randSeed() { var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s = ''; for (var i = 0; i < 5; i++) s += A[Math.floor(Math.random() * A.length)]; return s; }
+  function seedOf(m) {
+    // A real mission code keeps its reproducible look (same code, same scene).
+    // Practice has no code, so each new run gets a fresh random look, stored on
+    // the run's state object (reset/retry creates a new one). Visual only.
+    try {
+      var s = S.scn && S.scn[m] && S.scn[m].seed;
+      if (s && s !== 'PRACTICE') return s;
+      var st = m === 'storm' ? S.ops : m === 'fire' ? S.f : S.l;
+      if (st) return (st._vseed = st._vseed || randSeed());
+      return 'PRACTICE';
+    } catch (e) { return 'PRACTICE'; }
+  }
   function mkCanvas(w, h) { var c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
   var cache = {};
 
