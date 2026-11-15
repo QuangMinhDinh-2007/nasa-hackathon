@@ -6,7 +6,7 @@
 'use strict';
 document.head.insertAdjacentHTML('beforeend', `<style>
 .nav .steps>*{display:none}
-#stepBtn{position:fixed;right:380px;bottom:16px;z-index:50;padding:8px 12px;border-radius:999px;border:1px solid #5aa9ff88;background:#000a;color:#fff;font-size:12px;font-weight:600}
+#stepBtn{position:fixed;right:470px;bottom:16px;z-index:50;padding:8px 12px;border-radius:999px;border:1px solid #5aa9ff88;background:#000a;color:#fff;font-size:12px;font-weight:600}
 #stepBtn[hidden]{display:none}
 #stepPop{position:fixed;right:16px;bottom:60px;z-index:60;padding:14px 18px;border-radius:16px;border:1px solid var(--line2);background:#0b1424f2;box-shadow:0 10px 30px #000a}
 #stepPop[hidden]{display:none}
