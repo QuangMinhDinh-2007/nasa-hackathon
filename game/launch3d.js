@@ -43,7 +43,7 @@
     var layer = document.getElementById('layer');
     layer.innerHTML = '<div class="launch" id="L3" style="background:#000">' +
       '<canvas id="l3c" style="position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab"></canvas>' +
-      '<div class="hud" style="pointer-events:none"><div class="eyebrow">' + ms.name + ' · Launch</div>' +
+      '<div class="hud" style="pointer-events:none' + (mKey === 'storm' ? ';top:4vh' : '') + '"><div class="eyebrow">' + ms.name + ' · Launch</div>' +
       '<div class="display" id="l3cap" style="font-size:clamp(40px,6vw,84px);margin-top:10px;text-shadow:0 2px 20px #000c">Go for launch</div>' +
       '<div id="l3sub" style="font-size:13px;color:var(--muted);margin-top:6px;min-height:18px"></div></div>' +
       '<div class="foot"><div class="bar"><i id="l3p" style="width:0"></i></div>' +
