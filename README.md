@@ -4,6 +4,12 @@ A browser-based space mission design game for students. You are the Flight Direc
 
 Built for the NASA Space Apps 2026 challenge "Space Mission Design Game".
 
+## Mission design loop (v7.2)
+
+Every mission now runs: **short briefing → choose one measurable target → build → Design Check + launch compatibility → launch → four challenges → requirements verification → Improve My Mission → re-fly with the same Mission Code → compare.** Wildfire Watch also offers two orbits that change the simulation. Details: `docs/V7_MISSION_DESIGN.md`.
+
+Added files: `game/mission-design.js` (requirements, targets, launch profiles, Design Check, verification, records; pure, no DOM) and `game/design-ui.js` (screens and panels). Added tests: `node tools/design_tests.js` (37), `node tools/example_run.js`, and `node tools/e2e_design_loop.js` (headless browser, needs Playwright).
+
 ## Missions
 
 | Mission | Orbit | Scenario | Goal |

@@ -1,7 +1,9 @@
 # Earth Missions — Mission Lab · v6.3 game guide
 
 NASA Space Apps 2026 · challenge "Space Mission Design Game" · built 15 Nov 2026.
-Start here. Older notes: `V5.1_UX_RESCUE.md` (interaction redesign), `EARTH_MISSIONS_v5_SPEC.md` (Mission Codes, sources), `BALANCING_REPORT.md` (Storm score fix).
+**v7.0 note:** the design loop added in v7.0 (briefing, student target, Design Check with launch compatibility, requirements verification, Improve My Mission, Wildfire orbit choice) is described in `V7_MISSION_DESIGN.md`. Everything below still applies, except: the build screen is now reached through a briefing; the "Readiness review" button is "Design Check" and is always enabled (the check itself blocks an unlaunchable design); the report's "Redesign satellite" button is "Improve My Mission"; Wildfire is engine `fire-3.3.0`.
+
+Older notes: `V5.1_UX_RESCUE.md` (interaction redesign), `EARTH_MISSIONS_v5_SPEC.md` (Mission Codes, sources), `BALANCING_REPORT.md` (Storm score fix).
 
 ## 1. The game in one paragraph
 

@@ -55,6 +55,32 @@
     ],
   };
 
+  /* ---- v3.3: mission architecture profiles (versioned). Only the observation passes, ground contacts and eclipse cycle differ.
+   * 'pm-sso' IS the original schedule (the same arrays as CONFIG.passes / contacts / eclipse): results are unchanged.
+   * 'dawn-dusk-sso' is ONE additional educational profile. Both are hand-made teaching schedules (class D), not propagated orbits.
+   * Neither profile changes detection: there is no time-of-day detection advantage in this model.
+   * Mission Code events are attached to the Nth pass / Nth contact and to fixed mission hours, so they are the same in both. */
+  const DEFAULT_ARCH = 'pm-sso';
+  const ARCH = {
+    'pm-sso': { id: 'pm-sso', version: '1.0', name: 'Mid-afternoon sun-synchronous orbit',
+      passes: CONFIG.passes, contacts: CONFIG.contacts, eclipse: CONFIG.eclipse },
+    'dawn-dusk-sso': { id: 'dawn-dusk-sso', version: '1.0', name: 'Dawn-dusk sun-synchronous orbit',
+      passes: [{ h: 3.5 }, { h: 9.5 }, { h: 15.5 }, { h: 21.5 }],   // each look comes 90 minutes later in the mission day (class D)
+      // same ground rule as the original: a 1-hour contact starting 1 h after each pass, plus the last hour of the day.
+      // The last two windows overlap, so the final contact runs 22:30-24:00 (4.5 contact hours in total instead of 5).
+      contacts: [[4.5, 5.5], [10.5, 11.5], [16.5, 17.5], [22.5, 23.5], [23, 24]],
+      eclipse: { cycleSteps: 10, eclipseSteps: [] } },              // rides the day/night line: no eclipse in this game (class D simplification)
+  };
+  function archProfile(id) { const a = ARCH[id || DEFAULT_ARCH]; if (!a) throw new Error('Unknown Wildfire architecture: ' + id); return a; }
+  // Mission Code events shown with this architecture's clock times. Parameters (what the engine uses) are never changed.
+  function scenarioView(scn, archId) { const A = archProfile(archId);
+    if (!scn || scn.practice || !scn.params || A.id === DEFAULT_ARCH) return scn;
+    const hh = h => `${String(Math.floor(h)).padStart(2, '0')}:${String(Math.round((h % 1) * 60)).padStart(2, '0')}`, p = scn.params;
+    const events = scn.events.map(e => { if (e.stream === 'ground' && p.contactCut) { const c = A.contacts[p.contactCut.index][0]; return Object.assign({}, e, { from: c, to: c + p.contactCut.lateMin / 60, text: `The ${hh(c)} contact starts ${p.contactCut.lateMin} minutes late.` }); }
+      if (e.stream === 'environment' && p.smoke) { const h = A.passes[p.smoke.pass].h; return Object.assign({}, e, { from: h, to: h + 0.5, text: `Dense smoke over the region during the ${hh(h)} pass: detection strength ×${p.smoke.factor}.` }); }
+      return e; }).sort((a, b) => a.from - b.from);
+    return Object.assign({}, scn, { events, archView: A.id }); }
+
   const CHALLENGES = [
     { key: 'c1', hours: [0, 6], controls: [['wide', 'targeted'], ['std', 'high']] },        // footprint, image mode
     { key: 'c2', hours: [6, 12], controls: [['alerts', 'fifo'], ['full', 'compress']] },     // downlink order, imagery handling
@@ -66,16 +92,16 @@
   function totals(design) { let kg = CONFIG.bus.kg, cr = CONFIG.bus.credits; for (const k in CONFIG.parts) { kg += CONFIG.parts[k][design[k]].kg; cr += CONFIG.parts[k][design[k]].credits; } return { kg, credits: cr, valid: kg <= CONFIG.limits.kg && cr <= CONFIG.limits.credits }; }
   const timing = (lat) => { for (const [l, f] of CONFIG.sciTiming) if (lat <= l + 1e-9) return f; return 0; };
 
-  function newMission(design, scn) {
+  function newMission(design, scn, archId) { const A = archProfile(archId);
     const P = {}; for (const k in CONFIG.parts) P[k] = CONFIG.parts[k][design[k]];
-    return { scn: (scn && scn.params) || null, scenarioId: scn ? scn.id : 'fire:PRACTICE', trace: [], traceOn: false,  P, design: Object.assign({}, design), step: 0, battery: P.power.battKWh, health: 100, safe: false, failed: false, unpoweredRun: 0,
+    return { scn: (scn && scn.params) || null, scenarioId: scn ? scn.id : 'fire:PRACTICE', trace: [], traceOn: false, A, arch: { id: A.id, version: A.version }, P, design: Object.assign({}, design), step: 0, battery: P.power.battKWh, health: 100, safe: false, failed: false, unpoweredRun: 0,
       opHours: 0, minBatt: 100, items: [], nextId: 1, detected: new Set(), decisions: [null, null, null, null], ext: [null, null, null, null], events: [], missed: 0,
       energy: { imaging: 0, comms: 0 }, generatedGB: 0 };
   }
   const hourOf = s => s * CONFIG.stepMin / 60;
   const stored = M => M.items.filter(i => i.status === 'stored').reduce((a, i) => a + i.sizeGB, 0);
-  const inContact = (M, h) => CONFIG.contacts.some(([a, b], i) => { const late = (M.scn && M.scn.contactCut && M.scn.contactCut.index === i) ? M.scn.contactCut.lateMin / 60 : 0; return h >= a + late - 1e-9 && h < b - 1e-9; });
-  const sunlit = s => !CONFIG.eclipse.eclipseSteps.includes(s % CONFIG.eclipse.cycleSteps);
+  const inContact = (M, h) => M.A.contacts.some(([a, b], i) => { const late = (M.scn && M.scn.contactCut && M.scn.contactCut.index === i) ? M.scn.contactCut.lateMin / 60 : 0; return h >= a + late - 1e-9 && h < b - 1e-9; });
+  const sunlit = (M, s) => !M.A.eclipse.eclipseSteps.includes(s % M.A.eclipse.cycleSteps);
 
   function settings(M, h) {
     const d = M.decisions, ci = Math.min(3, Math.floor(h / 6));
@@ -138,7 +164,7 @@
     if (s.compress) for (const i of M.items) if (i.kind === 'image' && i.status === 'stored' && !i.compressed && i.remainingGB === i.sizeGB) {
       i.compressed = true; i.sizeGB *= C.compression.size; i.remainingGB = i.sizeGB; i.pts *= C.compression.quality; }
     // power
-    const solar = sunlit(M.step) ? P.power.solarKW * s.solar : 0;
+    const solar = sunlit(M, M.step) ? P.power.solarKW * s.solar : 0;
     let e = M.battery + (solar - s.baselineKW) * dt;
     let powered = true;
     if (e < 0) { e = 0; powered = false; }
@@ -153,8 +179,8 @@
       if (!M.safe && powered) M.opHours += dt;
       s = settings(M, h);
       // imaging in pass windows: product k at pass start + k*10 min
-      const pi = C.passes.findIndex(p => Math.abs(h - p.h) < 1e-9 || Math.abs(h - (p.h + C.stepMin / 60)) < 1e-9);
-      if (pi >= 0 && !M.safe) { const k = Math.round((h - C.passes[pi].h) * 60 / C.stepMin); if (k < s.perPass) imagePass(M, pi, s, k); }
+      const PS = M.A.passes, pi = PS.findIndex(p => Math.abs(h - p.h) < 1e-9 || Math.abs(h - (p.h + C.stepMin / 60)) < 1e-9);
+      if (pi >= 0 && !M.safe) { const k = Math.round((h - PS[pi].h) * 60 / C.stepMin); if (k < s.perPass) imagePass(M, pi, s, k); }
       // downlink during contacts
       if (inContact(M, h) && s.commRate > 0) {
         const rate = P.comms.rateGBh * s.commRate; let budget = rate * dt;
@@ -218,8 +244,8 @@
     return { sci, del, eff, rel, total: Math.round(sci + del + eff + rel), gates, outcome, derived: d };
   }
 
-  function runFull(design, decisions, scn, ext) { const M = newMission(design, scn); if (ext) M.ext = JSON.parse(JSON.stringify(ext)); for (let ci = 0; ci < 4; ci++) runChallenge(M, ci, decisions[ci]); return { M, s: score(M) }; }
+  function runFull(design, decisions, scn, ext, archId) { const M = newMission(design, scn, archId); if (ext) M.ext = JSON.parse(JSON.stringify(ext)); for (let ci = 0; ci < 4; ci++) runChallenge(M, ci, decisions[ci]); return { M, s: score(M) }; }
 
-  const API = { VERSION: 'fire-3.2.1', CONFIG, CHALLENGES, totals, newMission, runChallenge, derive, score, runFull };
+  const API = { VERSION: 'fire-3.3.0', CONFIG, ARCH, DEFAULT_ARCH, archProfile, scenarioView, CHALLENGES, totals, newMission, runChallenge, derive, score, runFull };
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.WFEngine = API;
 })(typeof window !== 'undefined' ? window : globalThis);
