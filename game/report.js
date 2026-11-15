@@ -15,16 +15,17 @@
  */
 'use strict';
 document.head.insertAdjacentHTML('beforeend', `<style>
-.cr{display:grid;grid-template-columns:260px 1fr;gap:14px;align-items:start}
-.cr-hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:18px 14px;gap:8px}
-.cr-hero .out{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:18px;text-transform:uppercase}
+.cr{display:grid;grid-template-columns:minmax(260px,38%) 1fr;gap:16px;align-items:start}
+.cr-left{display:grid;gap:14px}
+.cr-hero{display:flex;flex-direction:column;align-items:center;text-align:center;padding:26px 18px 22px;gap:6px;position:relative;overflow:hidden;min-height:260px;background:linear-gradient(180deg,#0003,#000c 70%,#000e),var(--img-half) center/cover;justify-content:center}
+.cr-hero .out{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:26px;text-transform:uppercase;letter-spacing:.02em;text-shadow:0 2px 10px #000}
 .cr-hero.good .out{color:var(--good)}.cr-hero.warn .out{color:var(--warn)}.cr-hero.bad .out{color:var(--bad)}
-.cr-sc{font-size:46px;font-weight:800;line-height:1}.cr-sc small{font-size:16px;color:var(--muted);font-weight:600}
-.cr-bar{width:100%;height:8px;border-radius:5px;background:#ffffff18;overflow:hidden}
+.cr-sc{font-size:82px;font-weight:800;line-height:.9;text-shadow:0 2px 14px #000}.cr-sc small{font-size:20px;color:#ffffffcc;font-weight:600}
+.cr-bar{width:85%;height:10px;border-radius:6px;background:#ffffff26;overflow:hidden;margin-top:6px}
 .cr-bar i{display:block;height:100%;border-radius:inherit}
 .cr-hero.good .cr-bar i{background:var(--good)}.cr-hero.warn .cr-bar i{background:var(--warn)}.cr-hero.bad .cr-bar i{background:var(--bad)}
-.cr-patch{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:4px}
-.cr-patch span{font-size:13px;color:#ffcc66;letter-spacing:2px}
+.cr-patch{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:10px}
+.cr-patch span{font-size:14px;color:#ffcc66;letter-spacing:2px;text-shadow:0 1px 6px #000}
 .cr-panel{padding:14px 16px}
 .cr-panel h3{margin:0 0 8px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
 .cr-goals{display:grid;grid-template-columns:1fr 1fr;gap:6px}
@@ -42,7 +43,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .cr-breakdown summary::before{content:'▸ '}.cr-breakdown[open] summary::before{content:'▾ '}
 .cr-bd-row{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:4px 0;border-bottom:1px solid #ffffff14}
 .cr-bd-row b{color:#fff}.cr-bd-row span{color:var(--muted);flex:1;text-align:right}
-@media(max-width:820px){.cr{grid-template-columns:1fr}.cr-goals{grid-template-columns:1fr}.cr-dec{grid-template-columns:1fr}.cr-dec p{grid-column:auto}}
+@media(max-width:820px){.cr{grid-template-columns:1fr}.cr-goals{grid-template-columns:1fr}.cr-dec{grid-template-columns:1fr}.cr-dec p{grid-column:auto}.cr-hero{min-height:200px}.cr-sc{font-size:60px}}
 </style>`);
 
 function crOneLine(s) { if (!s) return ''; const m = s.match(/^[^.]*\./); return (m ? m[0] : s).trim(); }
@@ -68,15 +69,18 @@ V.report = () => {
   const tryHtml = best && best.dv > 0
     ? `<p class="r1">Try: ${best.lab}</p><p class="r2">Predicted score: ${best.total}/100 (+${best.dv})</p><p class="scope">Replay result with this satellite and Mission Code. Other Mission Codes may differ.</p>`
     : `<p class="r1">No single change scores higher with this satellite and Mission Code.</p><p class="scope" style="margin-top:6px">Try a different Mission Code, or change two decisions at once and compare.</p>`;
+  const goalsDone = s.req.filter(r => r[1]).length;
   return `<div class="screen">${nav(3)}<div class="cr">
-   <div class="glass cr-hero ${chip}">
-    <div class="out">${s.outcome === 'Mission Success' ? 'Mission Success' : s.outcome === 'Partial Success' ? 'Partial Success' : 'Mission Failed'}</div>
-    <div class="cr-sc">${s.total}<small>/100</small></div>
-    <div class="cr-bar"><i style="width:${s.total}%"></i></div>
-    <div class="cr-patch">${patchSvg(patch, 72)}<span aria-label="${stars} of 3 stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span></div>
+   <div class="cr-left">
+    <div class="glass cr-hero ${chip}">
+     <div class="out">${s.outcome === 'Mission Success' ? 'Mission Success' : s.outcome === 'Partial Success' ? 'Partial Success' : 'Mission Failed'}</div>
+     <div class="cr-sc">${s.total}<small>/100</small></div>
+     <div class="cr-bar"><i style="width:${s.total}%"></i></div>
+     <div class="cr-patch">${patchSvg(patch, 72)}<span aria-label="${stars} of 3 stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span></div>
+    </div>
+    <div class="glass cr-panel"><h3>Mission Goals <span class="muted" style="text-transform:none;letter-spacing:0;font-size:12px">${goalsDone} / 4</span></h3><div class="cr-goals">${s.req.map(r => `<div class="cr-g ${r[1] ? 'y' : 'n'}"><i>${r[1] ? '✓' : '✕'}</i><span>${r[0]}</span></div>`).join('')}</div></div>
    </div>
    <div style="display:grid;gap:14px">
-    <div class="glass cr-panel"><h3>Mission Goals</h3><div class="cr-goals">${s.req.map(r => `<div class="cr-g ${r[1] ? 'y' : 'n'}"><i>${r[1] ? '✓' : '✕'}</i><span>${r[0]}</span></div>`).join('')}</div></div>
     <div class="glass cr-panel"><h3>Your Decisions</h3><div class="cr-decs">${o.log.map((L, i) => `<div class="cr-dec"><b>${i + 1}. ${CH[i].title}</b><span>${L.choices}</span><p>${crOneLine(L.trade) || crOneLine(L.good)}</p></div>`).join('')}</div></div>
     <div class="glass cr-panel cr-try"><h3>Try Changing One Thing</h3>${tryHtml}</div>
     <details class="cr-breakdown"><summary>How was my score calculated?</summary>
