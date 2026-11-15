@@ -186,17 +186,17 @@
   const T = (o) => Object.assign({ cls: 'D', defVersion: DEF_VERSION }, o);
   const TARGETS = {
     storm: [
-      T({ id: 'S1', title: 'Fast critical update', statement: 'Get the first fresh image of the final storm phase to forecasters by mission hour 20:00.', unit: 'mission hour of delivery', op: '<=', threshold: 20,
+      T({ id: 'S1', title: 'Fast Delivery', statement: 'Send the final storm image by 20:00.', unit: 'mission hour of delivery', op: '<=', threshold: 20,
         definition: 'Earliest delivery time of a qualifying image captured at or after 18:00.', source: 'engine image ledger: deliveredAt of delivered records with phase 4 and qualifies = true', verify: 'Met if that time is 20:00 or earlier. Not met if later, or if no such image was delivered.',
         demands: 'The mandatory requirement only asks for delivery by 24:00. Four hours earlier means the downlink queue must be nearly empty when the last phase starts: think link speed, image size and what you send first.',
         parts: ['comms', 'instrument', 'storage', 'power'], ch: [3, 1, 2], fmt: v => hm(v),
         measure: M => { const c = stormDel(M).filter(r => r.phase === 3 && r.qualifies).sort((a, b) => a.deliveredAt - b.deliveredAt)[0]; return c ? { value: c.deliveredAt, evidence: [`image #${c.id} captured ${hm(c.t)}, delivered ${hm(c.deliveredAt)}`] } : { value: null, evidence: ['no qualifying image from 18:00–24:00 was delivered'] }; } }),
-      T({ id: 'S2', title: 'The whole storm story', statement: 'Deliver at least one qualifying image from all 4 storm phases.', unit: 'storm phases with a delivered image', op: '>=', threshold: 4,
+      T({ id: 'S2', title: 'Full Coverage', statement: 'Capture all 4 storm phases.', unit: 'storm phases with a delivered image', op: '>=', threshold: 4,
         definition: 'Number of 6-hour storm phases (0–4) with at least one qualifying image delivered to Earth by 24:00.', source: 'engine image ledger: phase of delivered records with qualifies = true', verify: 'Met if the count is 4.',
         demands: 'The mandatory requirement accepts 3 phases and counts images that are still on board. This target needs every phase imaged AND delivered, including the phase hit by the power fault.',
         parts: ['power', 'comms', 'storage', 'observation'], ch: [0, 1, 2, 3], fmt: v => `${v} of 4`,
         measure: M => { const del = stormDel(M).filter(r => r.qualifies), ph = [0, 1, 2, 3].filter(p => del.some(r => r.phase === p)); return { value: ph.length, evidence: [0, 1, 2, 3].map(p => { const r = del.filter(x => x.phase === p).sort((a, b) => a.deliveredAt - b.deliveredAt)[0]; return r ? `phase ${p + 1}: image #${r.id} delivered ${hm(r.deliveredAt)}` : `phase ${p + 1}: nothing delivered`; }) }; } }),
-      T({ id: 'S3', title: 'Fresh data', statement: 'Keep the average delay between taking an image and delivering it at 2 hours or less.', unit: 'hours (mean capture-to-delivery delay)', op: '<=', threshold: 2,
+      T({ id: 'S3', title: 'Quick Updates', statement: 'Keep average image delivery at 2 hours or less.', unit: 'hours (mean capture-to-delivery delay)', op: '<=', threshold: 2,
         definition: 'Mean of (delivery time − capture time) over all delivered images.', source: 'engine image ledger: deliveredAt − t of delivered records (derive().meanLatency)', verify: 'Met if the mean is 2.0 h or less and at least one image was delivered.',
         demands: 'Images must not wait in storage. Make only as much data as your link can move: a bigger storage does not make anything arrive sooner.',
         parts: ['comms', 'instrument', 'observation', 'storage'], ch: [0, 1, 3], fmt: v => `${n2(v)} h`,

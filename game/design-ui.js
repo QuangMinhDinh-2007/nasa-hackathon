@@ -42,6 +42,12 @@
 .tg .s{font-size:14px;line-height:1.45}
 .tg .k{font-size:12px;color:var(--muted);line-height:1.5}.tg .k b{color:#cfe0ff;font-weight:600}
 .ar-wrap{margin-top:16px}.ar-h{font-size:16px;font-weight:600}.ar-h span{font-size:12.5px;font-weight:400;color:var(--muted);margin-left:8px}
+/* Storm Watch compact briefing */
+.bf-compact .lead{color:var(--muted);font-size:16px;line-height:1.5;max-width:620px;margin-top:8px}
+.bf-compact .bf-sec{margin-top:24px}
+.bf-compact .bf-sec h2{font-size:24px}
+.bf-compact .bf-sec>p{margin-top:4px}
+.bf-compact .bf-more{margin-top:18px}
 .ar-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px}.tg.ar{min-height:0}
 .md-redo+.md-strip+.ar-wrap,.panel>.ar-wrap{margin-top:12px}
 @media(max-width:1000px){.ar-grid{grid-template-columns:1fr}}
@@ -99,6 +105,29 @@
 
   /* ================= 1. briefing + target (before the builder) ================= */
   V.brief = () => { const m = S.mission || 'storm', B = D.BRIEFING[m], Q = D.BRIEF[m], sel = S.target[m];
+    const targetCards = `<div class="tg-grid" role="radiogroup" aria-label="Mission target">${D.TARGETS[m].map(t => `<button class="tg" role="radio" aria-checked="${sel === t.id}" data-a="pickTarget" data-t="${t.id}">
+          <span class="t">${t.title}<span class="mark" aria-hidden="true">${sel === t.id ? '✓' : ''}</span></span><span class="s">${t.statement}</span></button>`).join('')}</div>
+        ${sel ? `<details class="bf-more" style="margin-top:10px"><summary>How "${tgt(m).title}" is measured</summary><p class="muted" style="font-size:12.5px;line-height:1.6;margin-top:6px"><b style="color:#cfe0ff">Measured as:</b> ${tgt(m).definition}<br><b style="color:#cfe0ff">Checked by:</b> ${tgt(m).verify}<br><b style="color:#cfe0ff">What it demands:</b> ${tgt(m).demands}<br>The number is a teaching choice for this game, not a scientific limit. It never replaces a mandatory requirement.</p></details>` : ''}`;
+    const foot = `<div class="bf-foot"><span class="muted" style="font-size:12.5px">${sel ? '' : 'Choose a goal to continue.'}</span>
+        <button class="btn good" data-a="briefGo" ${sel ? '' : 'disabled'}>Build Your Satellite →</button></div>`;
+
+    if (m === 'storm') {
+      // Compact Storm Watch briefing: a student should understand the mission and pick a bonus goal
+      // in 5-10 seconds. Mandatory requirements and the full narrative move into one collapsed
+      // "Mission Details" section; the target cards, their ids, thresholds and measure() logic are
+      // the exact same TARGETS.storm entries used everywhere else (build screen, report).
+      return `<div class="screen page brief bf-compact">
+        <button class="linkback" data-a="go" data-to="missions">← All missions</button>
+        <div class="eyebrow" style="margin-top:14px">Mission briefing · ${D.NAME[m]}</div>
+        <h1 class="display">A Hurricane Is Coming!</h1>
+        <p class="lead">Track the storm and send images to forecasters before it's too late.</p>
+        <div class="bf-sec"><h2>Choose a Bonus Goal</h2><p>Pick one extra challenge.</p>${targetCards}</div>
+        <details class="bf-more"><summary>Mission Details</summary>
+          <div class="bf-req" style="margin-bottom:18px">${Q.req.map(r => `<div><b>Mandatory</b>${r}</div>`).join('')}</div>
+          <div class="bf-grid">${B.cards.map(c => `<div class="bf-card"><h3>${c[0]}</h3><p>${c[1]}</p><p class="muted">${c[2]}</p></div>`).join('')}</div>
+          <p class="muted" style="margin-top:10px;font-size:12.5px">${D.WHY_ORBIT[m]}</p></details>
+        ${foot}</div>`;
+    }
     return `<div class="screen page brief">
       <button class="linkback" data-a="go" data-to="missions">← All missions</button>
       <div class="eyebrow" style="margin-top:14px">Mission briefing · ${D.NAME[m]}</div>
@@ -107,12 +136,8 @@
       <div class="bf-chips"><span class="bf-lab">To succeed</span>${Q.req.map(r => `<span class="chip">${r}</span>`).join('')}</div>
       <details class="bf-more"><summary>Read more</summary><div class="bf-grid">${B.cards.map(c => `<div class="bf-card"><h3>${c[0]}</h3><p>${c[1]}</p><p class="muted">${c[2]}</p></div>`).join('')}</div><p class="muted" style="margin-top:10px;font-size:12.5px">${D.WHY_ORBIT[m]}</p></details>
       ${archPicker(m)}
-      <div class="bf-sec"><h2>Pick your target</h2><p>One extra goal, measured after the flight. No points, just proof.</p>
-        <div class="tg-grid" role="radiogroup" aria-label="Mission target">${D.TARGETS[m].map(t => `<button class="tg" role="radio" aria-checked="${sel === t.id}" data-a="pickTarget" data-t="${t.id}">
-          <span class="t">${t.title}<span class="mark" aria-hidden="true">${sel === t.id ? '✓' : ''}</span></span><span class="s">${t.statement}</span></button>`).join('')}</div>
-        ${sel ? `<details class="bf-more" style="margin-top:10px"><summary>How "${tgt(m).title}" is measured</summary><p class="muted" style="font-size:12.5px;line-height:1.6;margin-top:6px"><b style="color:#cfe0ff">Measured as:</b> ${tgt(m).definition}<br><b style="color:#cfe0ff">Checked by:</b> ${tgt(m).verify}<br><b style="color:#cfe0ff">What it demands:</b> ${tgt(m).demands}<br>The number is a teaching choice for this game, not a scientific limit. It never replaces a mandatory requirement.</p></details>` : ''}</div>
-      <div class="bf-foot"><span class="muted" style="font-size:12.5px">${sel ? '' : 'Choose a target to continue.'}</span>
-        <button class="btn good" data-a="briefGo" ${sel ? '' : 'disabled'}>Build your satellite →</button></div></div>`; };
+      <div class="bf-sec"><h2>Pick your target</h2><p>One extra goal, measured after the flight. No points, just proof.</p>${targetCards}</div>
+      ${foot}</div>`; };
 
   /* ================= 2. builder: target strip, part links, change note, redo banner ================= */
   function noteHtml(m) { const n = S.mdNote[m]; if (!n) return ''; return `<div class="md-note ${n.dir}" role="status"><b>${n.what}:</b> ${n.text} <span class="muted">Tested by flying 256 standard decision plans in practice conditions. It is not a prediction of your flight.</span></div>`; }
