@@ -111,16 +111,10 @@
       g.fillRect((C.l / 100 + r0() * C.w / 100) * W, (C.t / 100 + r0() * C.h / 100) * H, 2 + r0() * 3, 2 + r0() * 3); }
     return (cache[key] = c);
   }
-  function paintFire(cv, reveal) {
-    var W = cv.width, H = cv.height, g = cv.getContext('2d'), seed = seedOf('fire');
-    g.drawImage(fireTex(seed, W, H), 0, 0);
-    if (!S.f || !S.f.M) return;
-    var M = S.f.M, t = reveal ? 24 : (typeof fNow === 'function' ? fNow() : M.step * WC.stepMin / 60);
-    // smoke / burn / thermal cluster ONLY for events the engine says are detected and already shown
-    WC.events.forEach(function (e) {
-      if (!M.detected.has(e.id) || WC.passes[e.pass].h > t + 1e-9) return;
-      var pos = EVPOS[e.id], fx = pos[0] / 100 * W, fy = pos[1] / 100 * H;
-      var fr = mulberry32(hash32(seed + '|' + e.id)), fh = latNoise(hash32(seed + e.id));
+  // one fire: burn scar, thermal cluster, smoke plume (k = size)
+  function drawBlaze(g, seed, id, fx, fy, sc) {
+      var fr = mulberry32(hash32(seed + '|' + id)), fh = latNoise(hash32(seed + id));
+      g.save(); g.translate(fx, fy); g.scale(sc, sc); fx = 0; fy = 0;
       g.save();
       g.beginPath(); for (var a = 0; a <= 24; a++) { var th = a / 24 * 6.283, rr = 9 + 10 * fh(Math.cos(th) + 3, Math.sin(th) + 3, 3);
         var px = fx + Math.cos(th) * rr * 1.3, py = fy + Math.sin(th) * rr; a ? g.lineTo(px, py) : g.moveTo(px, py); } g.closePath();
@@ -132,7 +126,17 @@
       var wd = fr() * 1.2 - 2.2;
       for (k = 0; k < 20; k++) { var dd = k * 5.5 + fr() * 4, sx = fx + Math.cos(wd) * dd + (fr() - .5) * k * 2, sy = fy + Math.sin(wd) * dd + (fr() - .5) * k * 1.4;
         g.fillStyle = 'rgba(205,205,210,' + (0.32 * (1 - k / 22)) + ')'; g.beginPath(); g.arc(sx, sy, 3 + k * .9, 0, 7); g.fill(); }
-      g.restore();
+      g.restore(); g.restore();
+  }
+  function paintFire(cv, reveal) {
+    var W = cv.width, H = cv.height, g = cv.getContext('2d'), seed = seedOf('fire');
+    g.drawImage(fireTex(seed, W, H), 0, 0);
+    if (!S.f || !S.f.M) return;
+    var M = S.f.M, t = reveal ? 24 : (typeof fNow === 'function' ? fNow() : M.step * WC.stepMin / 60);
+    // smoke / burn / thermal cluster ONLY for events the engine says are detected and already shown
+    WC.events.forEach(function (e) {
+      if (!M.detected.has(e.id) || WC.passes[e.pass].h > t + 1e-9) return;
+      var pos = EVPOS[e.id]; drawBlaze(g, seed, e.id, pos[0] / 100 * W, pos[1] / 100 * H, 1);
     });
   }
 
@@ -184,6 +188,18 @@
     cv.getContext('2d').drawImage(floodTex(seedOf('flood'), cv.width, cv.height, reveal ? 1 : 0, radar), 0, 0);
   }
 
+  /* ================= mission cards (Earth missions page) =================
+   * Decorative only: a fixed visual seed and made-up fire positions, never the
+   * player's scenario, so the cards cannot hint at hidden events. */
+  var CARD_SEED = 'CARD1';
+  function paintFireCard(cv) {
+    var W = cv.width, H = cv.height, g = cv.getContext('2d');
+    g.drawImage(fireTex(CARD_SEED, W, H), 0, 0);
+    drawBlaze(g, CARD_SEED, 'a', W * .62, H * .62, 2.1); drawBlaze(g, CARD_SEED, 'b', W * .3, H * .78, 1.3);
+  }
+  function paintFloodCard(cv) { cv.getContext('2d').drawImage(floodTex(CARD_SEED, cv.width, cv.height, .8, false), 0, 0); }
+  cardArt = function (kind) { return '<canvas class="vizc" data-viz="' + kind + 'card" aria-hidden="true"></canvas>'; };
+
   /* ================= mounting ================= */
   var mount = function (kind, extra) { return '<canvas class="vizc" data-viz="' + kind + '" ' + (extra || '') + ' aria-hidden="true"></canvas>'; };
   document.head.insertAdjacentHTML('beforeend', '<style>.vizc{position:absolute;inset:0;width:100%;height:100%;display:block}</style>');
@@ -204,6 +220,7 @@
       var kind = cv.dataset.viz, box = cv.parentElement;
       var w = Math.min(640, Math.max(200, box.clientWidth || 510)), h = Math.max(140, box.clientHeight || 340);
       var t = kind === 'storm' ? stormT() : 0;
+      if (kind === 'firecard' || kind === 'floodcard') { if (cv.dataset.sig === kind + w + 'x' + h) return; cv.dataset.sig = kind + w + 'x' + h; cv.width = w; cv.height = h; (kind === 'firecard' ? paintFireCard : paintFloodCard)(cv); return; }
       var sig = kind + '|' + w + 'x' + h + '|' + (cv.dataset.reveal || '') + '|' + t.toFixed(2) + '|' + seedOf(kind === 'storm' ? 'storm' : kind === 'fire' ? 'fire' : 'flood') + '|' + (kind === 'fire' && S.f && S.f.M ? S.f.M.detected.size : '');
       if (cv.dataset.sig === sig) return;
       cv.dataset.sig = sig; cv.width = w; cv.height = h;

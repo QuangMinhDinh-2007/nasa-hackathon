@@ -28,8 +28,12 @@ FILES
   review.js             v6.3: readiness review wording (Ready / Caution / Not Ready) and summary
   look.js               v6.3: launch-site background, Join Class Mission tiles, fewer helper lines
   stepper.js            v6.3: Build/Launch/Operate/Report steps behind a "Step n of 4" button
+  rocket3d.js           the one 3D rocket model: shown on every "Build your satellite" screen and
+                        flown by the launch sequence (falls back to the flat SVG rocket without WebGL)
+  launch3d.js           3D launch sequence (uses the rocket from rocket3d.js)
+  viz.js                procedural mission visuals, incl. the Wildfire / Flood cards on the Earth missions page
   nasa-s1.js            real radar water maps of Kerr County (generated — do not edit)
-  assets/               images
+  assets/               images, three.min.js (Three.js r128, MIT; loaded locally so 3D works offline)
 
 MISSION CODES
   STORM-PRACTICE / FIRE-PRACTICE / FLOOD-PRACTICE  = baseline, no surprises

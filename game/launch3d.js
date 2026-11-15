@@ -29,16 +29,7 @@
     } catch (e) { return [false, false, false]; }
   }
 
-  var threeLoading = null;
-  function loadThree() {
-    if (window.THREE) return Promise.resolve();
-    if (!threeLoading) threeLoading = new Promise(function (res, rej) {
-      var s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-      s.onload = res; s.onerror = rej; document.head.appendChild(s);
-    });
-    return threeLoading;
-  }
+  var loadThree = Rocket3D.loadThree; // local assets/three.min.js first, then CDN
 
   var active = null; // current launch instance
 
@@ -134,47 +125,11 @@
     for (i = 0; i < 110; i++) { var sm = new T.Mesh(smokeG, new T.MeshLambertMaterial({ color: i % 3 ? 0xD5DAE1 : 0xAEB5BF, transparent: true, opacity: 0, depthWrite: false }));
       sm.userData = { a: rnd() * Math.PI * 2, b: 0.15 + rnd() * 0.3, r: 0.6 + rnd() * 0.8, up: rnd() }; sm.visible = false; ground.add(sm); smoke.push(sm); }
 
-    /* ---------- rocket ---------- */
-    var rocket = new T.Group(); rocket.position.set(0, MOUNT, 0); scene.add(rocket);
-    var R = 1.3, stage1 = new T.Group(), stage2 = new T.Group(); rocket.add(stage1); rocket.add(stage2);
-    stage1.add(cyl(R, 1.9, 3, M.red, 0, 1.5, 0)); stage1.add(cyl(R, R, 11, M.white, 0, 8.5, 0));
-    stage1.add(cyl(R + 0.02, R + 0.02, 0.35, M.blue, 0, 11, 0)); stage1.add(cyl(R + 0.02, R + 0.02, 0.3, M.red, 0, 5, 0)); stage1.add(cyl(R + 0.01, R + 0.01, 0.8, M.dark, 0, 14.4, 0));
-    for (i = 0; i < 4; i++) { a = i * Math.PI / 2 + Math.PI / 4; var bx = Math.cos(a) * 1.75, bz = Math.sin(a) * 1.75;
-      stage1.add(cyl(0.18, 0.75, 5.5, M.red2, bx, 2.75, bz, 14)); stage1.add(cyl(0.45, 0.6, 0.6, M.yellow, bx, -0.25, bz, 12)); }
-    stage1.add(cyl(0.7, 0.95, 0.7, M.yellow, 0, -0.3, 0, 16));
-    stage2.position.y = 14.8;
-    stage2.add(cyl(R, R, 14, M.white, 0, 7, 0)); stage2.add(cyl(R + 0.02, R + 0.02, 0.35, M.blue, 0, 1, 0)); stage2.add(cyl(R + 0.02, R + 0.02, 1.1, M.dark, 0, 10.6, 0));
-    stage2.add(cyl(R + 0.03, R + 0.03, 0.18, M.red, 0, 10.6, 0)); stage2.add(cyl(R + 0.02, R + 0.02, 0.3, M.red, 0, 12.6, 0)); stage2.add(cyl(0.5, 0.8, 0.8, M.dark, 0, -0.4, 0, 16));
-    var labelTex = new T.CanvasTexture(document.createElement('canvas'));
-    (function setLabel(text) { var c = labelTex.image; c.width = 96; c.height = 512; var x = c.getContext('2d'); x.clearRect(0, 0, 96, 512);
-      x.save(); x.translate(48, 256); x.rotate(-Math.PI / 2); x.fillStyle = '#1B2B4B'; x.font = '400 54px Anton, Impact, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, 0, 4, 480); x.restore(); labelTex.needsUpdate = true; })(ms.label);
-    [[0, R + 0.02, 0], [-(R + 0.02), 0, -Math.PI / 2], [R + 0.02, 0, Math.PI / 2]].forEach(function (p) { var lp = mesh(new T.PlaneGeometry(1.25, 6.6), new T.MeshBasicMaterial({ map: labelTex, transparent: true }), p[0], 5.6, p[1], false); lp.rotation.y = p[2]; stage2.add(lp); });
-    // fairing
-    var FY = 28.8, prof = []; for (i = 0; i <= 14; i++) { var t = i / 14; prof.push(new T.Vector2(R * Math.sqrt(Math.max(0, 1 - Math.pow(t, 1.7))) * (1 - 0.15 * t) + 0.02, t * 8.5)); }
-    var fair = [0, 1].map(function (k) { var g = new T.Group(); g.position.y = FY; var fm = new T.MeshLambertMaterial({ color: 0xF7F8FA, side: T.DoubleSide, transparent: true });
-      g.add(mesh(new T.LatheGeometry(prof, 28, k * Math.PI, Math.PI), fm, 0, 0, 0, false)); g.add(cyl(0.05, 0.05, 1.6, M.dark, k ? -0.03 : 0.03, 9, 0, 6)); rocket.add(g); return g; });
-    // flames
-    function flame(r, h) { var g = new T.ConeGeometry(r, h, 16, 1, true); g.rotateX(Math.PI); g.translate(0, -h / 2, 0);
-      var o = new T.Mesh(g, new T.MeshBasicMaterial({ color: 0xFFB13B, transparent: true, opacity: 0.9 })); var inner = new T.Mesh(g, new T.MeshBasicMaterial({ color: 0xFFF6C8 })); inner.scale.set(0.5, 0.6, 0.5); o.add(inner); return o; }
-    var f1 = flame(1.5, 11); f1.position.y = -0.5; stage1.add(f1); var f2 = flame(0.7, 5); f2.position.y = -0.8; stage2.add(f2);
-    var glow = new T.PointLight(0xFF8A2A, 0, 120); glow.position.y = -3; rocket.add(glow);
-    // satellite from the player's design
-    var sat = new T.Group(); sat.position.y = FY + 3.2; rocket.add(sat); var satParts = {};
-    (function buildSat(m, o) {
-      sat.add(box(1.3, 1.7, 1.3, M.gold, 0, 0, 0));
-      var pw = o[1] ? 4.6 : 3.1;
-      satParts.pl = new T.Group(); satParts.pl.position.x = -0.65; satParts.pl.add(box(pw, 1.1, 0.06, M.pv, -pw / 2, 0, 0)); sat.add(satParts.pl);
-      satParts.pr = new T.Group(); satParts.pr.position.x = 0.65; satParts.pr.add(box(pw, 1.1, 0.06, M.pv, pw / 2, 0, 0)); sat.add(satParts.pr);
-      for (var j = 1; j < 6; j++) { satParts.pl.add(box(0.04, 1.1, 0.08, M.glass, -pw * j / 6, 0, 0)); satParts.pr.add(box(0.04, 1.1, 0.08, M.glass, pw * j / 6, 0, 0)); }
-      if (m !== 'flood') { var s = o[0] ? 1 : 0.6; sat.add(box(0.9 * s, 0.8 * s, 0.9 * s, M.dark, 0, -0.85 - 0.4 * s, 0)); sat.add(cyl(0.3 * s, 0.3 * s, 0.2, M.glass, 0, -0.85 - 0.85 * s, 0)); }
-      else if (o[0]) { satParts.radar = new T.Group(); satParts.radar.position.y = 0.85; satParts.radar.add(cyl(0.06, 0.06, 1.9, M.white, 0, 0.95, 0, 8));
-        var dish = mesh(new T.CylinderGeometry(2.3, 2.3, 0.05, 28), new T.MeshLambertMaterial({ color: 0xE8C66A, transparent: true, opacity: 0.55, side: T.DoubleSide }), 0, 3.6, 0); dish.rotation.x = Math.PI / 2; satParts.radar.add(dish);
-        satParts.radar.add(mesh(new T.TorusGeometry(2.3, 0.07, 8, 36), M.gold, 0, 3.6, 0));
-        for (j = 0; j < 4; j++) { var sp = box(4.6, 0.05, 0.05, M.gold, 0, 3.6, 0); sp.rotation.z = j * Math.PI / 4; satParts.radar.add(sp); } sat.add(satParts.radar); }
-      else { sat.add(cyl(0.42, 0.42, 1, M.dark, 0, -1.35, 0)); satParts.lid = new T.Group(); satParts.lid.position.set(-0.42, -1.87, 0); satParts.lid.add(cyl(0.44, 0.44, 0.06, M.gold, 0.42, 0, 0)); sat.add(satParts.lid); }
-      if (o[2]) { satParts.dish = new T.Group(); satParts.dish.position.set(0.4, 0.85, 0.3); satParts.dish.add(cyl(0.04, 0.04, 0.5, M.white, 0, 0.25, 0, 6));
-        var dc = mesh(new T.ConeGeometry(0.5, 0.25, 18, 1, true), new T.MeshLambertMaterial({ color: 0xF7F8FA, side: T.DoubleSide }), 0, 0.6, 0); dc.rotation.x = Math.PI; satParts.dish.add(dc); sat.add(satParts.dish); }
-    })(mKey, satOptions(mKey));
+    /* ---------- rocket (shared model: rocket3d.js) ---------- */
+    var RK = Rocket3D.build(T, { label: ms.label, mission: mKey, sat: satOptions(mKey) });
+    var rocket = RK.rocket, stage1 = RK.stage1, stage2 = RK.stage2, fair = RK.fair, f1 = RK.f1, f2 = RK.f2, glow = RK.glow, sat = RK.sat, satParts = RK.satParts, FY = RK.FY;
+    rocket.position.set(0, MOUNT, 0); scene.add(rocket);
+
 
     /* ---------- space ---------- */
     var sg = new T.BufferGeometry(), sp = []; for (i = 0; i < 900; i++) { var v = V(rnd() - 0.5, rnd() - 0.5, rnd() - 0.5).normalize().multiplyScalar(4000); sp.push(v.x, v.y, v.z); }

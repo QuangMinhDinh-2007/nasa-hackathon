@@ -291,7 +291,7 @@ input{font:inherit;color:inherit}
 }
 
 /* ---- Sign-in: teammate demo style (navy gradient, white card) ---- */
-.screen.signin{background:linear-gradient(180deg,#0c1631 0%,#18264a 45%,#2a3f6c 100%);font-family:Inter,system-ui,sans-serif;gap:6vw}
+.screen.signin{background:none;font-family:Inter,system-ui,sans-serif;gap:6vw}
 .signin .eyebrow{color:#a9bff5;font-family:Inter,sans-serif;font-weight:500;font-size:15px;letter-spacing:.2em}
 .signin h1.display{font-family:"Space Grotesk",Inter,sans-serif;font-weight:700;text-transform:none;letter-spacing:-.01em;line-height:1.0;font-size:clamp(48px,5.4vw,104px);margin:22px 0 26px;color:#fff}
 .signin p.lead{color:#cdd8ef;font-size:clamp(16px,1.35vw,22px);line-height:1.55;max-width:560px}
@@ -376,7 +376,7 @@ function D(){return ENG.derive(S.ops.M)}
 
 /* ================== BACKGROUND ================== */
 const BG={
- signin:{img:'var(--img-hero)',flip:true,blur:0,shade:'linear-gradient(90deg,#000 0,#000c 30%,#0004 60%,#0000)',flares:[[8,78,'sm'],[46,14,'']]},
+ signin:{img:'var(--img-horizon)',blur:0,shade:'linear-gradient(180deg,#000a,#0000 50%,#0006),linear-gradient(90deg,#000a 0,#0006 40%,#0000 70%)',flares:[[8,16,'sm'],[52,10,'']]},
  ready:{img:'var(--img-horizon)',blur:0,shade:'linear-gradient(180deg,#000a,#0000 50%,#0006)',flares:[[14,20,''],[84,66,'sm tilt']]},
  dest:{img:'none',blur:0,shade:'radial-gradient(80% 60% at 50% 100%,#0b2a5a55,#000 70%)',flares:[[6,30,''],[92,12,'sm'],[78,88,'sm tilt']]},
  missions:{img:'var(--img-half)',blur:6,shade:'linear-gradient(90deg,#000e,#000b 50%,#0008)',flares:[[90,18,'']]},
@@ -402,6 +402,7 @@ function nav(step,name='Storm Watch',chip='Earth · Mission 1'){
    <div class="steps">${names.map((n,i)=>`${i?'<div class="step-line"></div>':''}<div class="step ${i<step?'done':i===step?'on':''}"><div class="dot">${i<step?'✓':i+1}</div><span class="lbl">${n}</span></div>`).join('')}</div>
    <div class="who"><button class="navbtn" data-a="sources">Data & sources</button></div></div></div>`;
 }
+let cardArt=()=>'';
 let stormArt=()=>`<div class="ocean"></div><div class="land"></div><div class="storm"><div class="arms"></div><div class="arms b"></div><div class="eye"></div></div>`;
 const rocketSVG=(cls,label='STORM WATCH')=>`<svg class="${cls}" viewBox="0 0 120 520" fill="none">
  <path d="M60 4C38 40 30 90 30 130h60c0-40-8-90-30-126z" fill="#f4f7fb"/>
@@ -451,9 +452,9 @@ V.missions=()=>`<div class="screen page">
    <div class="glass mis active"><div class="art">${stormArt()}<span class="chip solid">Beginner</span></div>
     <div class="body"><h3>Storm Watch</h3><p>Watch a growing Atlantic hurricane from geostationary orbit and get key images to forecasters in 24 hours.</p>
     <div><button class="btn blue" data-a="startMission">Start mission →</button></div></div></div>
-   <div class="glass mis active"><div class="art" style="background:radial-gradient(60% 80% at 60% 60%,#ff7a3d,#7a2410 55%,#1a0703)"><span class="chip solid">Intermediate</span></div>
+   <div class="glass mis active"><div class="art" style="background:#1d2a17">${cardArt('fire')}<span class="chip solid">Intermediate</span></div>
     <div class="body"><h3>Wildfire Watch</h3><p>Spot fires from low Earth orbit. Limited passes, short ground contacts: get the alert to responders in time.</p><div><button class="btn blue" data-a="fstart">Start mission →</button></div></div></div>
-   <div class="glass mis active"><div class="art" style="background:radial-gradient(70% 90% at 40% 60%,#5aa9ff,#123a6a 55%,#040d1a)"><span class="chip solid">Beginner–Intermediate</span></div>
+   <div class="glass mis active"><div class="art" style="background:#123a6a">${cardArt('flood')}<span class="chip solid">Beginner–Intermediate</span></div>
     <div class="body"><h3>Flood Watch</h3><p>Map a flooding river valley with an optical camera or radar. Clouds, night and short contacts stand in your way.</p><div><button class="btn blue" data-a="lstart">Start mission →</button></div></div></div>
   </div></div>`;
 
@@ -1021,6 +1022,7 @@ render();
 <script src="stepper.js"></script>
 <script src="look.js"></script>
 <script src="review.js"></script>
+<script src="rocket3d.js"></script>
 <script src="launch3d.js"></script>
 <script src="viz.js"></script>
 </body>
