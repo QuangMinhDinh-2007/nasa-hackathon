@@ -20,7 +20,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .hot.missed{border:2px dashed #ffffffcc;color:#fff}
 .hot .g{pointer-events:none}
 .hot .lb{font-size:12px!important}
-.fbadge{position:absolute;left:10px;bottom:8px;z-index:3;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#000b;border:1px solid currentColor;white-space:nowrap}
+.fbadge{position:absolute;right:10px;bottom:8px;z-index:3;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#000b;border:1px solid currentColor;white-space:nowrap}
 .fbadge.recent{color:#3ddc97}.fbadge.stale{color:#ffcc66}.fbadge.never{color:#ffffffa0;border-style:dashed}
 .fskip{position:absolute;left:50%;top:48px;transform:translateX(-50%);z-index:4;font-size:12px;font-weight:600;padding:4px 10px;border-radius:8px;background:#000c;color:#ffcc66;border:1px solid #ffcc6666}
 .flegend{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:8px 4px 0;font-size:12px;color:var(--muted)}
@@ -65,17 +65,9 @@ fireArt = function (reveal) { const M = S.f.M, t = reveal ? 24 : fNow(); const r
     return `<div class="hot ${cls}" tabindex="0" role="img" aria-label="${name}. ${state}." data-tip="${name}||${state}" style="left:${x}%;top:${y}%"><span class="g" aria-hidden="true">${g}</span>${reveal && (!cont || miss) ? `<span class="lb ${x > 65 ? 'l' : ''}">${cont ? 'Known fire, ' + fmtH(WC.passes[e.pass].h) : e.name}${miss ? ' · missed' : ''}</span>` : ''}</div>`; }).join('');
   return `<div class="fmap"></div>${regs}${hs}`; };
 
-const LEGEND = `<div class="flegend" id="fLegend" role="list" aria-label="Map legend"><b>Map key</b>
-  <span role="listitem"><i class="k" aria-hidden="true" style="background:radial-gradient(circle,#fff3c2 0,#ff9d3d 45%,#ff4d1c 75%)"></i>Fire · alert sent</span>
-  <span role="listitem"><i class="k" aria-hidden="true" style="border:2px solid #ff9d3d;color:#ff9d3d">!</i>Detected, alert not sent</span>
-  <span role="listitem"><i class="k" aria-hidden="true" style="border:1.5px dashed #fff;color:#fff">×</i>Missed (shown in the report)</span>
-  <span role="listitem"><span aria-hidden="true" style="color:#3ddc97">✓</span>Observed</span>
-  <span role="listitem"><span aria-hidden="true" style="color:#ffcc66">⚠</span>Update needed (&gt;6 h)</span>
-  <span role="listitem"><span aria-hidden="true" style="color:#ffffffa0">○</span>Never observed</span></div>`;
 const WARN_TXT = 'An Advanced thermal image is 1.0–1.5 GB. Standard communications sends 0.6 GB per hour, and the satellite only talks to Earth during five 1-hour ground contacts. Ask yourself how much imagery can reach Earth before it goes stale, and before the mission ends.';
 function firePlusMount() {
   if ((S.screen === 'fops' || S.screen === 'freport') && S.f && S.f.M) { const v = document.querySelector('.view');
-    if (v && !document.getElementById('fLegend')) v.insertAdjacentHTML('afterend', LEGEND);
     if (v && S.screen === 'fops' && S.f.phase === 'result' && !v.querySelector('.fskip')) { const n = fSkipNote(S.f.M, S.f.ci); if (n) v.insertAdjacentHTML('beforeend', `<div class="fskip" role="note">${n}</div>`); } }
   if (S.screen === 'fbuild' && S.fdesign) { const pad = document.querySelector('.pad'), nose = pad && pad.querySelector('.nose');
     if (pad && nose && S.fdesign.instrument === 'adv' && S.fdesign.comms === 'std' && !pad.querySelector('.fwarn')) {

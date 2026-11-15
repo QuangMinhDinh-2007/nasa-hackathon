@@ -120,7 +120,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .tk{position:absolute;z-index:4;border:2px dashed #ffffff55;border-radius:10px;background:transparent;color:#fff;text-align:left;padding:0}
 button.tk{cursor:pointer}button.tk:hover{background:#ffffff10}.tk.on{border:2px solid #ffcc66;background:#ffcc6612}
 .tk span{position:absolute;left:8px;bottom:6px;font-size:12px;font-weight:600;padding:2px 7px;border-radius:6px;background:#000a}.tk.on span{background:#ffcc66;color:#111}
-.tkstrip{margin:0 0 14px;padding:12px 14px;border:1px solid #ffcc6655;border-radius:12px;background:#ffcc660d;font-size:13px}
+.tkstrip{margin:0 0 14px;padding:4px 2px;font-size:13px}
 .tkstrip b{color:#fff}.tkstrip .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}.tkstrip .row>span{min-width:110px;color:var(--muted);font-size:12px}
 .vzone .tkz{position:absolute;left:12px;top:66px;font-size:12px;font-weight:700;padding:2px 7px;border-radius:6px;background:#ffcc66;color:#111;margin-right:4px}
 .vzone .tkz+.tkz{top:88px}

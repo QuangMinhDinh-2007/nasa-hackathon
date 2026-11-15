@@ -23,7 +23,7 @@ t('skipped pass is explained (plan / battery / storage)', () => { const M = WF.n
   for (let dec = 0; dec < 4 && !any; dec++) { const m = WF.newMission(S2.design); [['wide', 'high'], ['fifo', 'full'], ['normal', 'image'], ['wide', 'fast']].forEach((d, i) => WF.runChallenge(m, i, d)); any = [0, 1, 2, 3].some(p => /storage full|battery reserve/.test(fSkipNote(m, p))); }
   assert.ok(any, 'storage/battery reason surfaces for an overloaded design'); });
 t('markers and badges are keyboard-focusable with a text state', () => { assert.ok(/class="hot \$\{cls\}" tabindex="0" role="img" aria-label=/.test(src)); assert.ok(/class="fbadge \$\{s.st\}" tabindex="0"/.test(src)); assert.ok(/'×' : sent \? '' : '!'/.test(src)); });
-t('map legend, live announcer, focus ring, reduced motion', () => { assert.ok(/aria-label="Map legend"/.test(src)); assert.ok(/aria-live', 'polite'/.test(src)); assert.ok(/:focus-visible\{outline/.test(src)); assert.ok(/prefers-reduced-motion: reduce\)\{\*/.test(src)); });
+t('live announcer, focus ring, reduced motion (map legend removed by design)', () => { assert.ok(!/aria-label="Map legend"/.test(src)); assert.ok(/aria-live', 'polite'/.test(src)); assert.ok(/:focus-visible\{outline/.test(src)); assert.ok(/prefers-reduced-motion: reduce\)\{\*/.test(src)); });
 t('no text below 12 px in the game (decorative legend glyphs excepted)', () => { const bad = [];
   ['index.html', 'upgrade.js', 'rescue.js', 'final.js', 'fun.js', 'fireplus.js'].forEach(f => { const s = G(f).replace(/class="k"[^>]*>/g, ''); [...s.matchAll(/font(?:-size)?:\s*(?:\d{3}\s+)?(\d+(?:\.\d+)?)px/g)].forEach(m => { if (+m[1] < 12 && !/9px\/1 system-ui/.test(s.slice(m.index - 5, m.index + 30))) bad.push(f + ':' + m[1]); }); });
   assert.deepStrictEqual(bad, []); });
