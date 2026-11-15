@@ -45,6 +45,13 @@ const rest = run(ADV, all('rest')), full = run(ADV, all('full'));
 ok(rest.M.chSnapshots[2].battAfterKWh > full.M.chSnapshots[2].battAfterKWh && rest.M.chSnapshots[2].captured.length === 0, 'resting all six hours keeps more battery and captures nothing');
 const mixed = run(ADV, [null, null, { sched: ['full', 'rest', 'eco', 'rest', 'one', 'full'] }, null]);
 ok(sig(mixed) !== sig(rest) && sig(mixed) !== sig(full), 'a mixed schedule gives its own result');
+// 9b three-period Power Emergency planner: Take Images = two "full" hours, Save Power = two "rest" hours
+const per = q => [null, null, { sched: [0, 1, 2].flatMap(i => (q >> (2 - i)) & 1 ? ['full', 'full'] : ['rest', 'rest']), sel: 0 }, null];
+const pr = [0, 1, 2, 3, 4, 5, 6, 7].map(q => run(D0, per(q))), c3 = r => r.M.chSnapshots[2];
+ok(pr.every((r, q) => c3(r).captured.length === 2 * [0, 1, 1, 2, 1, 2, 2, 3][q]), 'each Take Images period adds two hourly images, each Save Power period none (all 8 plans)');
+ok([1, 2, 4].every(q => c3(pr[q]).battAfterKWh < c3(pr[0]).battAfterKWh) && c3(pr[7]).battAfterKWh < c3(pr[3]).battAfterKWh, 'every imaging period costs battery at 18:00');
+ok(pr.every((r, q) => sig(r) === sig(run(D0, per(q)))) && sig(pr[7]) === sig(run(D0)), 'three-period plans are reproducible; all Take Images = the original Normal preset');
+ok(pr.every(r => r.s.outcome !== 'Mission Failure'), 'no three-period plan fails the mission for the all-standard satellite');
 // 10 emergency downlink
 const M3 = E.newMission(ADV, 'v34'); for (let i = 0; i < 3; i++) E.runChallenge(M3, i, dec[i]);
 const ob3 = M3.records.filter(r => r.status === 'stored').map(r => r.id);

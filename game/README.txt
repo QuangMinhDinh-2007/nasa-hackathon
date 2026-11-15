@@ -14,7 +14,7 @@ FILES
   nasa-data.js          real NASA observations (generated — do not edit)
   upgrade.js            journey playback, Pip + crew chat, readiness review,
                         what-if replay, timeline, mission record, sources panel
-  rescue.js             v5.1: Storm Watch direct controls (scan box, data sorting, hour plan,
+  rescue.js             v5.1: Storm Watch direct controls (scan box, data sorting, 3-period power plan,
                         downlink order), no mascot/voice, no flicker, background music
   final.js              v6.0: score explainer, badges, debrief quiz, how-to-play,
                         Wildfire region tasking, Flood pass aiming

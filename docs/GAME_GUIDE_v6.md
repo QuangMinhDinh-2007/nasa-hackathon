@@ -13,7 +13,7 @@ Three missions: **Storm Watch** (geostationary, hurricane), **Wildfire Watch** (
 
 | Mission | Challenge 1 | Challenge 2 | Challenge 3 | Challenge 4 |
 |---|---|---|---|---|
-| Storm Watch | drag and resize the scan box over the forecast track and cone | mark stored images Send first / Keep / Discard | set each hour to Full / One image / Eco / Rest with a battery forecast | reorder the downlink queue; each image shows its arrival time |
+| Storm Watch | drag and resize the scan box over the forecast track and cone | mark stored images Send first / Keep / Discard | choose Take Images or Save Power for each of three 2-hour periods (12–14, 14–16, 16–18), with a live battery and storm-data preview | reorder the downlink queue; each image shows its arrival time |
 | Wildfire Watch | click regions on the map to target them (1 region 115% sensitivity, 2 regions 100%, 3 regions 85%) + options | region targeting + options | region targeting + options | region targeting + options |
 | Flood Watch | aim each of the two passes at a zone or at all three (100% or 80% detail) + options | pass aiming + options | pass aiming + options | pass aiming (first pass is a fixed emergency request for the town) + options |
 

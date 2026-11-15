@@ -44,18 +44,10 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .pk .id{font-weight:700;width:34px}.pk .meta{color:var(--muted)}.pk .meta b{color:#fff;font-weight:600}
 .pk.late .meta b.eta{color:#ff7a7a}.pk.ok .meta b.eta{color:#5fe0a0}
 .pklist{max-height:250px;overflow:auto;margin-bottom:10px}
-.slots{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-.slot{padding:10px 6px;border-radius:12px;border:1px solid var(--line);background:#0004;text-align:center}
-.slot small{display:block;color:var(--muted);font-size:12px}.slot b{display:block;font-size:13px;margin:4px 0}
-.slot.full{border-color:#7fb6ff;background:#3d8bff22}.slot.one{border-color:#5fe0a0;background:#5fe0a01a}.slot.eco{border-color:#ffcc66;background:#ffcc661a}.slot.rest{opacity:.75}
-.slot .bat{height:46px;display:flex;align-items:flex-end;justify-content:center;margin-top:6px}
-.slot .bat i{display:block;width:60%;border-radius:4px 4px 0 0;background:#5fe0a0;transition:height .25s}
-.slot .bat i.low{background:#ff7a7a}.slot .bat i.mid{background:#ffcc66}
 .ixset{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}.ixset .lab{font-size:12px;color:var(--muted);margin-bottom:4px}
 .mini{padding:6px 10px;border-radius:9px;border:1px solid var(--line);font-size:12px;color:#fff;background:#0004}
 .mini:hover{background:#ffffff14}
 #musicBtn{position:fixed;right:16px;bottom:16px;z-index:50;padding:8px 12px;border-radius:999px;border:1px solid #ffffff33;background:#000a;color:#fff;font-size:12px}
-@media (prefers-reduced-motion: reduce){.slot .bat i{transition:none}}
 </style>`);
 
 /* ---------------- 3. render without flicker ---------------- */
@@ -84,13 +76,35 @@ endJourney = function () { const j = S.jr; if (!j) return; const m = j.m, ci = M
 
 /* ---------------- 4. Storm Watch: direct controls wired to the engine ---------------- */
 const hhmm = t => { const h = Math.floor(t + 1e-9), mm = Math.round((t - h) * 60); return String(h).padStart(2, '0') + ':' + String(mm).padStart(2, '0'); };
-const MODES = { full: ['Full', 'every image the camera can take'], one: ['One image', '1 image this hour'], eco: ['Eco', '1 image, 25% less power for camera and radio'], rest: ['Rest', 'no images, radio keeps sending'] };
-const MKEYS = Object.keys(MODES);
+const PEPER = [['12:00–14:00', 'Early'], ['14:00–16:00', 'Middle'], ['16:00–18:00', 'Late']];
+const PEIC = { take: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  save: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="8" width="16" height="9" rx="2"/><path d="M21 11v3M11 9.5l-2 3h3l-2 3"/></svg>' };
+const peLabel = sched => [0, 1, 2].map(i => PEPER[i][1] + ': ' + (sched[i * 2] === 'rest' ? 'Save Power' : 'Take Images')).join(' · ');
+document.head.insertAdjacentHTML('beforeend', `<style>
+.pe-pers{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pe-per{padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:#0004;color:#fff;font:inherit;text-align:left;cursor:pointer}
+.pe-per:hover{border-color:#ffffff55}.pe-per.on{border-color:var(--blue);background:#3d8bff1f;box-shadow:0 0 0 3px #3d8bff22}
+.pe-per small{display:block;color:var(--muted);font-size:12px}.pe-per b{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;margin:6px 0 4px}
+.pe-per em{font-style:normal;font-size:12px;color:var(--muted)}.pe-per em.new{color:#5fe0a0}.pe-per em.dim{color:#ffcc66}
+.pe-ic svg{width:30px;height:30px;display:block}.pe-ic.sm svg{width:18px;height:18px}
+.pe-q{margin:16px 0 8px;font-size:14px;font-weight:600}
+.pe-acts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pe-act{position:relative;display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:16px;border:1.5px solid var(--line);background:#0004;color:#fff;font:inherit;text-align:left;cursor:pointer;min-height:92px}
+.pe-act:hover{border-color:#ffffff55}.pe-act.on{border-color:var(--blue);background:#05080fcc}
+.pe-act .pe-ic{color:#ffffffbb}.pe-act.on .pe-ic{color:var(--blue)}
+.pe-tx b{display:block;font-size:17px;font-weight:600}.pe-tx span{display:block;font-size:13px;color:#fff;margin-top:2px}.pe-tx small{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.pe-ck{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;border:1.5px solid #ffffff55;display:grid;place-items:center;font-size:13px;color:transparent}
+.pe-act.on .pe-ck{background:var(--blue);border-color:var(--blue);color:#fff}
+.pe-prev{margin-top:14px}
+.pe-warn{margin-top:10px;padding:9px 12px;border-radius:12px;font-size:13px;font-weight:600;border:1px solid #ffcc6666;background:#ffcc6614;color:#ffcc66}
+.pe-warn.bad{border-color:#ff7a7a66;background:#ff7a7a14;color:#ff7a7a}
+@media (max-width:640px){.pe-pers,.pe-acts{grid-template-columns:1fr}}
+</style>`);
 function onboard(M) { return M.records.filter(r => r.status === 'stored').sort((a, b) => (b.pts / b.sizeGB) - (a.pts / a.sizeGB) || a.t - b.t || a.id - b.id); }
 function ixGet() { const o = S.ops, M = o.M, ci = o.ci; o.ix = o.ix || [null, null, null, null]; if (!o.ix[ci]) {
     if (ci === 0) { const p = ENG.trackPoint(M.C, 0, 0); o.ix[0] = { box: ENG.normBox(M.C, { x: p[0], y: p[1], w: 0.5 }) }; }
     if (ci === 1) o.ix[1] = { first: [], drop: [] };
-    if (ci === 2) o.ix[2] = { sched: Array(6).fill('full') };
+    if (ci === 2) o.ix[2] = { sched: Array(6).fill('full'), sel: 0 };
     if (ci === 3) o.ix[3] = { order: onboard(M).map(r => r.id), newFirst: true }; }
   M.ext[ci] = o.ix[ci]; return o.ix[ci]; }
 function ixPreview() { const o = S.ops, M = o.M, c = structuredClone(M); c.traceOn = true; c.trace = []; c.events = [];
@@ -113,11 +127,19 @@ function ixPanel() { const o = S.ops, M = o.M, ci = o.ci, x = ixGet(), p = ixPre
     h = `<h3>Sort the data on board</h3><p class="sub">${ob.length ? `${ob.length} image${ob.length > 1 ? 's are' : ' is'} still waiting to be sent. Older images are worth less when they arrive. Decide what goes first and what is not worth the space.` : 'Nothing is waiting: your downlink kept up during the first six hours. Only the settings below are left to decide.'}</p>
     ${ob.length ? `<div class="pklist">${ob.map(r => `<div class="pk"><div class="id">#${r.id}</div><div class="meta">taken <b>${hhmm(r.t)}</b> · <b>${r.pts.toFixed(2)}</b> pts · <b>${r.sizeGB.toFixed(2)}</b> GB</div><div class="sg2">${[['first', 'Send first'], ['keep', 'Keep'], ['drop', 'Discard']].map(k => `<button class="${st(r.id) === k[0] ? 'on ' + k[0] : ''}" data-a="ixPk" data-id="${r.id}" data-v="${k[0]}" aria-pressed="${st(r.id) === k[0]}">${k[1]}</button>`).join('')}</div></div>`).join('')}</div>
     <div class="ixrow">${stat('Free storage now', free.toFixed(2) + ' GB of ' + M.P.storage.capGB)}${stat('Send first', x.first.length)}${stat('Discarded', x.drop.length, x.drop.length ? 'warn' : '')}</div>` : ''}${setToggles(1, [0, 1])}${prevLine(p)}`; }
-  if (ci === 2) { const solar = Math.round((M.scn ? M.scn.anomalySolar : M.C.anomalySolarFactor) * 100), low = Math.min(...p.tr.map(f => f.batteryPct));
-    h = `<h3>Plan the next six hours</h3><p class="sub">The solar array is damaged: only ${solar}% power until 18:00. Click each hour to choose what the satellite does. The bars show the battery at the end of each hour.</p>
-    <div class="slots">${x.sched.map((m, i) => { const b = p.tr[i] ? p.tr[i].batteryPct : 0; return `<button class="slot ${m}" data-a="ixSlot" data-i="${i}" title="${MODES[m][1]}" aria-label="${12 + i}:00, ${MODES[m][0]}: ${MODES[m][1]}. Battery after: ${Math.round(b)} percent. Click to change."><small>${12 + i}:00</small><b>${MODES[m][0]}</b><div class="bat"><i class="${b < 15 ? 'low' : b < 40 ? 'mid' : ''}" style="height:${Math.max(4, b * 0.46)}px"></i></div><small>${Math.round(b)}%</small></button>`; }).join('')}</div>
-    <div class="ixset"><div><div class="lab">Quick plans</div><button class="mini" data-a="ixPlan" data-v="full">All Full</button> <button class="mini" data-a="ixPlan" data-v="eco">All Eco</button> <button class="mini" data-a="ixPlan" data-v="alt">Image every other hour</button></div></div>
-    ${prevLine(p, low < 12 ? ' · <b style="color:#ff7a7a">battery reaches its 10% reserve</b>' : '')}`; }
+  if (ci === 2) { const sel = x.sel || 0, acts = [0, 1, 2].map(i => x.sched[i * 2] === 'rest' ? 'save' : 'take'), d = p.d, low = Math.min(...p.tr.map(f => f.batteryPct));
+    // Safe / Low / Critical use the engine's own thresholds: 10% reserve (images and downlink are skipped), 0% (essential systems lose power)
+    const st = low <= 0.5 ? ['Critical', 'bad', 'Battery runs out! Save power during one more period.'] : (low <= M.C.reservePct * 100 + 1e-9 || p.snap.missed) ? ['Low', 'warn', 'Low battery! Try saving power during one period.'] : ['Safe', 'good', ''];
+    // observation note per period, from the engine's storm-phase science target (new information until the target is reached)
+    let cum = 0; const note = [0, 1, 2].map(i => { if (acts[i] === 'save') return ['No images', '']; const was = cum; cum += p.snap.captured.filter(r => r.t >= 12 + i * 2 - 1e-9 && r.t < 14 + i * 2 - 1e-9).reduce((a, r) => a + r.pts, 0); return was >= M.C.phaseTarget - 1e-9 ? ['Already observed', 'dim'] : ['New storm information', 'new']; });
+    const card = (k, title, l1, l2) => `<button class="pe-act ${acts[sel] === k ? 'on' : ''}" role="radio" aria-checked="${acts[sel] === k}" data-a="ixAct" data-v="${k}"><span class="pe-ic">${PEIC[k]}</span><span class="pe-tx"><b>${title}</b><span>${l1}</span><small>${l2}</small></span><span class="pe-ck" aria-hidden="true">✓</span></button>`;
+    h = `<h3>Power Emergency!</h3><p class="sub">Your solar panels are damaged. Choose when to take storm images while protecting your battery.</p>
+    <div class="pe-pers" role="tablist" aria-label="Time periods">${PEPER.map((n, i) => `<button class="pe-per ${i === sel ? 'on' : ''}" role="tab" aria-selected="${i === sel}" data-a="ixPer" data-i="${i}"><small>${n[0]} · ${n[1]}</small><b><span class="pe-ic sm">${PEIC[acts[i]]}</span>${acts[i] === 'take' ? 'Take Images' : 'Save Power'}</b><em class="${note[i][1]}">${note[i][0]}</em></button>`).join('')}</div>
+    <div class="pe-q">What should your satellite do during this period?</div>
+    <div class="pe-acts" role="radiogroup" aria-label="Action for ${PEPER[sel][0]}">${card('take', 'Take Images', 'Collect storm information.', 'Uses more battery')}${card('save', 'Save Power', 'Protect your battery.', 'No new images')}</div>
+    <div class="ixrow pe-prev" id="ixPrev">${stat('Battery at 18:00', Math.round(d.batteryPct) + '%', st[1])}${stat('Useful storm data', fmt(d.deliveredScience) + ' / 12')}${stat('Battery status', st[0], st[1])}</div>
+    ${st[2] ? `<div class="pe-warn ${st[1]}" role="status">⚠ ${st[2]}</div>` : ''}`;
+    return `<div class="glass decision ix" id="ixPanel">${h}<div class="dfoot"><button class="btn blue" data-a="run">Run My 6-Hour Plan</button></div></div>`; }
   if (ci === 3) { const recs = id => p.c.records.find(r => r.id === id), cr = p.d.critical;
     h = `<h3>Emergency downlink</h3><p class="sub">Forecasters need a fresh storm image before 24:00. ${x.order.length ? 'Use the arrows to choose which stored image is sent first.' : 'Nothing is waiting on board, so new images go straight down.'}</p>
     ${x.order.length ? `<div class="pklist">${x.order.map((id, i) => { const r = recs(id), ok = r.status === 'delivered'; return `<div class="pk ${ok ? 'ok' : 'late'}"><div class="id">#${id}</div><div class="meta">taken <b>${hhmm(r.t)}</b> · <b>${r.pts.toFixed(2)}</b> pts · ${ok ? `arrives <b class="eta">${hhmm(r.deliveredAt)}</b> · worth <b>${Math.round(ENG.timelinessFactor(r.deliveredAt - r.t, M.C) * 100)}%</b>` : '<b class="eta">will not arrive by 24:00</b>'}</div><div><button class="mini" data-a="ixMove" data-i="${i}" data-d="-1" aria-label="Move image ${id} up" ${i ? '' : 'disabled'}>▲</button> <button class="mini" data-a="ixMove" data-i="${i}" data-d="1" aria-label="Move image ${id} down" ${i < x.order.length - 1 ? '' : 'disabled'}>▼</button></div></div>`; }).join('')}</div>` : ''}
@@ -158,8 +180,8 @@ document.addEventListener('input', e => { if (e.target.id === 'ixW') { const x =
 document.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b || S.screen !== 'ops' || !S.ops || S.ops.phase !== 'choose') return; const a = b.dataset.a, o = S.ops, x = o.ix && o.ix[o.ci]; if (!x) return;
   if (a === 'ixWhole') ixSetBox({ x: .5, y: .5, w: 1 });
   else if (a === 'ixPk') { const id = +b.dataset.id, v = b.dataset.v; x.first = x.first.filter(i => i !== id); x.drop = x.drop.filter(i => i !== id); if (v === 'first') x.first.push(id); if (v === 'drop') x.drop.push(id); ixRefresh(); }
-  else if (a === 'ixSlot') { const i = +b.dataset.i; x.sched[i] = MKEYS[(MKEYS.indexOf(x.sched[i]) + 1) % MKEYS.length]; ixRefresh(); const s = document.querySelector(`[data-a="ixSlot"][data-i="${i}"]`); if (s) s.focus(); }
-  else if (a === 'ixPlan') { const v = b.dataset.v; x.sched = v === 'alt' ? ['one', 'rest', 'one', 'rest', 'one', 'rest'] : Array(6).fill(v); ixRefresh(); }
+  else if (a === 'ixPer') { x.sel = +b.dataset.i; ixRefresh(); const f = document.querySelector(`[data-a="ixPer"][data-i="${x.sel}"]`); if (f) f.focus(); }
+  else if (a === 'ixAct') { const i = x.sel || 0, m = b.dataset.v === 'save' ? 'rest' : 'full'; x.sched[i * 2] = x.sched[i * 2 + 1] = m; ixRefresh(); const f = document.querySelector(`[data-a="ixAct"][data-v="${b.dataset.v}"]`); if (f) f.focus(); }
   else if (a === 'ixMove') { const i = +b.dataset.i, j = i + (+b.dataset.d); if (j >= 0 && j < x.order.length) { [x.order[i], x.order[j]] = [x.order[j], x.order[i]]; ixRefresh(); } }
   else if (a === 'ixNew') { x.newFirst = b.dataset.v === '1'; ixRefresh(); } });
 
@@ -172,7 +194,7 @@ function ixAfter(ci) { const o = S.ops, M = o.M, x = o.ix && o.ix[ci], sn = M.ch
   const L = o.log[ci], ch = chx('storm', ci), lab = gi => (ch.groups[gi].opts.find(p => p[0] === o.choice[ci][gi]) || [])[1];
   if (L) { if (ci === 0) { const sc = ENG.boxScan(M, x.box, 0); L.choices = `${lab(0)} + scan box ${Math.round(sc.cover)}% of the disk`; L.good = String(L.good).replace(/\(scan coverage[^)]*\)/, `(area scanned ${Math.round(sc.cover)}%, box detail ${Math.round(sc.detail * 100)}%)`); }
     if (ci === 1) L.choices = `${lab(0)} + ${lab(1)}${x.first.length || x.drop.length ? ` + ${x.first.length} sent first, ${x.drop.length} discarded` : ''}`;
-    if (ci === 2) L.choices = x.sched.map(m => MODES[m][0]).join(' · ');
+    if (ci === 2) L.choices = peLabel(x.sched);
     if (ci === 3) L.choices = `${lab(0)} + ${lab(1)} + new images ${x.newFirst ? 'jump the queue' : 'wait their turn'}`; }
   o.notes = o.notes || {}; (o.notes[ci] = o.notes[ci] || []).unshift(t); render(); }
 
@@ -184,7 +206,7 @@ function ixReport() { const o = S.ops, M = o && o.M; if (!M || !o.ix) return; co
   add('Challenge 1: other image quality', (e, dd) => { dd[0][0] = dd[0][0] === 'std' ? 'high' : 'std'; });
   if (o.ix[1]) add('Challenge 2: no manual sorting', e => { if (!e[1].first.length && !e[1].drop.length) return false; e[1] = null; });
   add('Challenge 2: other image quality', (e, dd) => { dd[1][0] = dd[1][0] === 'std' ? 'high' : 'std'; }); add('Challenge 2: other full-storage rule', (e, dd) => { dd[1][1] = dd[1][1] === 'keep' ? 'prio' : 'keep'; });
-  if (o.ix[2]) [['All Full', Array(6).fill('full')], ['All Eco', Array(6).fill('eco')], ['image every other hour', ['one', 'rest', 'one', 'rest', 'one', 'rest']]].forEach(k => add('Challenge 3: ' + k[0], e => { if (e[2].sched.join() === k[1].join()) return false; e[2] = { sched: k[1] }; }));
+  if (o.ix[2]) [0, 1, 2].forEach(i => add(`Challenge 3: ${o.ix[2].sched[i * 2] === 'rest' ? 'take images' : 'save power'} ${PEPER[i][0]}`, e => { const m = e[2].sched[i * 2] === 'rest' ? 'full' : 'rest'; e[2].sched[i * 2] = e[2].sched[i * 2 + 1] = m; }));
   if (o.ix[3]) add(`Challenge 4: new images ${o.ix[3].newFirst ? 'wait their turn' : 'jump the queue'}`, e => { e[3].newFirst = !e[3].newFirst; });
   add('Challenge 4: other downlink speed', (e, dd) => { dd[3][0] = dd[3][0] === 'std' ? 'fast' : 'std'; }); add('Challenge 4: other power mode', (e, dd) => { dd[3][1] = dd[3][1] === 'full' ? 'eco' : 'full'; });
   const best = rows.slice().sort((a, b) => b[1] - a[1])[0];
