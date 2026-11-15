@@ -321,6 +321,7 @@ input{font:inherit;color:inherit}
 <script src="engine.js"></script>
 <script src="wildfire-engine.js"></script>
 <script src="flood-engine.js"></script>
+<script src="mission-design.js"></script>
 <script>
 const GLOBE='assets/globe.webp';
 const $=s=>document.querySelector(s);
@@ -469,8 +470,8 @@ V.build=()=>{const t=totals();const okKg=t.kg<=MAX_KG,okM=t.m<=MAX_M,ok=okKg&&ok
     ${meter('Total mass',t.kg,MAX_KG,v=>`${v.toLocaleString()} / ${MAX_KG.toLocaleString()} kg`,okKg?(t.kg/MAX_KG>.95?'warn':''):'bad')}
     ${meter('Mission budget',t.m,MAX_M,v=>`$${v}M / $${MAX_M}M`,okM?(t.m/MAX_M>.95?'warn':''):'bad')}
     <div class="muted" style="font-size:12px;margin-top:8px">Includes fixed spacecraft bus: ${BUS.kg.toLocaleString()} kg · $${BUS.costM}M (structure, propulsion, fuel, thermal).</div>
-    ${!ok?`<div class="muted" style="font-size:12px;margin-top:6px;color:var(--bad)">${!okKg?`Too heavy by ${(t.kg-MAX_KG).toLocaleString()} kg. `:''}${!okM?`Over budget by $${t.m-MAX_M}M. Try a Standard part.`:''}</div>`:''}
-    <button class="btn good" style="width:100%;margin-top:16px;height:48px" data-a="mrr" data-m="storm" ${ok?'':'disabled'}>Readiness review →</button></div>
+    ${!ok?`<div class="muted" style="font-size:12px;margin-top:6px;color:var(--bad)">${!okKg?MissionDesign.launchCheck('storm',t.kg).message+' ':''}${!okM?`Over budget by $${t.m-MAX_M}M. Try a Standard part.`:''}</div>`:''}
+    <button class="btn good" style="width:100%;margin-top:16px;height:48px" data-a="mrr" data-m="storm">Design Check →</button></div>
   </div>
   <div class="pad">${rocketSVG('rocket')}
    <div class="glass nose"><div class="t">Inside the nose cone</div>${PARTS.map(p=>`<div class="r"><span class="muted">${p.label.replace('Scientific ','')}</span><b class="${S.design[p.key]}">${S.design[p.key]==='adv'?'Advanced':'Standard'}</b></div>`).join('')}<div class="muted" style="font-size:12px;margin-top:10px">Orbit: Geostationary (fixed) · 35,786 km</div></div>
@@ -561,7 +562,7 @@ V.report=()=>{const o=S.ops,s=scoreCard(),x=s.x,M=o.M;
       Collected science ${fmt(x.collectedScience)} pts · per phase ${x.collectedByPhase.map(fmt).join(' / ')} · delivered per phase ${x.deliveredByPhase.map(fmt).join(' / ')} (target 3 each)<br>
       Optional energy used ${fmt(M.energy.imaging+M.energy.comms)} kWh, ${Math.round((ed.energyYield||0)*100)}% of it produced delivered science · ${Math.round((ed.dataYield||0)*100)}% of generated data reached Earth (age-weighted)<br>
       Essential systems powered ${fmt(M.essentialHours)} / 24 h · incidents ${M.incidents}</div></details></div>
-   ${reportExtras('storm')}<div class="acts-row"><button class="btn blue" data-a="retry">Retry, same satellite</button><button class="btn ghost" data-a="redesign">Redesign satellite</button><button class="btn primary" data-a="nextMission">Next mission →</button></div>
+   ${reportExtras('storm')}<div class="acts-row"><button class="btn blue" data-a="retry">Retry, same satellite</button><button class="btn good" data-a="improve" data-m="storm">Improve My Mission</button><button class="btn primary" data-a="nextMission">Next mission →</button></div>
   </div></div></div>`};
 
 /* ================== SIMULATION ================== */
@@ -624,6 +625,8 @@ const FFX={instrument:p=>`${p.sizeGB} GB/image · ${p.basePts} pt${p.basePts>1?'
  observation:p=>`Up to ${p.perPass} image${p.perPass>1?'s':''} per pass`,power:p=>`${p.solarKW} kW solar (0 in eclipse) · ${p.battKWh} kWh battery`,
  comms:p=>`${p.rateGBh} GB/hour during contacts · +${p.commKW} kW`,storage:p=>`${p.capGB} GB on board`};
 const FPARTS=Object.keys(FLABEL).map(k=>({key:k,label:FLABEL[k],std:WC.parts[k].std,adv:WC.parts[k].adv}));
+const fA=()=>WF.archProfile((S.f&&S.f.M&&S.f.M.arch&&(S.screen==='fops'||S.screen==='freport'))?S.f.M.arch.id:(S.arch?S.arch.fire:undefined)); // architecture being flown, else the one selected
+const pT=i=>fmtH(fA().passes[i].h);
 const fmtH=h=>{const H=Math.floor(h+1e-9),m=Math.round((h-H)*60);return `${String(H).padStart(2,'0')}:${String(m).padStart(2,'0')}`};
 const CHF=[
  {title:'Initial fire detection',sub:'First pass over the reported fire at 02:00.',hours:'00:00–06:00',win:'Pass 02:00 · contact 03:00–04:00',
@@ -652,22 +655,23 @@ const CHF=[
   lesson:'Information only helps responders if it reaches them in time.'},
 ];
 S.fdesign={instrument:'std',observation:'std',power:'std',comms:'std',storage:'std'};
-function resetF(){S.f={ci:0,phase:'alert',choice:CHF.map(c=>c.groups.map(g=>g.opts[0][0])),M:Object.assign(WF.newMission(S.fdesign,S.scn.fire),{traceOn:true}),log:[],delta:{}};}
+function resetF(){S.f={ci:0,phase:'alert',choice:CHF.map(c=>c.groups.map(g=>g.opts[0][0])),M:Object.assign(WF.newMission(S.fdesign,S.scn.fire,archOf('fire')),{traceOn:true}),log:[],delta:{}};}
 function fTotals(){let kg=WC.bus.kg,cr=WC.bus.credits;FPARTS.forEach(p=>{const o=p[S.fdesign[p.key]];kg+=o.kg;cr+=o.credits});return{kg,cr}}
 function fD(){const M=S.f.M,d=WF.derive(M),t=M.step*WC.stepMin/60;
   const crit=M.items.find(i=>i.kind==='alert'&&i.critical);
   d.t=t;
-  d.critStatus=t<20?'Not yet required':(crit&&crit.status==='delivered')?(crit.deliveredAt-crit.t<=WC.alertOnTimeH+1e-9?'Delivered on time':'Delivered late'):t>=24-1e-9?'Missed':crit?'Pending':(t>20.2?'Not detected':'Pending');
-  d.finalStatus=t<20?'Not yet required':d.finalUpdate?'Delivered':t>=24-1e-9?'Missed':'Pending';
-  const nextP=WC.passes.map(p=>p.h).find(h=>h>=t-1e-9),nextC=WC.contacts.map(c=>c[0]).find(h=>h>=t-1e-9);
+  const lastP=fA().passes[3].h;
+  d.critStatus=t<lastP?'Not yet required':(crit&&crit.status==='delivered')?(crit.deliveredAt-crit.t<=WC.alertOnTimeH+1e-9?'Delivered on time':'Delivered late'):t>=24-1e-9?'Missed':crit?'Pending':(t>lastP+0.2?'Not detected':'Pending');
+  d.finalStatus=t<lastP?'Not yet required':d.finalUpdate?'Delivered':t>=24-1e-9?'Missed':'Pending';
+  const nextP=fA().passes.map(p=>p.h).find(h=>h>=t-1e-9),nextC=fA().contacts.map(c=>c[0]).find(h=>h>=t-1e-9);
   d.nextPass=nextP===undefined?'none':fmtH(nextP);d.nextContact=nextC===undefined?'none':fmtH(nextC);
   return d;}
 const EVPOS={E1:[24,44],E1b:[31,54],E1c:[22,62],E1d:[36,40],E2:[63,24],E3:[57,42],E4:[71,36],E5:[78,76]};
 const REG={A:{l:10,t:24,w:38,h:52,n:'A · Known fire'},B:{l:52,t:10,w:36,h:46,n:'B · Forest'},C:{l:62,t:62,w:30,h:30,n:'C · Community'}};
 function fireArt(reveal){const M=S.f.M;const det=[...M.detected];
   const regs=Object.entries(REG).map(([k,r])=>`<div class="freg ${k==='C'?'comm':''}" style="left:${r.l}%;top:${r.t}%;width:${r.w}%;height:${r.h}%"><b>${r.n}</b></div>`).join('');
-  const shown=reveal?WC.events:WC.events.filter(e=>M.detected.has(e.id)&&(!S.live||WC.passes[e.pass].h<=S.live.t+1e-9));
-  const hs=shown.map(e=>{const [x,y]=EVPOS[e.id];const miss=!M.detected.has(e.id);const cont=/continued/.test(e.name);return `<div class="hot ${miss?'missed':''}" title="${e.name}" style="left:${x}%;top:${y}%">${reveal&&(!cont||miss)?`<span class="lb ${x>65?'l':''}">${cont?'Known fire, '+fmtH(WC.passes[e.pass].h):e.name}${miss?' · missed':''}</span>`:''}</div>`}).join('');
+  const shown=reveal?WC.events:WC.events.filter(e=>M.detected.has(e.id)&&(!S.live||fA().passes[e.pass].h<=S.live.t+1e-9));
+  const hs=shown.map(e=>{const [x,y]=EVPOS[e.id];const miss=!M.detected.has(e.id);const cont=/continued/.test(e.name);return `<div class="hot ${miss?'missed':''}" title="${e.name}" style="left:${x}%;top:${y}%">${reveal&&(!cont||miss)?`<span class="lb ${x>65?'l':''}">${cont?'Known fire, '+pT(e.pass):e.name}${miss?' · missed':''}</span>`:''}</div>`}).join('');
   return `<div class="fmap"></div>${regs}${hs}`;}
 function fScan(){const o=S.f;const fp=(o.ci===3?o.choice[3][0]:o.ci===0?o.choice[0][0]:(o.log[0]?o.choice[0][0]:'wide'));
   return fp==='targeted'?{l:REG.A.l-1,t:REG.A.t-1,w:REG.A.w+2,h:REG.A.h+2}:{l:6,t:6,w:88,h:88};}
@@ -705,8 +709,8 @@ V.fbuild=()=>{const t=fTotals();const okKg=t.kg<=WC.limits.kg,okC=t.cr<=WC.limit
     ${meter('Total mass',t.kg,WC.limits.kg,v=>`${v.toLocaleString()} / ${WC.limits.kg.toLocaleString()} kg`,okKg?(t.kg/WC.limits.kg>.95?'warn':''):'bad')}
     ${meter('Mission budget',t.cr,WC.limits.credits,v=>`${v} / ${WC.limits.credits} credits`,okC?(t.cr/WC.limits.credits>.95?'warn':''):'bad')}
     <div class="muted" style="font-size:12px;margin-top:8px">Includes fixed bus and propellant: ${WC.bus.kg} kg · ${WC.bus.credits} credits.</div>
-    ${!ok?`<div class="muted" style="font-size:12px;margin-top:6px;color:var(--bad)">${!okKg?`Too heavy by ${t.kg-WC.limits.kg} kg. `:''}${!okC?`Over budget by ${t.cr-WC.limits.credits} credits. `:''}Try a Standard part.</div>`:''}
-    <button class="btn good" style="width:100%;margin-top:16px;height:48px" data-a="mrr" data-m="fire" ${ok?'':'disabled'}>Readiness review →</button></div>
+    ${!ok?`<div class="muted" style="font-size:12px;margin-top:6px;color:var(--bad)">${!okKg?MissionDesign.launchCheck('fire',t.kg).message+' ':''}${!okC?`Over budget by ${t.cr-WC.limits.credits} credits. `:''}Try a Standard part.</div>`:''}
+    <button class="btn good" style="width:100%;margin-top:16px;height:48px" data-a="mrr" data-m="fire">Design Check →</button></div>
   </div>
   <div class="pad">${rocketSVG('rocket','WILDFIRE WATCH')}
    <div class="glass nose"><div class="t">Inside the nose cone</div>${FPARTS.map(p=>`<div class="r"><span class="muted">${p.label}</span><b class="${S.fdesign[p.key]}">${S.fdesign[p.key]==='adv'?'Advanced':'Standard'}</b></div>`).join('')}<div class="muted" style="font-size:12px;margin-top:10px">Orbit: low Earth, near-polar · 824 km · ~101 min per orbit</div></div>
@@ -741,20 +745,20 @@ function fsim(){const o=S.f,ci=o.ci,c=o.choice[ci],M=o.M,g=CHF[ci].groups;
  const waitGB=M.items.filter(i=>i.status==='stored').reduce((a,i)=>a+i.remainingGB,0);
  let good='',trade='',met=true,badge='Objective met';
  const sentTxt=`${sentA.length} alert(s) and ${sentI.length} image(s) reached Earth this period.`;
- if(ci===0){good=imgs.length?`${imgs.length} image(s) at 02:00 found: ${found.length?found.join(', '):'nothing strong enough to detect'}. ${sentTxt}`:'No image was taken.';
+ if(ci===0){good=imgs.length?`${imgs.length} image(s) at ${pT(0)} found: ${found.length?found.join(', '):'nothing strong enough to detect'}. ${sentTxt}`:'No image was taken.';
    trade=`${c[0]==='wide'?'Wide survey: weaker detection everywhere.':'Targeted scan: regions B and C were not observed at all.'} ${c[1]==='std'?'Standard mode may miss weaker fires.':`High-detail images are ${(M.P.instrument.sizeGB).toFixed(1)} GB each.`} ${fmt(waitGB)} GB still waiting to be sent.${skipped.length?' '+skipped.join('; ')+'.':''}`;
    met=found.length>0;badge=met?'Fire detected':'Nothing detected';}
- else if(ci===1){good=`${sentTxt} ${imgs.length?`08:00 pass found: ${found.length?found.join(', '):'nothing new'}.`:''}`;
+ else if(ci===1){good=`${sentTxt} ${imgs.length?`${pT(1)} pass found: ${found.length?found.join(', '):'nothing new'}.`:''}`;
    const late=sentA.filter(a=>a.deliveredAt-a.t>WC.alertOnTimeH+1e-9).length;
    trade=`${c[0]==='fifo'?'Oldest data went first'+(late?`: ${late} alert(s) arrived more than 2 h after detection.`:'.'):'Alerts went first; images waited.'} ${c[1]==='compress'?'Compressed images lost 25% of their science value.':''} ${fmt(waitGB)} GB still on board.`;
    met=!late;badge=met?'Contact used':'Alerts late';}
  else if(ci===2){const safe=evs.some(m=>m.includes('Safe mode entered'));
-   good=`${imgs.length?`${imgs.length} image(s) at 14:00 (${found.length?found.join(', '):'no detection'}).`:'14:00 pass not imaged.'} ${sentTxt}`;
-   trade=`Battery ${Math.round(before.batteryPct)}% → ${Math.round(after.batteryPct)}% with solar at ${faultPct('fire')} and an eclipse every orbit.${safe?' The satellite dropped into SAFE MODE (health −10).':''}${skipped.length?' '+skipped.join('; ')+'.':''}${M.failed?' Critical failure.':''}`;
+   good=`${imgs.length?`${imgs.length} image(s) at ${pT(2)} (${found.length?found.join(', '):'no detection'}).`:`${pT(2)} pass not imaged.`} ${sentTxt}`;
+   trade=`Battery ${Math.round(before.batteryPct)}% → ${Math.round(after.batteryPct)}% with solar at ${faultPct('fire')}${fA().eclipse.eclipseSteps.length?' and an eclipse every orbit':' (this orbit has no eclipse)'}.${safe?' The satellite dropped into SAFE MODE (health −10).':''}${skipped.length?' '+skipped.join('; ')+'.':''}${M.failed?' Critical failure.':''}`;
    met=!safe&&!M.failed;badge=M.failed?'Critical failure':safe?'Safe mode':'Anomaly managed';}
  else {const e5=fresh.find(i=>i.kind==='alert'&&i.critical);
    good=`${imgs.length?`Final pass found: ${found.length?found.join(', '):'nothing'}.`:'No final image.'} ${sentTxt}`;
-   trade=`${e5?(after.critStatus==='Delivered on time'?`New-hotspot alert delivered ${fmt(e5.deliveredAt-e5.t)} h after detection.`:`New-hotspot alert ${after.critStatus.toLowerCase()}.`):'The new hotspot in region C was never detected.'} ${after.finalUpdate?'A 20:00 image reached Earth before the deadline.':'No 20:00 image reached Earth by 24:00.'} ${M.items.filter(i=>i.status==='stored').length} item(s) never left the satellite.`;
+   trade=`${e5?(after.critStatus==='Delivered on time'?`New-hotspot alert delivered ${fmt(e5.deliveredAt-e5.t)} h after detection.`:`New-hotspot alert ${after.critStatus.toLowerCase()}.`):'The new hotspot in region C was never detected.'} ${after.finalUpdate?`A ${pT(3)} image reached Earth before the deadline.`:`No ${pT(3)} image reached Earth by 24:00.`} ${M.items.filter(i=>i.status==='stored').length} item(s) never left the satellite.`;
    met=after.critStatus==='Delivered on time'&&after.finalUpdate;badge=met?'Responders updated':'Update incomplete';}
  o.delta={cov:after.coveredPasses-before.coveredPasses,pts:after.deliveredScience-before.deliveredScience,batt:after.batteryPct-before.batteryPct,st:after.storagePct-before.storagePct,health:after.health-before.health};
  o.log[ci]={choices:chName,good,trade,met,badge};}
@@ -764,15 +768,15 @@ function showFAlert(){const o=S.f,ch=chx('fire',o.ci);
    <div class="acts"><button class="btn ghost" data-a="falertBack">Go back</button><button class="btn blue" data-a="faccept">Accept challenge</button></div></div></div>`;}
 V.freport=()=>{const o=S.f,M=o.M,sc=WF.score(M),x=fD();
  const chip=sc.outcome==='Mission Success'?'good':sc.outcome==='Partial Success'?'warn':'bad';
- const req=[[`Delivered science ≥ ${WC.requiredScience} pts`,sc.gates.G1,`${fmt(x.deliveredScience)} / ${WC.requiredScience}`],['New-hotspot alert within 2 h',sc.gates.G2,x.critStatus],['Final update: a 20:00 image delivered by 24:00',sc.gates.G3,x.finalStatus],['Essential systems running',sc.gates.G4,x.health+'% health']];
+ const req=[[`Delivered science ≥ ${WC.requiredScience} pts`,sc.gates.G1,`${fmt(x.deliveredScience)} / ${WC.requiredScience}`],['New-hotspot alert within 2 h',sc.gates.G2,x.critStatus],[`Final update: a ${pT(3)} image delivered by 24:00`,sc.gates.G3,x.finalStatus],['Essential systems running',sc.gates.G4,x.health+'% health']];
  const fpFor=p=>p<3?o.choice[0][0]:o.choice[3][0];
  const reveal=WC.events.map(e=>{const d=M.detected.has(e.id);let why='';if(!d){const imaged=M.items.some(i=>i.kind==='image'&&i.pass===e.pass);
    why=!imaged?'pass not imaged':!WC.footprint[fpFor(e.pass)].regions.includes(e.region)?'outside footprint':'too weak for your instrument/mode';}
    const al=M.items.find(i=>i.kind==='alert'&&i.event===e.id);
-   return `<div class="req"><div class="ck ${d?'y':'n'}">${d?'✓':'✕'}</div><span>${fmtH(WC.passes[e.pass].h)} · ${e.name} (region ${e.region}, ${e.cls.toLowerCase()} activity)</span><b style="color:${d?'var(--good)':'var(--bad)'}">${d?(al&&al.status==='delivered'?'alert sent '+fmtH(al.deliveredAt):'alert not sent'):'missed: '+why}</b></div>`}).join('');
+   return `<div class="req"><div class="ck ${d?'y':'n'}">${d?'✓':'✕'}</div><span>${pT(e.pass)} · ${e.name} (region ${e.region}, ${e.cls.toLowerCase()} activity)</span><b style="color:${d?'var(--good)':'var(--bad)'}">${d?(al&&al.status==='delivered'?'alert sent '+fmtH(al.deliveredAt):'alert not sent'):'missed: '+why}</b></div>`}).join('');
  const lessons=[];
  if(!sc.gates.G2)lessons.push(M.detected.has('E5')?'You detected the new hotspot near the community, but its alert did not reach responders within 2 hours.':'The new hotspot near the community was never detected. Only a wide search on the final pass can see region C, with enough detection strength.');
- if(!sc.gates.G3)lessons.push('No image from the final pass reached Earth before 24:00. Big images need more contact time than the last two contacts provide.');
+ if(!sc.gates.G3)lessons.push('No image from the final pass reached Earth before 24:00. Big images need more contact time than is left after the final pass.');
  if(!sc.gates.G1)lessons.push('Too little useful science reached Earth in time. Images that arrive hours later are worth less, and images still on board count for nothing.');
  if(M.events.some(e=>e.msg.includes('Safe mode entered')))lessons.push('The battery fell below 5% during the anomaly and the satellite entered safe mode.');
  if(!lessons.length)lessons.push('You watched the right places and got the information down in time. Try a cheaper design: can it still succeed?');
@@ -791,7 +795,7 @@ V.freport=()=>{const o=S.f,M=o.M,sc=WF.score(M),x=fD();
    <div class="glass panel" style="margin-top:16px"><h2 style="font-size:28px;margin-bottom:6px">Your decisions & their trade-offs</h2>
     ${o.log.map((L,i)=>`<div class="dec"><div class="t"><b>${CHF[i].title}</b><span>${L.choices}</span></div><div class="g">+ ${L.good}</div><div class="w">− ${L.trade}</div></div>`).join('')}</div>
    <div class="glass panel" style="margin-top:16px"><h2 style="font-size:26px;margin-bottom:8px">Mission analysis</h2><ul class="muted" style="line-height:1.6;padding-left:18px">${lessons.map(l=>`<li>${l}</li>`).join('')}</ul></div>
-   ${reportExtras('fire')}<div class="acts-row"><button class="btn blue" data-a="fretry">Retry, same satellite</button><button class="btn ghost" data-a="fredesign">Redesign satellite</button><button class="btn primary" data-a="go" data-to="missions">All missions →</button></div>
+   ${reportExtras('fire')}<div class="acts-row"><button class="btn blue" data-a="fretry">Retry, same satellite</button><button class="btn good" data-a="improve" data-m="fire">Improve My Mission</button><button class="btn primary" data-a="go" data-to="missions">All missions →</button></div>
   </div></div></div>`};
 
 
@@ -878,8 +882,8 @@ V.lbuild=()=>{const t=lTotals();const okKg=t.kg<=LC.limits.kg,okM=t.m<=LC.limits
     ${meter('Total mass',t.kg,LC.limits.kg,v=>`${v.toLocaleString()} / ${LC.limits.kg.toLocaleString()} kg`,okKg?(t.kg/LC.limits.kg>.95?'warn':''):'bad')}
     ${meter('Mission budget',t.m,LC.limits.costM,v=>`$${v}M / $${LC.limits.costM}M`,okM?(t.m/LC.limits.costM>.95?'warn':''):'bad')}
     <div class="muted" style="font-size:12px;margin-top:8px">Includes fixed bus: ${LC.bus.kg.toLocaleString()} kg · $${LC.bus.costM}M.</div>
-    ${!ok?`<div class="muted" style="font-size:12px;margin-top:6px;color:var(--bad)">${!okKg?`Too heavy by ${t.kg-LC.limits.kg} kg. `:''}${!okM?`Over budget by $${t.m-LC.limits.costM}M. `:''}Radar cannot fly with High-Capacity Power.</div>`:''}
-    <button class="btn good" style="width:100%;margin-top:16px;height:48px" data-a="mrr" data-m="flood" ${ok?'':'disabled'}>Readiness review →</button></div>
+    ${!ok?`<div class="muted" style="font-size:12px;margin-top:6px;color:var(--bad)">${!okKg?MissionDesign.launchCheck('flood',t.kg).message+' ':''}${!okM?`Over budget by $${t.m-LC.limits.costM}M. `:''}Swap a part to launch.</div>`:''}
+    <button class="btn good" style="width:100%;margin-top:16px;height:48px" data-a="mrr" data-m="flood">Design Check →</button></div>
   </div>
   <div class="pad">${rocketSVG('rocket','FLOOD WATCH')}
    <div class="glass nose"><div class="t">Inside the nose cone</div>${LPARTS.map(p=>`<div class="r"><span class="muted">${p.label}</span><b class="${S.ldesign[p.key]}">${p[S.ldesign[p.key]].name.split(' ').slice(0,2).join(' ')}</b></div>`).join('')}<div class="muted" style="font-size:12px;margin-top:10px">Orbit: sun-synchronous LEO · 747 km · ~100 min per orbit</div></div>
@@ -958,11 +962,11 @@ V.lreport=()=>{const o=S.l,M=o.M,sc=FL.score(M),x=lD(),opt=M.P.instrument.kind==
    <div class="glass panel" style="margin-top:16px"><h2 style="font-size:28px;margin-bottom:6px">Your decisions & their trade-offs</h2>
     ${o.log.map((L,i)=>`<div class="dec"><div class="t"><b>${LCH[i].title}</b><span>${L.choices}</span></div><div class="g">+ ${L.good}</div><div class="w">− ${L.trade}</div></div>`).join('')}</div>
    <div class="glass panel" style="margin-top:16px"><h2 style="font-size:26px;margin-bottom:8px">Mission analysis</h2><ul class="muted" style="line-height:1.6;padding-left:18px">${lessons.map(l=>`<li>${l}</li>`).join('')}</ul></div>
-   ${reportExtras('flood')}<div class="acts-row"><button class="btn blue" data-a="lretry">Retry, same satellite</button><button class="btn ghost" data-a="lredesign">Redesign satellite</button><button class="btn primary" data-a="go" data-to="missions">All missions →</button></div>
+   ${reportExtras('flood')}<div class="acts-row"><button class="btn blue" data-a="lretry">Retry, same satellite</button><button class="btn good" data-a="improve" data-m="flood">Improve My Mission</button><button class="btn primary" data-a="go" data-to="missions">All missions →</button></div>
   </div></div></div>`};
 
 /* ================== ROUTER ================== */
-const BGKEY={signin:'signin',ready:'ready',dest:'dest',missions:'missions',build:'build',ops:'ops',report:'report',fbuild:'build',fops:'ops',freport:'report',lbuild:'build',lops:'ops',lreport:'report'};
+const BGKEY={brief:'missions',signin:'signin',ready:'ready',dest:'dest',missions:'missions',build:'build',ops:'ops',report:'report',fbuild:'build',fops:'ops',freport:'report',lbuild:'build',lops:'ops',lreport:'report'};
 function go(s){S.screen=s;render();window.scrollTo(0,0)}
 function render(){setBg(BGKEY[S.screen]);$('#app').innerHTML=V[S.screen]();
   const f=$('#signForm');if(f)f.onsubmit=e=>{e.preventDefault();go('ready')};}
@@ -971,9 +975,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b
   switch(a){
    case'go':go(b.dataset.to);break;
    case'toast':toast(b.dataset.msg);break;
-   case'startMission':S.mission='storm';go('build');break;
-   case'fstart':S.mission='fire';go('fbuild');break;
-   case'lstart':S.mission='flood';go('lbuild');break;
+   case'startMission':S.mission='storm';go('brief');break;
+   case'fstart':S.mission='fire';go('brief');break;
+   case'lstart':S.mission='flood';go('brief');break;
    case'lpart':S.ldesign[b.dataset.k]=b.dataset.v;render();break;
    case'llaunch':S.mission='flood';runLaunch();break;
    case'laccept':$('#layer').innerHTML='';S.l.phase='choose';render();break;
@@ -1027,5 +1031,6 @@ render();
 <script src="launch3d.js"></script>
 <script src="viz.js"></script>
 <script src="floodui.js"></script>
+<script src="design-ui.js"></script>
 </body>
 </html>

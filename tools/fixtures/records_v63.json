@@ -1,0 +1,627 @@
+[
+ {
+  "game": "Earth Missions",
+  "gameVersion": "6.3",
+  "mission": "storm",
+  "missionCode": "STORM-PRACTICE",
+  "scenarioId": "storm@1.0:PRACTICE",
+  "scenarioVersion": "1.0",
+  "engineVersion": "storm-3.6.0",
+  "mode": "practice",
+  "design": {
+   "instrument": "std",
+   "observation": "std",
+   "power": "std",
+   "comms": "std",
+   "storage": "std"
+  },
+  "decisions": [
+   [
+    "high",
+    "wide"
+   ],
+   [
+    "high",
+    "keep"
+   ],
+   [
+    "normal",
+    "freq"
+   ],
+   [
+    "fast",
+    "full"
+   ]
+  ],
+  "manipulations": [
+   null,
+   null,
+   null,
+   null
+  ],
+  "result": {
+   "score": 95,
+   "outcome": "Mission Success",
+   "science": 35,
+   "delivery": 35,
+   "efficiency": 15.43,
+   "reliability": 10,
+   "gates": {
+    "G1": true,
+    "G2": true,
+    "G3": true,
+    "G4": true
+   }
+  },
+  "simulatedEvents": []
+ },
+ {
+  "game": "Earth Missions",
+  "gameVersion": "6.3",
+  "mission": "storm",
+  "missionCode": "STORM-7K3QX",
+  "scenarioId": "storm@1.0:7K3QX",
+  "scenarioVersion": "1.0",
+  "engineVersion": "storm-3.6.0",
+  "mode": "class",
+  "design": {
+   "instrument": "std",
+   "observation": "std",
+   "power": "adv",
+   "comms": "adv",
+   "storage": "std"
+  },
+  "decisions": [
+   [
+    "std",
+    "focus"
+   ],
+   [
+    "high",
+    "prio"
+   ],
+   [
+    "save",
+    "occ"
+   ],
+   [
+    "fast",
+    "eco"
+   ]
+  ],
+  "manipulations": [
+   {
+    "box": {
+     "x": 0.5249999999999999,
+     "y": 0.5325,
+     "w": 0.6
+    }
+   },
+   {
+    "first": [
+     2
+    ],
+    "drop": [
+     1
+    ]
+   },
+   {
+    "sched": [
+     "full",
+     "one",
+     "eco",
+     "rest",
+     "one",
+     "full"
+    ]
+   },
+   {
+    "order": [],
+    "newFirst": false
+   }
+  ],
+  "result": {
+   "score": 100,
+   "outcome": "Mission Success",
+   "science": 35,
+   "delivery": 35,
+   "efficiency": 20,
+   "reliability": 10,
+   "gates": {
+    "G1": true,
+    "G2": true,
+    "G3": true,
+    "G4": true
+   }
+  },
+  "simulatedEvents": [
+   "Heavy rain at the ground station: downlink rate halved, 03:00–05:00.",
+   "Solar generation 30% of nominal, hours 12–18 (Practice value: 35%)."
+  ]
+ },
+ {
+  "game": "Earth Missions",
+  "gameVersion": "6.3",
+  "mission": "storm",
+  "missionCode": "STORM-AB2CD",
+  "scenarioId": "storm@1.0:AB2CD",
+  "scenarioVersion": "1.0",
+  "engineVersion": "storm-3.6.0",
+  "mode": "class",
+  "design": {
+   "instrument": "adv",
+   "observation": "adv",
+   "power": "std",
+   "comms": "std",
+   "storage": "std"
+  },
+  "decisions": [
+   [
+    "high",
+    "wide"
+   ],
+   [
+    "std",
+    "keep"
+   ],
+   [
+    "normal",
+    "freq"
+   ],
+   [
+    "std",
+    "full"
+   ]
+  ],
+  "manipulations": [
+   null,
+   null,
+   null,
+   null
+  ],
+  "result": {
+   "score": 63,
+   "outcome": "Partial Success",
+   "science": 33.95,
+   "delivery": 16.73,
+   "efficiency": 2.73,
+   "reliability": 9.88,
+   "gates": {
+    "G1": false,
+    "G2": true,
+    "G3": false,
+    "G4": true
+   }
+  },
+  "simulatedEvents": [
+   "Heavy rain at the ground station: downlink rate halved, 05:00–07:00.",
+   "Solar generation 30% of nominal, hours 12–18 (Practice value: 35%)."
+  ]
+ },
+ {
+  "game": "Earth Missions",
+  "gameVersion": "6.3",
+  "mission": "fire",
+  "missionCode": "FIRE-PRACTICE",
+  "scenarioId": "fire@1.0:PRACTICE",
+  "scenarioVersion": "1.0",
+  "engineVersion": "fire-3.2.1",
+  "mode": "practice",
+  "design": {
+   "instrument": "std",
+   "observation": "std",
+   "power": "std",
+   "comms": "std",
+   "storage": "std"
+  },
+  "decisions": [
+   [
+    "wide",
+    "high"
+   ],
+   [
+    "alerts",
+    "full"
+   ],
+   [
+    "normal",
+    "image"
+   ],
+   [
+    "wide",
+    "std"
+   ]
+  ],
+  "manipulations": [
+   null,
+   null,
+   null,
+   null
+  ],
+  "result": {
+   "score": 98,
+   "outcome": "Mission Success",
+   "science": 34.44,
+   "delivery": 35,
+   "efficiency": 18.78,
+   "reliability": 10,
+   "gates": {
+    "G1": true,
+    "G2": true,
+    "G3": true,
+    "G4": true
+   }
+  },
+  "simulatedEvents": []
+ },
+ {
+  "game": "Earth Missions",
+  "gameVersion": "6.3",
+  "mission": "fire",
+  "missionCode": "FIRE-7K3QX",
+  "scenarioId": "fire@1.0:7K3QX",
+  "scenarioVersion": "1.0",
+  "engineVersion": "fire-3.2.1",
+  "mode": "class",
+  "design": {
+   "instrument": "adv",
+   "observation": "std",
+   "power": "std",
+   "comms": "adv",
+   "storage": "std"
+  },
+  "decisions": [
+   [
+    "wide",
+    "high"
+   ],
+   [
+    "alerts",
+    "compress"
+   ],
+   [
+    "save",
+    "image"
+   ],
+   [
+    "wide",
+    "fast"
+   ]
+  ],
+  "manipulations": [
+   {
+    "regions": [
+     "A",
+     "B",
+     "C"
+    ]
+   },
+   {
+    "regions": [
+     "A",
+     "B"
+    ]
+   },
+   {
+    "regions": [
+     "B"
+    ]
+   },
+   {
+    "regions": [
+     "A",
+     "B",
+     "C"
+    ]
+   }
+  ],
+  "result": {
+   "score": 99,
+   "outcome": "Mission Success",
+   "science": 34.01,
+   "delivery": 35,
+   "efficiency": 20,
+   "reliability": 10,
+   "gates": {
+    "G1": true,
+    "G2": true,
+    "G3": true,
+    "G4": true
+   }
+  },
+  "simulatedEvents": [
+   "Solar generation 25% of nominal in sunlight, hours 12–18 (Practice value: 15%).",
+   "The 21:00 contact starts 30 minutes late (30 instead of 60 minutes)."
+  ]
+ },
+ {
+  "game": "Earth Missions",
+  "gameVersion": "6.3",
+  "mission": "fire",
+  "missionCode": "FIRE-M4RSH",
+  "scenarioId": "fire@1.0:M4RSH",
+  "scenarioVersion": "1.0",
+  "engineVersion": "fire-3.2.1",
+  "mode": "class",
+  "design": {
+   "instrument": "std",
+   "observation": "adv",
+   "power": "adv",
+   "comms": "std",
+   "storage": "std"
+  },
+  "decisions": [
+   [
+    "targeted",
+    "std"
+   ],
+   [
+    "fifo",
+    "full"
+   ],
+   [
+    "normal",
+    "skip"
+   ],
+   [
+    "targeted",
+    "fast"
+   ]
+  ],
+  "manipulations": [
+   {
+    "regions": [
+     "A"
+    ]
+   },
+   {
+    "regions": [
+     "A"
+    ]
+   },
+   {
+    "regions": [
+     "A"
+    ]
+   },
+   {
+    "regions": [
+     "A"
+    ]
+   }
+  ],
+  "result": {
+   "score": 69,
+   "outcome": "Partial Success",
+   "science": 23.5,
+   "delivery": 22.64,
+   "efficiency": 13.2,
+   "reliability": 10,
+   "gates": {
+    "G1": false,
+    "G2": false,
+    "G3": true,
+    "G4": true
+   }
+  },
+  "simulatedEvents": [
+   "Dense smoke over the region during the 08:00 pass: detection strength ×0.85.",
+   "Solar generation 15% of nominal in sunlight, hours 12–18 (Practice value: 15%).",
+   "The 21:00 contact starts 30 minutes late (30 instead of 60 minutes)."
+  ]
+ },
+ {
+  "game": "Earth Missions",
+  "gameVersion": "6.3",
+  "mission": "flood",
+  "missionCode": "FLOOD-PRACTICE",
+  "scenarioId": "flood@1.0:PRACTICE",
+  "scenarioVersion": "1.0",
+  "engineVersion": "flood-4.3.0",
+  "mode": "practice",
+  "design": {
+   "instrument": "std",
+   "observation": "std",
+   "power": "std",
+   "comms": "std",
+   "storage": "std"
+  },
+  "decisions": [
+   [
+    "high",
+    "wide"
+   ],
+   [
+    "raw",
+    "keep"
+   ],
+   [
+    "normal",
+    "full"
+   ],
+   [
+    "ground",
+    "full"
+   ]
+  ],
+  "manipulations": [
+   null,
+   null,
+   null,
+   null
+  ],
+  "result": {
+   "score": 60,
+   "outcome": "Partial Success",
+   "science": 25.59,
+   "delivery": 17.45,
+   "efficiency": 7.43,
+   "reliability": 9.36,
+   "gates": {
+    "G1": false,
+    "G2": true,
+    "G3": false,
+    "G4": true
+   }
+  },
+  "simulatedEvents": []
+ },
+ {
+  "game": "Earth Missions",
+  "gameVersion": "6.3",
+  "mission": "flood",
+  "missionCode": "FLOOD-7K3QX",
+  "scenarioId": "flood@1.0:7K3QX",
+  "scenarioVersion": "1.0",
+  "engineVersion": "flood-4.3.0",
+  "mode": "class",
+  "design": {
+   "instrument": "adv",
+   "observation": "std",
+   "power": "std",
+   "comms": "adv",
+   "storage": "std"
+  },
+  "decisions": [
+   [
+    "std",
+    "focused"
+   ],
+   [
+    "mask",
+    "prio"
+   ],
+   [
+    "save",
+    "minimal"
+   ],
+   [
+    "relay",
+    "eco"
+   ]
+  ],
+  "manipulations": [
+   {
+    "zones": [
+     "UV",
+     "FARM"
+    ]
+   },
+   {
+    "zones": [
+     "ALL",
+     "TOWN"
+    ]
+   },
+   {
+    "zones": [
+     "FARM",
+     "TOWN"
+    ]
+   },
+   {
+    "zones": [
+     "TOWN",
+     "UV"
+    ]
+   }
+  ],
+  "result": {
+   "score": 93,
+   "outcome": "Mission Success",
+   "science": 27.55,
+   "delivery": 35,
+   "efficiency": 20,
+   "reliability": 10,
+   "gates": {
+    "G1": true,
+    "G2": true,
+    "G3": true,
+    "G4": true
+   }
+  },
+  "simulatedEvents": [
+   "Solar generation 25% of nominal, hours 12–18 (Practice value: 25%).",
+   "The contact at mission hour 14:30 is cut from 10 to 5 minutes (antenna shared with another spacecraft)."
+  ]
+ },
+ {
+  "game": "Earth Missions",
+  "gameVersion": "6.3",
+  "mission": "flood",
+  "missionCode": "FLOOD-ZZ999",
+  "scenarioId": "flood@1.0:ZZ999",
+  "scenarioVersion": "1.0",
+  "engineVersion": "flood-4.3.0",
+  "mode": "class",
+  "design": {
+   "instrument": "std",
+   "observation": "adv",
+   "power": "std",
+   "comms": "std",
+   "storage": "adv"
+  },
+  "decisions": [
+   [
+    "high",
+    "focused"
+   ],
+   [
+    "raw",
+    "keep"
+   ],
+   [
+    "normal",
+    "full"
+   ],
+   [
+    "relay",
+    "full"
+   ]
+  ],
+  "manipulations": [
+   {
+    "zones": [
+     "UV",
+     "FARM"
+    ]
+   },
+   {
+    "zones": [
+     "FARM",
+     "TOWN"
+    ]
+   },
+   {
+    "zones": [
+     "FARM",
+     "TOWN"
+    ]
+   },
+   {
+    "zones": [
+     "TOWN",
+     "FARM"
+    ]
+   }
+  ],
+  "result": {
+   "score": 92,
+   "outcome": "Mission Success",
+   "science": 35,
+   "delivery": 35,
+   "efficiency": 11.93,
+   "reliability": 10,
+   "gates": {
+    "G1": true,
+    "G2": true,
+    "G3": true,
+    "G4": true
+   }
+  },
+  "simulatedEvents": [
+   "The contact at mission hour 05:30 is cut from 10 to 5 minutes (antenna shared with another spacecraft).",
+   "Solar generation 35% of nominal, hours 12–18 (Practice value: 25%)."
+  ]
+ }
+]

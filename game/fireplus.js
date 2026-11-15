@@ -62,7 +62,7 @@ fireArt = function (reveal) { const M = S.f.M, t = reveal ? 24 : fNow(); const r
     const cls = miss ? 'missed' : sent ? '' : 'held', g = miss ? '×' : sent ? '' : '!';
     const state = miss ? 'Not detected by your satellite (simulated fire)' : sent ? (late ? 'Detected · alert delivered late' : 'Detected · alert delivered') : 'Detected · alert not yet delivered';
     const name = `${e.name} (${e.cls}, ${fmtH(WC.passes[e.pass].h)} pass)`;
-    return `<div class="hot ${cls}" tabindex="0" role="img" aria-label="${name}. ${state}." data-tip="${name}||${state}" style="left:${x}%;top:${y}%"><span class="g" aria-hidden="true">${g}</span>${reveal && (!cont || miss) ? `<span class="lb ${x > 65 ? 'l' : ''}">${cont ? 'Known fire, ' + fmtH(WC.passes[e.pass].h) : e.name}${miss ? ' · missed' : ''}</span>` : ''}</div>`; }).join('');
+    return `<div class="hot ${cls}" tabindex="0" role="img" aria-label="${name}. ${state}." data-tip="${name}||${state}" style="left:${x}%;top:${y}%"><span class="g" aria-hidden="true">${g}</span>${reveal && (!cont || miss) ? `<span class="lb ${x > 65 ? 'l' : ''}">${cont ? 'Known fire, ' + pT(e.pass) : e.name}${miss ? ' · missed' : ''}</span>` : ''}</div>`; }).join('');
   return `<div class="fmap"></div>${regs}${hs}`; };
 
 const WARN_TXT = 'An Advanced thermal image is 1.0–1.5 GB. Standard communications sends 0.6 GB per hour, and the satellite only talks to Earth during five 1-hour ground contacts. Ask yourself how much imagery can reach Earth before it goes stale, and before the mission ends.';

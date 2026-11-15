@@ -3,21 +3,21 @@
  * the deterministic engines. Nothing in this file changes a simulation result.
  */
 'use strict';
-const GAME_VERSION = '6.3';
+const GAME_VERSION = '7.0';
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------------- mission adapters ---------------- */
 const MX = {
   storm: { key: 'storm', name: 'Storm Watch', orbit: 'GEO', eng: ENG, CH: CH, st: () => S.ops, design: () => S.design, sim: () => simulate(), dashFn: () => dash(), basePct: '35%',
-    runFull: (d, dec, scn) => ENG.runFull(d, dec, 'v34', scn), pts: 'deliveredScience', cov: 'coveredPhases', target: 12,
+    runFull: (d, dec, scn, ext) => ENG.runFull(d, dec, 'v34', scn, ext), pts: 'deliveredScience', cov: 'coveredPhases', target: 12,
     events: M => M.events.map(e => ({ h: e.t, msg: e.msg, type: e.type })), clock: h => fmtH(h),
     planScn: M => M.scn ? { anomalySolar: M.scn.anomalySolar, link: [], eclipseHour: null } : null, pctOf: p => p.anomalySolar,
     sci: (c, d) => d.collectedScience, sciUnit: 'science pts collected',
     gates: ['Delivered science ≥ 12', '≥ 3 storm phases covered', 'Critical update delivered', 'No critical failure'],
     fp: { 0: 1 }, screens: ['build', 'ops', 'report'] },
   fire: { key: 'fire', name: 'Wildfire Watch', orbit: 'LEO', eng: WF, CH: CHF, st: () => S.f, design: () => S.fdesign, sim: () => fsim(), dashFn: () => fDash(), basePct: '15%',
-    runFull: (d, dec, scn) => WF.runFull(d, dec, scn), pts: 'deliveredScience', cov: 'coveredPasses', target: 3,
+    runFull: (d, dec, scn, ext, arch) => MissionDesign.runFull('fire', d, dec, scn, ext, arch === undefined ? archOf('fire') : arch), pts: 'deliveredScience', cov: 'coveredPasses', target: 3,
     events: M => M.events, clock: h => fmtH(h),
     planScn: M => M.scn ? { anomalySolar: M.scn.anomalySolar, contactCut: null, smoke: null } : null, pctOf: p => p.anomalySolar,
     sci: (c, d, ci, keys) => { const o = S.f, C = WC, P = c.P; const fpKey = ci === 3 ? keys[0] : ci === 0 ? keys[0] : o.choice[0][0]; const md = ci === 0 ? keys[1] : o.choice[0][1];
@@ -26,7 +26,7 @@ const MX = {
     gates: ['Delivered science ≥ 3', 'New-hotspot alert within 2 h', 'Final update delivered', 'No critical failure'],
     fp: { 0: 0, 3: 0 }, screens: ['fbuild', 'fops', 'freport'] },
   flood: { key: 'flood', name: 'Flood Watch', orbit: 'LEO', eng: FL, CH: LCH, st: () => S.l, design: () => S.ldesign, sim: () => lsim(), dashFn: () => lDash(), basePct: '25%',
-    runFull: (d, dec, scn) => FL.runFull(d, dec, 'v41', scn), pts: 'delivered', cov: 'coveredZones', target: 5,
+    runFull: (d, dec, scn, ext) => FL.runFull(d, dec, 'v41', scn, ext), pts: 'delivered', cov: 'coveredZones', target: 5,
     events: M => M.log, clock: h => `${fmtH(h)} (${lt(h)} local)`,
     planScn: M => M.scn ? { anomalyFactor: M.scn.anomalyFactor, contactCut: null } : null, pctOf: p => p.anomalyFactor,
     sci: (c, d) => d.collected, sciUnit: 'map pts collected',
@@ -35,6 +35,11 @@ const MX = {
 };
 const missionOfScreen = () => Object.keys(MX).find(k => MX[k].screens.includes(S.screen));
 const curX = () => MX[missionOfScreen() || S.mission || 'storm'];
+/* v7.0: selected mission architecture (only Wildfire Watch has a choice) and the what-if replay, now also for hardware.
+ * replayRun re-flies the REAL engine with the same Mission Code; any of design / decisions / direct controls / architecture may differ. */
+S.arch = { storm: null, fire: MissionDesign.DEFAULT_ARCH.fire, flood: null };
+function archOf(m) { return S.arch[m] || MissionDesign.DEFAULT_ARCH[m] || null; }
+function replayRun(m, o) { o = o || {}; const X = MX[m], st = X.st(); return X.runFull(o.design || X.design(), o.decisions || st.choice, o.scn || S.scn[m], o.ext === undefined ? null : o.ext, o.arch === undefined ? archOf(m) : o.arch); }
 
 /* ---------------- shared state ---------------- */
 S.scn = { storm: Scenario.generate('storm', 'PRACTICE'), fire: Scenario.generate('fire', 'PRACTICE'), flood: Scenario.generate('flood', 'PRACTICE') };
@@ -45,6 +50,18 @@ function live(x) { return S.live ? Object.assign({}, x, S.live) : x; }
 function chx(m, ci) { const X = MX[m], ch = X.CH[ci], scn = S.scn[m]; if (ci !== 2 || scn.practice) return ch;
   const pct = Math.round(X.pctOf(scn.params) * 100) + '%'; const rep = s => typeof s === 'string' ? s.split(X.basePct).join(pct) : s;
   return Object.assign({}, ch, { title: rep(ch.title), sub: rep(ch.sub), alert: rep(ch.alert), lesson: rep(ch.lesson) }); }
+/* v7.0 P1: Wildfire challenge text for a non-default architecture. Clock times are mapped from the original profile to the flown
+ * one (pass k, contact k); sentences that describe the schedule's shape are replaced. The default profile returns the text untouched. */
+const ARCH_TEXT = { 'dawn-dusk-sso': {
+  2: { alert: 'A fault cuts solar generation to 15% for six hours. Your dawn-dusk orbit stays in sunlight, so no eclipse adds to the problem, but 15% is still less than the satellite uses. Essential systems always come first.',
+       lesson: 'Even with no eclipse, a solar fault makes the battery decide what you can do. Below 5% the satellite enters safe mode.' },
+  3: { win: 'Pass 21:30 · contact 22:30–24:00', alert: 'Responders report new fire activity near the community in region C. One pass left at 21:30, then one long contact from 22:30 until the deadline.' } } };
+function fireChText(ch) { const A = fA(), D0 = WF.archProfile(); if (A.id === D0.id) return ch;
+  const map = {}; D0.passes.forEach((p, i) => { map[fmtH(p.h)] = fmtH(A.passes[i].h); }); D0.contacts.slice(0, 4).forEach((c, i) => { map[fmtH(c[0])] = fmtH(A.contacts[i][0]); map[fmtH(c[1])] = fmtH(A.contacts[i][1]); });
+  const tr = s => typeof s === 'string' ? s.replace(/\b\d\d:\d\d\b/g, x => map[x] || x) : s, ci = CHF.indexOf(CHF.find(c => c.hours === ch.hours)), ov = (ARCH_TEXT[A.id] || {})[ci] || {};
+  const out = Object.assign({}, ch); ['title', 'sub', 'alert', 'win', 'decide', 'lesson'].forEach(k => { out[k] = ov[k] ? (k === 'alert' || k === 'lesson' ? ov[k].split('15%').join(faultPct('fire')) : ov[k]) : tr(ch[k]); });
+  out.groups = ch.groups.map(g => ({ lab: tr(g.lab), opts: g.opts.map(o => o.map(tr)) })); return out; }
+const _chxBase = chx; chx = function (m, ci) { const ch = _chxBase(m, ci); return m === 'fire' ? fireChText(ch) : ch; };
 function faultPct(m) { const scn = S.scn[m]; return scn.practice ? MX[m].basePct : Math.round(MX[m].pctOf(scn.params) * 100) + '%'; }
 
 /* ---------------- styles ---------------- */
@@ -259,14 +276,14 @@ function endJourney() { const j = S.jr; if (!j) return; clearInterval(j.timer); 
 function designLabel(m) { const X = MX[m], d = X.design(); return Object.keys(d).map(k => `${k}: ${d[k] === 'adv' ? (m === 'flood' ? 'B' : 'Advanced') : (m === 'flood' ? 'A' : 'Standard')}`).join(' · '); }
 function reportExtras(m) { const X = MX[m], st = X.st(), M = st.M, scn = S.scn[m], d = Object.assign({}, X.design()), dec = st.choice.map(c => c.slice()); const sc = X.eng.score(M);
   if (!st.recorded) { st.recorded = true; st.prev = S.last[m] || null;
-    st.record = { game: 'Earth Missions', gameVersion: GAME_VERSION, mission: m, missionCode: scn.code, scenarioId: scn.id, scenarioVersion: Scenario.VERSION, engineVersion: X.eng.VERSION, mode: S.scnMode[m], design: d, decisions: dec, manipulations: M.ext ? JSON.parse(JSON.stringify(M.ext)) : null,
-      result: { score: sc.total, outcome: sc.outcome, science: +sc.sci.toFixed(2), delivery: +sc.del.toFixed(2), efficiency: +sc.eff.toFixed(2), reliability: +sc.rel.toFixed(2), gates: sc.gates }, simulatedEvents: scn.events.map(e => e.text) };
+    // v7.0 record (recordVersion 2): adds the student target, architecture, launch profile, run summary and attempt info
+    st.record = MissionDesign.makeRecord({ mission: m, M, score: sc, scn, mode: S.scnMode[m], targetId: (S.target || {})[m] || null, archId: archOf(m), attempt: st.attempt || null });
     S.last[m] = st.record;
     const fails = ['G1', 'G2', 'G3', 'G4'].filter(k => !sc.gates[k]).map((k) => X.gates[+k[1] - 1]);
     setTimeout(() => say('pip', sc.outcome === 'Mission Success' ? `Mission Success with ${sc.total} points! Scroll down to "Change one decision" and see which choice mattered most.` : `${sc.outcome}, ${sc.total} points. Missed: ${fails.join('; ') || 'too little delivered science'}. The "Change one decision" table below shows which single choice would have changed the result.`), 400); }
   // what-if: flip exactly one control, same design, same Mission Code
   const rows = []; let bestGain = null;
-  X.CH.forEach((ch, ci) => ch.groups.forEach((g, gi) => { const alt = g.opts.find(o => o[0] !== dec[ci][gi]); const d2 = dec.map(c => c.slice()); d2[ci][gi] = alt[0]; const r = X.runFull(d, d2, scn).s; const dv = r.total - sc.total;
+  X.CH.forEach((ch0, ci) => chx(m, ci).groups.forEach((g, gi) => { const alt = g.opts.find(o => o[0] !== dec[ci][gi]); const d2 = dec.map(c => c.slice()); d2[ci][gi] = alt[0]; const r = replayRun(m, { design: d, decisions: d2, scn }).s; const dv = r.total - sc.total;
     if (!bestGain || dv > bestGain.dv) bestGain = { dv, ci, lab: alt[1], out: r.outcome };
     rows.push(`<tr><td>C${ci + 1} · ${g.lab}</td><td>${g.opts.find(o => o[0] === dec[ci][gi])[1]} → <b>${alt[1]}</b></td><td><b>${r.total}</b> <span class="d ${dv > 0 ? 'up' : dv < 0 ? 'down' : 'zero'}">${dv > 0 ? '+' : ''}${dv}</span></td><td style="color:${r.outcome === 'Mission Success' ? 'var(--good)' : r.outcome === 'Mission Failure' ? 'var(--bad)' : 'var(--warn)'}">${r.outcome}${r.outcome !== sc.outcome ? ' ⬅ changes outcome' : ''}</td></tr>`); }));
   // cause-and-effect timeline
