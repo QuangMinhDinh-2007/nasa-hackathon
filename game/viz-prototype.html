@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mission Visual Prototypes</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: dark mission-control gallery — one column of three mission sections, 4 seeded canvas cards each */
+:root{
+  --bg:#000; --panel:rgba(255,255,255,.065); --line:rgba(255,255,255,.16);
+  --text:#fff; --muted:rgba(255,255,255,.62); --dim:rgba(255,255,255,.42);
+  --blue:#5aa9ff; --warn:#ffc857; --good:#3ddc97;
+  --font-display:Anton,Impact,sans-serif; --font-body:Poppins,system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:14px;-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 70px}
+.wrap{max-width:1250px;margin:0 auto}
+.eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--blue);font-weight:600}
+h1{font-family:var(--font-display);font-weight:400;text-transform:uppercase;letter-spacing:.01em;line-height:.95;font-size:clamp(40px,6vw,76px);margin:12px 0 14px;text-wrap:balance}
+h2{font-family:var(--font-display);font-weight:400;text-transform:uppercase;font-size:clamp(26px,3.4vw,40px);margin:0 0 6px}
+.sub{color:var(--muted);max-width:640px;line-height:1.6}
+section{margin-top:56px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;margin-top:22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.card .cv{position:relative;aspect-ratio:3/2;background:#04121f}
+.card canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.card .meta{padding:12px 14px 14px;display:flex;flex-direction:column;gap:8px}
+.card .meta b{font-size:13px;font-weight:600}
+.card .meta span{font-size:12px;color:var(--muted);line-height:1.5}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.seedbox{display:flex;align-items:center;gap:6px}
+.seedbox input{width:84px;height:30px;border-radius:8px;border:1px solid var(--line);background:rgba(0,0,0,.4);color:#fff;padding:0 8px;font:inherit;font-size:12px;text-transform:uppercase}
+button{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.08);border-radius:999px;height:30px;padding:0 12px;font-size:12px;font-weight:600}
+button:hover{background:rgba(255,255,255,.16)}
+button[aria-pressed="true"]{background:#fff;color:#000;border-color:#fff}
+button:focus-visible,input:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
+.chip{display:inline-flex;align-items:center;height:20px;padding:0 9px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid var(--line);color:var(--muted)}
+.lbl{position:absolute;left:10px;top:10px;z-index:3;background:#000a;color:#fff;font-size:11px;font-weight:600;padding:3px 8px;border-radius:7px}
+.simnote{position:absolute;right:10px;bottom:8px;z-index:3;background:#000a;color:var(--dim);font-size:10px;padding:2px 7px;border-radius:6px}
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px 24px;margin-top:26px}
+.notes h3{font-size:14px;font-weight:600;margin-bottom:8px;color:var(--blue)}
+.notes ul{padding-left:18px;color:var(--muted);line-height:1.7;font-size:13px}
+.notes li b{color:#fff;font-weight:600}
+.notes p{color:var(--muted);line-height:1.7;font-size:13px;margin-top:8px}
+input[type=range]{accent-color:var(--blue);flex:1;min-width:90px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="eyebrow">Earth Missions · Proposal</div>
+<h1>Procedural mission visuals</h1>
+<p class="sub">Prototype renderers for Storm Watch, Wildfire Watch and Flood Watch. Every scene is generated from a mission-code seed through a <b style="color:#fff">separate visual random stream</b> (same hash/PRNG family as <code>scenario.js</code>, stream name <code>visual</code>), so the engine's random sequence is never touched. Same seed → same scene; type a seed or reroll to compare. All imagery is simulated, not real satellite data.</p>
+
+<section id="storm">
+  <div class="eyebrow">Mission 1</div><h2>Storm Watch — four storm structures</h2>
+  <p class="sub">Clouds come from a continuous density field (seeded fractal noise × irregular spiral rainbands), not geometric wedges. Inner cloud deck rotates slowly against the outer field; pause respects the simulation clock in-game.</p>
+  <div class="grid" id="stormGrid"></div>
+</section>
+
+<section id="fire">
+  <div class="eyebrow">Mission 2</div><h2>Wildfire Watch — four environments</h2>
+  <p class="sub">One continuous satellite-style landscape under the existing A / B / C regions. Toggle <b style="color:#fff">After scan</b> to see how a detected fire is revealed (thermal hotspot, smoke, burn scar). Before detection, nothing hints at hidden fire events.</p>
+  <div class="grid" id="fireGrid"></div>
+</section>
+
+<section id="flood">
+  <div class="eyebrow">Mission 3</div><h2>Flood Watch — four river valleys</h2>
+  <p class="sub">A meandering river over a seeded terrain-height field. The flood slider stands in for the simulation timeline: water fills connected low-lying ground near the river. Radar view swaps to grayscale backscatter with dark water, as in Sentinel-1 / HydroSAR imagery.</p>
+  <div class="grid" id="floodGrid"></div>
+</section>
+
+<section>
+  <div class="notes">
+    <h3>Integration plan (awaiting approval)</h3>
+    <ul>
+      <li><b>Approach</b>: Canvas 2D, no new dependencies. Each mission view gets one cached offscreen texture per seed (regenerated only on seed change or resize), composited each frame with cheap transforms. Animation is a pure function of simulated time, so pausing the game freezes the scene and replays are identical.</li>
+      <li><b>Seeding</b>: <code>Scenario.mulberry32(Scenario.hash32(version|mission|seed|'visual'))</code> — deterministic, independent of every engine stream.</li>
+      <li><b>Files</b>: replace <code>stormArt()</code>, <code>fireArt()</code>, <code>valleyArt()</code> in <code>index.html</code> with canvas mounts backed by a new <code>viz.js</code>. Region outlines, hotspot markers, scanbox, labels and all engine logic stay exactly as they are; the canvas sits under the existing overlays (z-order unchanged).</li>
+      <li><b>Known limitation stated, not hidden</b>: the engines score coverage with simple geometric models (storm phases, region footprints, zone thirds). Cloud/water art is illustrative; the scoring footprint stays the yellow box and region geometry, and the "Illustration · not real imagery" note stays on screen.</li>
+      <li><b>Hidden information</b>: fire events and flood extent render only from <code>M.detected</code> / delivered-map state the engine already exposes; undetected events leave no visual trace until the debrief reveal.</li>
+      <li><b>Performance</b>: textures ≤ 512×342, generated once (&lt;30 ms); per-frame work is drawImage + a few gradients. <code>prefers-reduced-motion</code> renders a static frame.</li>
+    </ul>
+    <p>Validation before merge: four seeds → four distinct scenes (shown above); same seed reproduces; storm pauses with the sim; camera box and track overlays stay readable; engine tests untouched (<code>tools/test_engine.js</code>, wildfire/flood checks) still pass since no engine file changes.</p>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+'use strict';
+/* ---------- seeded utilities (mirror of scenario.js, 'visual' stream) ---------- */
+function hash32(str){let h=2166136261>>>0;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const vstream=(mission,seed)=>mulberry32(hash32('1.0|'+mission+'|'+seed+'|visual'));
+/* integer lattice noise */
+function latNoise(seed){
+  const h=(x,y)=>{let n=Math.imul(x,374761393)+Math.imul(y,668265263)+seed|0;n=Math.imul(n^n>>>13,1274126177);return((n^n>>>16)>>>0)/4294967296;};
+  function n2(x,y){const xi=Math.floor(x),yi=Math.floor(y),xf=x-xi,yf=y-yi,u=xf*xf*(3-2*xf),v=yf*yf*(3-2*yf);
+    return h(xi,yi)*(1-u)*(1-v)+h(xi+1,yi)*u*(1-v)+h(xi,yi+1)*(1-u)*v+h(xi+1,yi+1)*u*v;}
+  return function fbm(x,y,oct,lac,gain){let a=.5,f=1,s=0,norm=0;oct=oct||4;lac=lac||2;gain=gain||.5;
+    for(let o=0;o<oct;o++){s+=a*n2(x*f,y*f);norm+=a;a*=gain;f*=lac;}return s/norm;};
+}
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const ALPH='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function randSeed(){let s='';for(let i=0;i<5;i++)s+=ALPH[Math.floor(Math.random()*ALPH.length)];return s;}
+
+/* ---------- card factory ---------- */
+function makeCard(grid,title,desc,seed0,extraCtl){
+  const card=document.createElement('div');card.className='card';
+  card.innerHTML='<div class="cv"><span class="lbl">'+title+'</span><canvas></canvas><span class="simnote">Simulation · not real imagery</span></div>'+
+    '<div class="meta"><b>'+title+'</b><span>'+desc+'</span>'+
+    '<div class="row"><div class="seedbox"><span class="chip">Seed</span><input value="'+seed0+'" maxlength="5" aria-label="Mission seed for '+title+'"></div>'+
+    '<button class="rr">Reroll</button><span class="extra"></span></div></div>';
+  grid.appendChild(card);
+  const canvas=card.querySelector('canvas'),input=card.querySelector('input');
+  canvas.width=510;canvas.height=340;
+  if(extraCtl)extraCtl(card.querySelector('.extra'));
+  return {card,canvas,input,ctx:canvas.getContext('2d')};
+}
+
+/* =================================================================
+   STORM — continuous cloud density field with spiral rainbands
+   ================================================================= */
+const STYPES=[
+ {t:'Type A · Organized cyclone',d:'Well-defined rainbands, dense core, small eye.',seed:'HK3PM',arms:5,swirl:5.2,eye:.045,core:1,asym:.12,spread:.95,gaps:.35},
+ {t:'Type B · Developing storm',d:'Looser spirals, uneven cover, no eye.',seed:'QZ7TW',arms:3,swirl:3.6,eye:0,core:.72,asym:.3,spread:1,gaps:.55},
+ {t:'Type C · Asymmetric storm',d:'Dense clouds on one side, displaced center.',seed:'XM9AF',arms:4,swirl:4.2,eye:0,core:.8,asym:.75,spread:.9,gaps:.5},
+ {t:'Type D · Broad cloud system',d:'Wide, loosely organized, multiple clusters.',seed:'BN4RD',arms:3,swirl:2.2,eye:0,core:.55,asym:.25,spread:1.35,gaps:.6}];
+
+function stormTexture(p,seed,W){ // returns {inner,outer} canvases (square W)
+  const r0=vstream('storm',seed);
+  const fb=latNoise(hash32(seed+'tex')),fb2=latNoise(hash32(seed+'band'));
+  const phase=r0()*6.283, cx=.5+(r0()-.5)*p.asym*.14, cy=.5+(r0()-.5)*p.asym*.14, aDir=r0()*6.283;
+  const armPh=[];for(let i=0;i<p.arms;i++)armPh.push(i*6.283/p.arms+(r0()-.5)*1.2);
+  function density(x,y){ // x,y in 0..1
+    const dx=x-cx,dy=y-cy,r=Math.hypot(dx,dy)/(0.5*p.spread);if(r>1.15)return 0;
+    const th=Math.atan2(dy,dx);
+    const s=th+p.swirl*Math.log(r+.06)+phase;
+    let band=0;
+    for(let i=0;i<p.arms;i++){let d=(s-armPh[i])%6.283;if(d<0)d+=6.283;d=Math.min(d,6.283-d);
+      const w=.5+.5*fb2(r*6+i*7.3,th*1.5+i*3.1,3); // irregular band width/strength along the arm
+      band=Math.max(band,Math.exp(-d*d/(2*.32*.32))*w);}
+    band*=Math.max(0,1-Math.abs(r-.55)/.65);           // rainband annulus
+    const core=p.core*Math.exp(-r*r/(2*.21*.21));
+    const outer=.34*Math.max(0,1-r)*fb(x*5+40,y*5+40,3);
+    const asy=1+p.asym*Math.cos(th-aDir);
+    let dns=(core+band*.9+outer)*asy;
+    const tex=fb(x*7,y*7,5,2.1,.55);                   // organic texture + fragmented edges
+    dns*=.35+1.05*tex;
+    dns-=p.gaps*.35*Math.max(0,fb(x*11+90,y*11+90,3)-.55)*3; // tear gaps in the deck
+    if(p.eye){const e=Math.hypot(dx,dy)/p.eye;dns*=Math.min(1,Math.max(0,(e-.55)/.6));}
+    return Math.max(0,Math.min(1,dns));
+  }
+  function layer(test){const c=document.createElement('canvas');c.width=c.height=W;
+    const g=c.getContext('2d'),im=g.createImageData(W,W),d=im.data;
+    for(let yy=0;yy<W;yy++)for(let xx=0;xx<W;xx++){const x=xx/W,y=yy/W;
+      const r=Math.hypot(x-cx,y-cy)/(0.5*p.spread);
+      if(!test(r)){continue;}
+      const v=density(x,y);if(v<=0)continue;
+      const i=(yy*W+xx)*4,b=200+55*Math.min(1,v*1.3);
+      d[i]=b;d[i+1]=b;d[i+2]=Math.min(255,b+6);d[i+3]=Math.min(255,v*255);}
+    g.putImageData(im,0,0);return c;}
+  const inner=layer(r=>r<.5),outer=layer(r=>r>=.42);
+  return {inner,outer,cx,cy};
+}
+STYPES.forEach(p=>{
+  const grid=document.getElementById('stormGrid');
+  const o=makeCard(grid,p.t,p.d,p.seed);
+  let tex=null,run=!reduce,raf=0;
+  function gen(){tex=stormTexture(p,o.input.value||p.seed,300);}
+  function frame(ts){
+    const g=o.ctx,W=o.canvas.width,H=o.canvas.height;
+    // ocean + faint land, matching the game's map framing
+    const oc=g.createRadialGradient(W*.42,H*.5,40,W*.5,H*.5,W*.62);
+    oc.addColorStop(0,'#0f3a66');oc.addColorStop(.55,'#082443');oc.addColorStop(1,'#04121f');
+    g.fillStyle=oc;g.fillRect(0,0,W,H);
+    g.fillStyle='#1c3a26';g.beginPath();g.ellipse(-W*.06,H*.45,W*.22,H*.75,0,0,7);g.fill();
+    const cxp=W*.58,cyp=H*.5,sc=H*1.02,t=reduce?0:ts/1000;
+    function draw(c,rot){g.save();g.translate(cxp,cyp);g.rotate(rot);
+      g.drawImage(c,-(tex.cx)*sc,-(tex.cy)*sc,sc,sc);g.restore();}
+    draw(tex.outer,-t*0.012);draw(tex.inner,-t*0.028); // differential rotation (NH: counter-clockwise; fictional basin)
+    if(run)raf=requestAnimationFrame(frame);
+  }
+  function restart(){cancelAnimationFrame(raf);gen();if(reduce){frame(0);}else{raf=requestAnimationFrame(frame);}}
+  o.input.addEventListener('change',()=>{o.input.value=o.input.value.toUpperCase();restart();});
+  o.card.querySelector('.rr').addEventListener('click',()=>{o.input.value=randSeed();restart();});
+  restart();
+});
+
+/* =================================================================
+   WILDFIRE — continuous landscape + observation-gated fire reveal
+   ================================================================= */
+const FTYPES=[
+ {t:'Env A · Dense forest',d:'Heavy canopy, small clearings.',seed:'HK3PM',treeBias:.72,dry:0,roads:0},
+ {t:'Env B · Dry woodland',d:'Mixed trees and open brown terrain.',seed:'QZ7TW',treeBias:.45,dry:.6,roads:0},
+ {t:'Env C · Grassland & forest',d:'Open grassland, scattered woodland.',seed:'XM9AF',treeBias:.3,dry:.3,roads:0},
+ {t:'Env D · Forest near community',d:'Clear wildland–urban boundary near region C.',seed:'BN4RD',treeBias:.6,dry:.2,roads:1}];
+const FREG={A:{l:.10,t:.24,w:.38,h:.52,n:'A · Known fire'},B:{l:.52,t:.10,w:.36,h:.46,n:'B · Forest'},C:{l:.62,t:.62,w:.30,h:.30,n:'C · Community'}};
+
+function fireScene(p,seed,W,H,after){
+  const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  const r0=vstream('fire',seed),fb=latNoise(hash32(seed+'veg')),fh=latNoise(hash32(seed+'hot'));
+  const im=g.createImageData(W,H),d=im.data;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const u=x/W,v=y/H;
+    const veg=fb(u*5,v*5,5,2.1,.52), fine=fb(u*22+60,v*22+60,3);
+    const shade=.82+.36*fb(u*3+200,v*3+200,3);          // terrain shading
+    let R,G,B;
+    const forest=veg>(.58-p.treeBias*.28);
+    if(forest){const k=.75+.5*fine;R=26*k;G=(52+26*veg)*k;B=24*k;}
+    else{const dry=p.dry*(.4+.6*fine);
+      R=(52+70*dry)*shade;G=(70+34*(1-dry)+20*fine)*shade;B=(34+8*(1-dry))*shade;}
+    // clearings
+    if(fb(u*8+500,v*8+500,3)>.74){R=R*.6+70;G=G*.6+66;B=B*.6+44;}
+    const i=(y*W+x)*4;d[i]=R;d[i+1]=G;d[i+2]=B;d[i+3]=255;
+  }
+  g.putImageData(im,0,0);
+  // community: roads + buildings near region C (env D heavier)
+  const C=FREG.C;
+  g.strokeStyle='rgba(205,200,185,.55)';g.lineWidth=2;
+  const nR=p.roads?3:1;
+  for(let k=0;k<nR;k++){g.beginPath();let yy=(C.t+.1+r0()*C.h*.8)*H;g.moveTo((C.l-.12)*W,yy);
+    for(let xx=(C.l-.1)*W;xx<=W;xx+=18){yy+=(r0()-.5)*8;g.lineTo(xx,yy);}g.stroke();}
+  const nB=p.roads?26:10;
+  for(let k=0;k<nB;k++){g.fillStyle='rgba(222,216,200,'+(0.5+r0()*0.4)+')';
+    g.fillRect((C.l+r0()*C.w)*W,(C.t+r0()*C.h)*H,2+r0()*3,2+r0()*3);}
+  if(after){ // detected fire in region A: burn scar + hotspot + smoke
+    const fx=(FREG.A.l+.35*FREG.A.w+r0()*.3*FREG.A.w)*W, fy=(FREG.A.t+.3*FREG.A.h+r0()*.4*FREG.A.h)*H;
+    g.save();
+    // burn scar: noise-perturbed dark polygon
+    g.beginPath();for(let a=0;a<=24;a++){const th=a/24*6.283;const rr=16+16*fh(Math.cos(th)+3,Math.sin(th)+3,3);
+      const px=fx+Math.cos(th)*rr*1.3,py=fy+Math.sin(th)*rr;a?g.lineTo(px,py):g.moveTo(px,py);}g.closePath();
+    g.fillStyle='rgba(26,18,14,.78)';g.fill();
+    // thermal hotspots: irregular cluster, not one circle
+    for(let k=0;k<7;k++){const th=r0()*6.283,rr=r0()*14;const px=fx+Math.cos(th)*rr*1.4,py=fy+Math.sin(th)*rr;
+      const gr=g.createRadialGradient(px,py,0,px,py,5+r0()*6);
+      gr.addColorStop(0,'rgba(255,240,190,.95)');gr.addColorStop(.45,'rgba(255,130,40,.8)');gr.addColorStop(1,'rgba(255,70,20,0)');
+      g.fillStyle=gr;g.beginPath();g.arc(px,py,12,0,7);g.fill();}
+    // smoke plume drifting with seeded wind
+    const wd=r0()*1.2-2.2; // wind angle (up-right-ish)
+    for(let k=0;k<26;k++){const dd=k*7+r0()*5;const px=fx+Math.cos(wd)*dd+(r0()-.5)*k*2.2,py=fy+Math.sin(wd)*dd+(r0()-.5)*k*1.6;
+      g.fillStyle='rgba(205,205,210,'+(0.4*(1-k/28))+')';g.beginPath();g.arc(px,py,4+k*1.1,0,7);g.fill();}
+    g.restore();
+  }
+  // region overlays (kept from the live game)
+  g.font='600 11px Poppins,sans-serif';
+  Object.values(FREG).forEach(r=>{g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1;
+    g.strokeRect(r.l*W,r.t*H,r.w*W,r.h*H);
+    g.fillStyle='rgba(255,255,255,.75)';g.fillText(r.n,r.l*W+8,r.t*H+16);});
+  return c;
+}
+FTYPES.forEach(p=>{
+  const grid=document.getElementById('fireGrid');
+  let after=false,btn;
+  const o=makeCard(grid,p.t,p.d,p.seed,ex=>{btn=document.createElement('button');btn.textContent='After scan';btn.setAttribute('aria-pressed','false');ex.appendChild(btn);});
+  function draw(){const s=fireScene(p,o.input.value||p.seed,o.canvas.width,o.canvas.height,after);o.ctx.drawImage(s,0,0);}
+  btn.addEventListener('click',()=>{after=!after;btn.setAttribute('aria-pressed',String(after));draw();});
+  o.input.addEventListener('change',()=>{o.input.value=o.input.value.toUpperCase();draw();});
+  o.card.querySelector('.rr').addEventListener('click',()=>{o.input.value=randSeed();draw();});
+  draw();
+});
+
+/* =================================================================
+   FLOOD — meandering river, height field, progression + radar view
+   ================================================================= */
+const LTYPES=[
+ {t:'Var A · River valley flood',d:'Winding river, narrow floodplain.',seed:'HK3PM',meander:1.2,plain:.16,farm:0,town:.4,wide:0},
+ {t:'Var B · Agricultural flood',d:'Wide floodplain across farmland fields.',seed:'QZ7TW',meander:.8,plain:.3,farm:1,town:.4,wide:0},
+ {t:'Var C · Community flood',d:'River against roads and buildings.',seed:'XM9AF',meander:1,plain:.2,farm:.4,town:1,wide:0},
+ {t:'Var D · Broad floodplain',d:'Wide river, multiple low-lying areas.',seed:'BN4RD',meander:.9,plain:.34,farm:.5,town:.3,wide:1}];
+const LZONES=[['Upper Valley',0],['Farmland',1/3],['Riverside Town',2/3]];
+
+function floodScene(p,seed,W,H,level,radar){
+  const c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  const r0=vstream('flood',seed),fb=latNoise(hash32(seed+'ter'));
+  const a1=.10+r0()*.1*p.meander,a2=.05+r0()*.06*p.meander,f1=1.1+r0()*1.2,f2=2.6+r0()*2,p1=r0()*6.283,p2=r0()*6.283;
+  const riverY=u=>.5+a1*Math.sin(u*6.283*f1+p1)+a2*Math.sin(u*6.283*f2+p2)+.06*(fb(u*3,9.7,3)-.5);
+  const baseW=(p.wide?.035:.016)+r0()*.008;
+  const im=g.createImageData(W,H),d=im.data;
+  const fields=p.farm>0?latNoise(hash32(seed+'fld')):null;
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const u=x/W,v=y/H;
+    const dy=Math.abs(v-riverY(u));
+    const terr=fb(u*5+30,v*5+30,5,2.1,.52);
+    const height=dy*(1.6-p.plain)+.35*(terr-.5); // valley trough + noise
+    const rw=baseW*(0.8+.5*fb(u*7,3.3,3));
+    const water=dy<rw, flooded=!water&&height< -.12+level*.34 && dy<.3;
+    let R,G,B;
+    const shade=.85+.3*fb(u*3+77,v*3+77,3);
+    if(u>1/3&&u<2/3&&p.farm&&fields&&!water){ // agricultural strip fields
+      const fv=Math.floor(fields(u*9,v*9,2)*6);
+      const pal=[[116,124,62],[96,112,56],[136,128,70],[88,98,48],[124,110,58],[104,120,64]][fv%6];
+      R=pal[0]*shade;G=pal[1]*shade;B=pal[2]*shade;
+      if((Math.floor(u*W/14)+Math.floor(v*H/26))%7===0){R*=.8;G*=.8;B*=.8;} // field boundaries
+    } else {
+      const veg=terr;R=(40+30*(1-veg))*shade;G=(72+34*veg)*shade;B=(36+10*veg)*shade;
+    }
+    if(water){R=24;G=58;B=96;}
+    else if(flooded){const k=.55;R=R*(1-k)+30*k;G=G*(1-k)+70*k;B=B*(1-k)+120*k;}
+    if(radar){ // backscatter: bright rough land, dark smooth water
+      const spk=fb(u*60,v*60,2);
+      let L=(water||flooded)?14+spk*18:70+terr*120*spk+((u>2/3&&p.town)?30*spk:0);
+      R=G=B=L;
+    }
+    const i=(y*W+x)*4;d[i]=R;d[i+1]=G;d[i+2]=B;d[i+3]=255;
+  }
+  g.putImageData(im,0,0);
+  if(!radar){ // town: roads + buildings in the right third
+    g.strokeStyle='rgba(210,205,190,.5)';g.lineWidth=1.6;
+    const n=Math.round(2+p.town*3);
+    for(let k=0;k<n;k++){g.beginPath();let yy=(0.2+r0()*.6)*H;g.moveTo(W*2/3,yy);
+      for(let xx=W*2/3;xx<=W;xx+=16){yy+=(r0()-.5)*7;g.lineTo(xx,yy);}g.stroke();}
+    for(let k=0;k<Math.round(14+p.town*26);k++){g.fillStyle='rgba(224,218,204,'+(0.45+r0()*0.4)+')';
+      g.fillRect((2/3+r0()/3)*W,r0()*H,2+r0()*3,2+r0()*3);}
+  }
+  // zone overlays (kept from the live game)
+  g.font='600 11px Poppins,sans-serif';
+  LZONES.forEach(([n,l])=>{g.strokeStyle='rgba(255,255,255,.3)';g.setLineDash([4,4]);
+    g.beginPath();g.moveTo((l+1/3)*W,0);g.lineTo((l+1/3)*W,H);g.stroke();g.setLineDash([]);
+    g.fillStyle='rgba(255,255,255,.8)';g.fillText(n,l*W+8,18);});
+  return c;
+}
+LTYPES.forEach(p=>{
+  const grid=document.getElementById('floodGrid');
+  let level=0.35,radar=false,slider,btn;
+  const o=makeCard(grid,p.t,p.d,p.seed,ex=>{
+    ex.style.display='flex';ex.style.alignItems='center';ex.style.gap='8px';ex.style.flex='1';
+    slider=document.createElement('input');slider.type='range';slider.min='0';slider.max='100';slider.value='35';slider.setAttribute('aria-label','Flood progression');
+    btn=document.createElement('button');btn.textContent='Radar';btn.setAttribute('aria-pressed','false');
+    ex.appendChild(slider);ex.appendChild(btn);});
+  function draw(){const s=floodScene(p,o.input.value||p.seed,o.canvas.width,o.canvas.height,level,radar);o.ctx.drawImage(s,0,0);}
+  let pend=0;slider.addEventListener('input',()=>{level=slider.value/100;cancelAnimationFrame(pend);pend=requestAnimationFrame(draw);});
+  btn.addEventListener('click',()=>{radar=!radar;btn.setAttribute('aria-pressed',String(radar));draw();});
+  o.input.addEventListener('change',()=>{o.input.value=o.input.value.toUpperCase();draw();});
+  o.card.querySelector('.rr').addEventListener('click',()=>{o.input.value=randSeed();draw();});
+  draw();
+});
+})();
+</script>
+</body>
+</html>

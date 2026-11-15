@@ -1,0 +1,51 @@
+{
+ "built": "2026-11-15",
+ "builder": "tools/build_nasa_data.py",
+ "sourceFiles": [
+  {
+   "file": "VIIRS_NOAA20_Maui_bbox_2023_08_07_12.csv",
+   "sha256": "c945d9895021dcf1929cfafc0c2a47a6cd53181ced353b60baa86ddeaf78d959",
+   "product": "VIIRS 375 m active fire (FIRMS archive download)",
+   "rows": 274
+  },
+  {
+   "file": "VIIRS_SNPP_Maui_bbox_2023_08_07_12.csv",
+   "sha256": "4eee987abc55e273c50eff94ba20ce811f108e8b68401dcbdeaf1211c53dbf24",
+   "product": "VIIRS 375 m active fire (FIRMS archive download)",
+   "rows": 265
+  },
+  {
+   "file": "3c85a5d3-3B-HHR.MS.MRG.3IMERG.20220927-S000000-E002959.0000.V07B.HDF5",
+   "sha256": "c4774b57f01799bb26430b8241a2e7ac4232af2066bbd07be819f07991863b72",
+   "product": "GPM IMERG Final Run half-hourly V07B (GPM_3IMERGHH)",
+   "doi": "10.5067/GPM/IMERG/3B-HH/07"
+  },
+  {
+   "file": "57acf1db-OPERA_L3_DSWX-HLS_V1_BWTR_2025-07-02_mosaic.tif",
+   "sha256": "3db6829787608131dc605663551bb7a53e5ae22a44e88be9ed719312a40c224b",
+   "product": "OPERA L3 DSWx-HLS V1, layer BWTR (binary water)"
+  },
+  {
+   "file": "d2b9b047-OPERA_L3_DSWX-HLS_V1_BWTR_2025-07-05_mosaic.tif",
+   "sha256": "cf3ce51e273d88d8aa66ffa2c65fc906035e05af09fe2ffb7f73db20fa81975f",
+   "product": "OPERA L3 DSWx-HLS V1, layer BWTR (binary water)"
+  },
+  {
+   "file": "f96082a5-OPERA_L3_DSWX-S1_V1_BWTR_2025-07-04_mosaic.tif",
+   "sha256": "911df6de00d347ba6cde0ad4bc1d3fed671c2b75b9b3cdfef6ad3842a2f4f319",
+   "product": "OPERA L3 DSWx-S1 V1, layer BWTR (binary water, Sentinel-1 radar)"
+  },
+  {
+   "file": "2101b736-OPERA_L3_DSWX-S1_V1_BWTR_2025-07-11_mosaic.tif",
+   "sha256": "5aa315c6608ce69a15df91c860ce78162b6841519a5ae597658895985bf4d925",
+   "product": "OPERA L3 DSWx-S1 V1, layer BWTR (binary water, Sentinel-1 radar)"
+  }
+ ],
+ "processing": [
+  "FIRMS: rows grouped by acq_date+acq_time+satellite; no rows dropped; longitude bands are a display choice",
+  "IMERG: precipitation field cut to bbox -90,18,-78,32; 2x2 mean for display; statistics computed on the full 0.1 degree cells",
+  "OPERA: pixel counts per class over the whole mosaic; water area = water pixels x 900 m2",
+  "OPERA DSWx-S1: cut to the UTM 14N box 465-510 km E, 3310-3335 km N (Kerr County); water area = water pixels x 900 m2; thumbnail shows a 90 m block as water if any 30 m pixel in it is water"
+ ],
+ "notInGame": "None of these observations changes any score, target or event in the three missions. They are shown as labelled NASA observations in the Final Report and the Data & sources panel."
+}

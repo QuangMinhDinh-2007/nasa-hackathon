@@ -1,0 +1,33 @@
+// v6.2 Wildfire clarity/accessibility checks. Run: node tools/fireplus_tests.js
+const fs = require('fs'), path = require('path'), assert = require('assert');
+const G = p => fs.readFileSync(path.join(__dirname, '../game', p), 'utf8');
+const WF = require('../game/wildfire-engine.js'), WC = WF.CONFIG;
+const src = G('fireplus.js');
+const pick = name => { const i = src.indexOf('function ' + name); let d = 0, j = src.indexOf('{', i); for (; j < src.length; j++) { if (src[j] === '{') d++; else if (src[j] === '}' && !--d) break; } return src.slice(i, j + 1); };
+const fmtH = h => { const m = Math.round(h * 60); return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
+const { fRegionState, fSkipNote } = new Function('WC', 'fmtH', pick('fRegionState') + pick('fSkipNote') + 'return { fRegionState, fSkipNote };')(WC, fmtH);
+const STD = { instrument: 'std', observation: 'std', power: 'std', comms: 'std', storage: 'std' };
+const DEC = [['wide', 'high'], ['alerts', 'full'], ['normal', 'image'], ['wide', 'std']];
+let n = 0; const t = (name, f) => { f(); n++; console.log('  ✓ ' + name); };
+console.log('Wildfire v6.2 checks');
+t('engine baseline unchanged (5,376 runs: 740 / 3,484 / 1,152)', () => { const B = require('./wildfire_balance_check.js'); });
+t('images record the regions they covered', () => { const M = WF.newMission(STD); WF.runChallenge(M, 0, [['targeted', 'high']][0]);
+  const im = M.items.find(i => i.kind === 'image'); assert.deepStrictEqual(im.regions, ['A']); assert.ok(im.strength > 0); });
+t('region freshness: observed, update needed after 6 h, never', () => { const M = WF.newMission(STD); WF.runChallenge(M, 0, ['targeted', 'high']);
+  let s = fRegionState(M, 6); assert.strictEqual(s.A.st, 'recent'); assert.strictEqual(s.A.txt, 'Observed 02:00'); assert.strictEqual(s.B.st, 'never');
+  s = fRegionState(M, 8.5); assert.strictEqual(s.A.st, 'stale'); assert.ok(['○', '⚠', '✓'].includes(s.A.g)); });
+t('freshness never looks ahead of the time shown', () => { const M = WF.newMission(STD); WF.runChallenge(M, 0, DEC[0]); assert.strictEqual(fRegionState(M, 1).A.st, 'never'); });
+t('skipped pass is explained (plan / battery / storage)', () => { const M = WF.newMission(STD); [DEC[0], DEC[1], ['normal', 'skip']].forEach((d, i) => WF.runChallenge(M, i, d));
+  assert.strictEqual(fSkipNote(M, 2), 'Pass 14:00 not imaged: skipped by your plan'); assert.strictEqual(fSkipNote(M, 1), '');
+  const S2 = WF.newMission({ instrument: 'adv', observation: 'adv', power: 'std', comms: 'std', storage: 'std' }); let any = false;
+  for (let dec = 0; dec < 4 && !any; dec++) { const m = WF.newMission(S2.design); [['wide', 'high'], ['fifo', 'full'], ['normal', 'image'], ['wide', 'fast']].forEach((d, i) => WF.runChallenge(m, i, d)); any = [0, 1, 2, 3].some(p => /storage full|battery reserve/.test(fSkipNote(m, p))); }
+  assert.ok(any, 'storage/battery reason surfaces for an overloaded design'); });
+t('markers and badges are keyboard-focusable with a text state', () => { assert.ok(/class="hot \$\{cls\}" tabindex="0" role="img" aria-label=/.test(src)); assert.ok(/class="fbadge \$\{s.st\}" tabindex="0"/.test(src)); assert.ok(/'×' : sent \? '' : '!'/.test(src)); });
+t('map legend, live announcer, focus ring, reduced motion', () => { assert.ok(/aria-label="Map legend"/.test(src)); assert.ok(/aria-live', 'polite'/.test(src)); assert.ok(/:focus-visible\{outline/.test(src)); assert.ok(/prefers-reduced-motion: reduce\)\{\*/.test(src)); });
+t('no text below 12 px in the game (decorative legend glyphs excepted)', () => { const bad = [];
+  ['index.html', 'upgrade.js', 'rescue.js', 'final.js', 'fun.js', 'fireplus.js'].forEach(f => { const s = G(f).replace(/class="k"[^>]*>/g, ''); [...s.matchAll(/font(?:-size)?:\s*(?:\d{3}\s+)?(\d+(?:\.\d+)?)px/g)].forEach(m => { if (+m[1] < 12 && !/9px\/1 system-ui/.test(s.slice(m.index - 5, m.index + 30))) bad.push(f + ':' + m[1]); }); });
+  assert.deepStrictEqual(bad, []); });
+t('data-delivery warning: Advanced imager + Standard comms only, no build prescribed', () => { assert.ok(/S\.fdesign\.instrument === 'adv' && S\.fdesign\.comms === 'std'/.test(src));
+  const w = src.match(/const WARN_TXT = '([^']+)'/)[1]; assert.ok(/0\.6 GB per hour/.test(w)); assert.ok(!/High-Capacity|upgrade|switch|choose|pick|best/i.test(w)); });
+t('fireplus.js loads after fun.js', () => { const h = G('index.html'); assert.ok(h.indexOf('fireplus.js') > h.indexOf('fun.js')); });
+console.log(`\n${n} checks passed`);

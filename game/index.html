@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Earth Missions — Mission Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --img-hero:url(assets/hero.jpg);--img-horizon:url(assets/horizon.jpg);--img-half:url(assets/half.jpg);--img-side:url(assets/side.jpg);
+  --glass:rgba(255,255,255,.065);--glass2:rgba(255,255,255,.11);--line:rgba(255,255,255,.16);--line2:rgba(255,255,255,.45);
+  --text:#fff;--muted:rgba(255,255,255,.62);--dim:rgba(255,255,255,.42);
+  --blue:#5aa9ff;--blue2:#2f7dff;--good:#3ddc97;--warn:#ffc857;--bad:#ff7a6b;
+  --r:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#000;color:var(--text);font-family:Poppins,system-ui,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input{font:inherit;color:inherit}
+.display{font-family:Anton,Impact,sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.01em;line-height:.95}
+.eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--blue);font-weight:600}
+.muted{color:var(--muted)}
+
+/* ---------- background layers ---------- */
+#bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#000}
+#bg .photo{position:absolute;inset:-40px;background-size:cover;background-position:center;transition:opacity .8s,filter .8s,transform 1.2s}
+#bg .shade{position:absolute;inset:0;transition:background .8s}
+.stars{position:absolute;inset:0;background-image:
+ radial-gradient(1px 1px at 12% 18%,#fff9,transparent),radial-gradient(1px 1px at 72% 12%,#fff8,transparent),
+ radial-gradient(1.4px 1.4px at 38% 72%,#fffa,transparent),radial-gradient(1px 1px at 88% 64%,#fff7,transparent),
+ radial-gradient(1px 1px at 55% 40%,#fff6,transparent),radial-gradient(1.2px 1.2px at 22% 88%,#fff8,transparent),
+ radial-gradient(1px 1px at 92% 30%,#fff6,transparent),radial-gradient(1px 1px at 6% 52%,#fff7,transparent),
+ radial-gradient(1px 1px at 64% 92%,#fff5,transparent),radial-gradient(1.3px 1.3px at 46% 8%,#fff8,transparent);opacity:.9}
+.flare{position:absolute;width:180px;height:180px;pointer-events:none;mix-blend-mode:screen;z-index:1}
+.flare::before,.flare::after{content:"";position:absolute;left:50%;top:50%;background:linear-gradient(90deg,transparent,#fff,transparent);transform:translate(-50%,-50%)}
+.flare::before{width:100%;height:2px}
+.flare::after{width:2px;height:100%;background:linear-gradient(180deg,transparent,#fff,transparent)}
+.flare i{position:absolute;left:50%;top:50%;width:26px;height:26px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,#fff 0,#fff8 25%,transparent 70%);box-shadow:0 0 40px 10px #ffffff40}
+.flare.sm{width:110px;height:110px}
+.flare.tilt{transform:rotate(18deg)}
+
+#app{position:relative;z-index:2;min-height:100vh}
+.screen{min-height:100vh;animation:fade .5s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ---------- glass ---------- */
+.glass{background:var(--glass);border:1px solid var(--line);border-radius:var(--r);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 22px;border-radius:999px;font-weight:600;font-size:13px;transition:.2s}
+.btn.primary{background:#fff;color:#000}
+.btn.primary:hover{background:#dfeaff;transform:translateY(-1px)}
+.btn.blue{background:var(--blue2);color:#fff;box-shadow:0 8px 30px -8px #2f7dffaa}
+.btn.blue:hover{background:#4a8fff}
+.btn.ghost{border:1px solid var(--line2);color:#fff}
+.btn.ghost:hover{background:#ffffff14}
+.btn.good{background:var(--good);color:#032015}
+.btn.good:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.35;pointer-events:none}
+.chip{display:inline-flex;align-items:center;height:22px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid var(--line);color:var(--muted)}
+.chip.good{background:#3ddc9722;border-color:#3ddc9755;color:var(--good)}
+.chip.warn{background:#ffc85722;border-color:#ffc85755;color:var(--warn)}
+.chip.bad{background:#ff7a6b22;border-color:#ff7a6b55;color:var(--bad)}
+.chip.solid{background:#fff;color:#000;border-color:#fff}
+
+/* ---------- top nav (template-style pill) ---------- */
+.nav{position:sticky;top:0;z-index:20;padding:18px 28px 0}
+.nav-in{display:flex;align-items:center;gap:18px;height:54px;padding:0 10px 0 14px;border:1px solid var(--line2);border-radius:16px;background:rgba(0,0,0,.35);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.logo svg{width:26px;height:26px}
+.backbtn{height:34px;padding:0 14px;border-radius:10px;border:1px solid var(--line);font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.backbtn:hover{background:#ffffff14}
+.steps{flex:1;display:flex;justify-content:center;align-items:center;gap:10px}
+.step{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.step .dot{width:22px;height:22px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;font-size:12px;letter-spacing:0}
+.step.done{color:var(--muted)}.step.done .dot{background:#fff;color:#000;border-color:#fff}
+.step.on{color:#fff}.step.on .dot{border-color:var(--blue);color:var(--blue);box-shadow:0 0 0 4px #5aa9ff22}
+.step-line{width:34px;height:1px;background:var(--line)}
+.who{font-size:12px;color:var(--muted);white-space:nowrap}.who b{color:#fff}
+
+/* ---------- sign-in ---------- */
+.signin{display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:40px;padding:0 7vw;min-height:100vh}
+.signin h1{font-size:clamp(56px,7.4vw,112px);margin:18px 0 22px}
+.signin p.lead{max-width:420px;color:var(--muted);font-size:15px;line-height:1.6}
+.card-sign{padding:34px;max-width:400px;justify-self:end;width:100%}
+.card-sign h2{font-size:22px;font-weight:600;margin-bottom:4px}
+.field{margin-top:16px}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px}
+.field input{width:100%;height:46px;border-radius:12px;border:1px solid var(--line);background:rgba(0,0,0,.35);padding:0 14px;outline:none;transition:.2s}
+.field input:focus{border-color:var(--blue);box-shadow:0 0 0 4px #5aa9ff22}
+.card-sign .btn{width:100%;margin-top:22px;height:48px}
+.small{font-size:12px;color:var(--muted);text-align:center;margin-top:14px}
+.small a{color:#fff}
+
+/* ---------- centered hero ---------- */
+.center-hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px 18vh}
+.center-hero h1{font-size:clamp(54px,8vw,120px);margin:16px 0 18px}
+.center-hero p{max-width:520px;color:var(--muted);line-height:1.6;font-size:15px;margin-bottom:28px}
+
+/* ---------- page wrappers ---------- */
+.page{padding:46px 7vw 60px;max-width:1400px;margin:0 auto}
+.page h1{font-size:clamp(44px,5.5vw,84px);margin:10px 0 12px}
+.page .sub{color:var(--muted);max-width:560px;line-height:1.6}
+.linkback{font-size:12px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;font-weight:600}
+.linkback:hover{color:#fff}
+
+/* destinations */
+.dest-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:40px}
+.dest{padding:30px 24px 28px;text-align:center;display:flex;flex-direction:column;align-items:center;transition:.3s;min-height:380px}
+.dest:hover{transform:translateY(-4px);border-color:var(--line2)}
+.dest .planet{width:170px;height:170px;border-radius:50%;margin:10px 0 24px;position:relative}
+.dest .planet.earth{background:url(assets/globe.webp) center/cover;box-shadow:0 0 60px 6px #3b82f655, inset -20px -10px 40px #0008;animation:spin 40s linear infinite}
+.dest .planet.moon{background:radial-gradient(circle at 35% 35%,#d9d9d9,#8a8a8a 45%,#2a2a2a 80%);box-shadow:inset -24px -14px 40px #000a;filter:grayscale(1)}
+.dest .planet.moon::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 60% 30%,#0003 0 10%,transparent 11%),radial-gradient(circle at 35% 62%,#0003 0 14%,transparent 15%),radial-gradient(circle at 70% 70%,#0002 0 8%,transparent 9%)}
+.dest .planet.mars{background:radial-gradient(circle at 35% 35%,#e08a5c,#a4482a 45%,#3a130a 82%);box-shadow:inset -24px -14px 40px #000a}
+.dest.locked .planet{opacity:.45}
+.dest h3{font-family:Anton,sans-serif;font-weight:400;font-size:34px;text-transform:uppercase;letter-spacing:.02em}
+.dest p{color:var(--muted);font-size:13px;margin:6px 0 20px}
+@keyframes spin{from{background-position:0 center}to{background-position:0 center}}
+
+/* missions */
+.mis-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:36px}
+.mis{overflow:hidden;display:flex;flex-direction:column;transition:.3s}
+.mis:hover{transform:translateY(-4px)}
+.mis.active{border-color:#5aa9ff88;box-shadow:0 0 0 1px #5aa9ff44,0 30px 80px -30px #2f7dff88}
+.mis .art{height:190px;position:relative;overflow:hidden}
+.mis .art .chip{position:absolute;top:14px;left:14px}
+.mis .body{padding:22px 22px 26px;flex:1;display:flex;flex-direction:column}
+.mis h3{font-family:Anton,sans-serif;font-weight:400;font-size:30px;text-transform:uppercase;margin-bottom:8px}
+.mis p{color:var(--muted);font-size:13px;line-height:1.6;flex:1;margin-bottom:18px}
+.mis.locked .art{filter:grayscale(.6) brightness(.6)}
+
+/* hurricane art */
+.ocean{position:absolute;inset:0;background:radial-gradient(120% 90% at 60% 50%,#0f3a66 0,#082443 55%,#04121f 100%)}
+.ocean::after{content:"";position:absolute;inset:0;background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);background-size:40px 40px}
+.land{position:absolute;left:-6%;top:-10%;width:30%;height:125%;background:linear-gradient(160deg,#2f5a3a,#1c3a26);border-radius:0 46% 38% 0/0 60% 40% 0;opacity:.9;filter:blur(.5px)}
+.land::after{content:"";position:absolute;right:-30%;bottom:6%;width:60%;height:28%;background:inherit;border-radius:50%}
+.storm{position:absolute;left:62%;top:52%;width:min(58%,330px);aspect-ratio:1;transform:translate(-50%,-50%)}
+.storm .arms{position:absolute;inset:0;border-radius:50%;
+  background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.95) 0deg,rgba(255,255,255,.55) 22deg,rgba(255,255,255,0) 50deg,rgba(255,255,255,0) 72deg);
+  -webkit-mask:radial-gradient(circle,#000 0 8%,#000 30%,rgba(0,0,0,.85) 55%,transparent 72%);mask:radial-gradient(circle,#000 0 8%,#000 30%,rgba(0,0,0,.85) 55%,transparent 72%);
+  filter:blur(3px);animation:rot 14s linear infinite}
+.storm .arms.b{transform:scale(.7);animation-duration:9s;opacity:.8}
+.storm .eye{position:absolute;left:50%;top:50%;width:7%;aspect-ratio:1;border-radius:50%;transform:translate(-50%,-50%);background:#06182b;box-shadow:0 0 0 3px #ffffff55,0 0 18px 6px #ffffff66}
+@keyframes rot{to{transform:rotate(-360deg)}}
+.storm .arms.b{animation-name:rotb}
+@keyframes rotb{from{transform:scale(.7) rotate(0)}to{transform:scale(.7) rotate(-360deg)}}
+
+/* ---------- build ---------- */
+.build{display:grid;grid-template-columns:minmax(380px,460px) 1fr;gap:22px;padding:22px 28px 28px;min-height:calc(100vh - 72px)}
+.panel{padding:24px}
+.panel h2{font-family:Anton,sans-serif;font-weight:400;font-size:36px;text-transform:uppercase;line-height:1}
+.parts{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.part{display:grid;grid-template-columns:36px 1fr auto;gap:12px;align-items:center;padding:9px 14px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25);transition:.2s}
+.part:hover{border-color:var(--line2)}
+.part .n{width:36px;height:36px;border-radius:10px;background:#ffffff14;display:grid;place-items:center;font-weight:600}
+.part .k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.part .v{font-weight:600;font-size:13.5px}
+.part .fx{font-size:12px;color:var(--muted);margin-top:2px}
+.seg{display:flex;padding:3px;border-radius:999px;border:1px solid var(--line);background:#0006}
+.seg button{height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg button.on{background:#fff;color:#000}
+.seg button.on.adv{background:var(--blue);color:#fff}
+.ready{padding:16px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.3)}
+.meter{margin-top:12px}
+.meter .row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}
+.meter .row span:last-child{font-weight:600}
+.bar{height:6px;border-radius:999px;background:#ffffff1c;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:inherit;background:var(--good);transition:width .7s cubic-bezier(.2,.8,.2,1),background .4s}
+.bar i.warn{background:var(--warn)}.bar i.bad{background:var(--bad)}.bar i.blue{background:var(--blue)}
+.pad{position:relative;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:var(--img-horizon) center 70%/cover}
+.pad::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#0008,transparent 40%,#0006)}
+.rocket{position:absolute;left:44%;bottom:6%;height:78%;transform:translateX(-50%);filter:drop-shadow(0 0 30px #5aa9ff44)}
+.nose{position:absolute;right:22px;top:22px;width:270px;padding:18px}
+.nose .t{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:10px}
+.nose .r{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px dashed #ffffff14}
+.nose .r b{font-weight:600}.nose .r b.adv{color:var(--blue)}
+.pad .cap{position:absolute;left:22px;bottom:20px;max-width:340px}
+.pad .cap .display{font-size:46px}
+
+/* ---------- launch ---------- */
+.launch{position:fixed;inset:0;z-index:30;background:#000;overflow:hidden}
+.launch .sky{position:absolute;inset:0;background:var(--img-horizon) center bottom/cover;transition:transform 6s cubic-bezier(.5,0,.3,1)}
+.launch.go .sky{transform:translateY(30%) scale(1.15)}
+.launch .lrocket{height:100%;display:block}
+.launch .plume{position:absolute;left:50%;top:96%;width:40px;height:0;transform:translateX(-50%);background:linear-gradient(#fff,#ffc85799,#ff7a6b00);border-radius:50%;filter:blur(6px);transition:height 1.5s}
+.launch.go .plume{height:60vh}
+.launch .hud{position:absolute;left:0;right:0;top:12vh;text-align:center}
+.launch .hud .display{font-size:clamp(48px,7vw,96px);margin-top:12px;transition:opacity .3s}
+.launch .foot{position:absolute;left:8vw;right:8vw;bottom:6vh;display:flex;align-items:center;gap:20px}
+.launch .foot .bar{flex:1;height:3px}
+.launch .foot .bar i{background:#fff;transition:width .2s linear}
+
+/* ---------- operate ---------- */
+.ops{display:grid;grid-template-columns:1fr 330px;gap:20px;padding:20px 28px 28px;max-width:1500px;margin:0 auto}
+.view{position:relative;height:clamp(300px,44vh,460px);border-radius:var(--r);overflow:hidden;border:1px solid var(--line)}
+.view .tags{position:absolute;left:14px;top:14px;display:flex;gap:6px;z-index:3}
+.view .tags .chip{background:#000a;backdrop-filter:blur(6px)}
+.view .tags .chip.solid{background:#fff}
+.view .note{position:absolute;bottom:12px;font-size:12px;padding:4px 10px;border-radius:8px;background:#000a;color:var(--muted);z-index:3}
+.fmap{position:absolute;inset:0;background:radial-gradient(90% 80% at 40% 50%,#3c4a2a 0,#26331d 55%,#151c10 100%)}
+.fmap::after{content:"";position:absolute;inset:0;background-image:linear-gradient(#ffffff07 1px,transparent 1px),linear-gradient(90deg,#ffffff07 1px,transparent 1px);background-size:36px 36px}
+.freg{position:absolute;border:1px solid #ffffff30;border-radius:14px;background:#ffffff06}
+.freg b{position:absolute;left:10px;top:8px;font-size:12px;font-weight:600;color:#ffffffb0;letter-spacing:.04em}
+.freg.comm{background:repeating-linear-gradient(45deg,#ffffff0a 0 6px,transparent 6px 12px)}
+.hot{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:radial-gradient(circle,#fff3c2 0,#ff9d3d 40%,#ff4d1c 70%,#ff4d1c00 72%);box-shadow:0 0 18px 6px #ff6a2a88;z-index:2}
+.hot.missed{background:none;border:2px dashed #ff7a6b;box-shadow:none}
+.hot .lb.l{left:auto;right:18px}
+.hot .lb{position:absolute;left:18px;top:-2px;white-space:nowrap;font-size:12px;color:#fff;background:#000a;padding:1px 6px;border-radius:6px}
+.vmap{position:absolute;inset:0;background:linear-gradient(90deg,#2d3b25 0,#2d3b25 33%,#3d4a2a 33%,#3d4a2a 66%,#3a3d44 66%,#3a3d44 100%)}
+.vzone{position:absolute;top:0;bottom:0;border-right:1px dashed #ffffff30}
+.vzone b{position:absolute;left:12px;top:44px;font-size:12px;font-weight:600;color:#ffffffc0}
+.vzone.q{box-shadow:inset 0 0 0 3px #5aa9ff}.vzone.d{background:#5aa9ff26}
+.river{position:absolute;left:0;right:0;top:48%;height:22px;background:linear-gradient(90deg,#2a6fd6,#3d8bff);border-radius:12px;transform:skewY(-4deg);opacity:.9}
+.flood{position:absolute;background:#3d8bff66;border-radius:40%}
+.clouds{position:absolute;inset:0;background:radial-gradient(30% 25% at 20% 30%,#fff,#fff0 70%),radial-gradient(35% 30% at 65% 60%,#fff,#fff0 70%),radial-gradient(28% 22% at 85% 25%,#fff,#fff0 70%);pointer-events:none}
+.night{position:absolute;inset:0;background:#000814;pointer-events:none}
+.scanbox{position:absolute;border:1.5px dashed var(--warn);border-radius:6px;transition:all .6s cubic-bezier(.2,.8,.2,1);z-index:2;box-shadow:0 0 0 9999px #00000030}
+.scanbox::after{content:"";position:absolute;left:-1px;top:-1px;width:10px;height:10px;border-left:2px solid var(--warn);border-top:2px solid var(--warn)}
+.decision{margin-top:18px;padding:22px}
+.dhead{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}
+.dhead .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#ff7a6b22;border:1px solid #ff7a6b55;color:var(--bad);flex:none}
+.dhead h3{font-family:Anton,sans-serif;font-weight:400;font-size:28px;text-transform:uppercase;line-height:1.05}
+.dhead p{color:var(--muted);font-size:13px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.og .lab{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:8px}
+.opt{width:100%;display:flex;gap:12px;align-items:center;text-align:left;padding:11px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.25);margin-bottom:8px;transition:.2s}
+.opt:hover{border-color:var(--line2)}
+.opt .rd{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line2);flex:none;transition:.2s}
+.opt.on{border-color:var(--blue);background:#2f7dff1f}
+.opt.on .rd{border:5px solid var(--blue);background:#fff}
+.opt b{display:block;font-size:13px;font-weight:600}
+.opt span{font-size:12px;color:var(--muted)}
+.dfoot{display:flex;gap:14px;align-items:center;margin-top:10px}
+.pred{flex:1;font-size:12px;color:var(--muted);padding:11px 14px;border-radius:12px;background:#ffffff0c;border:1px solid #ffffff10}
+.pred b{color:#fff}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0 16px}
+.res{padding:14px 16px;border-radius:14px;font-size:12.5px;line-height:1.55}
+.res h4{font-size:12px;font-weight:600;margin-bottom:4px;letter-spacing:.04em}
+.res.good{background:#3ddc9714;border:1px solid #3ddc9744}.res.good h4{color:var(--good)}
+.res.trade{background:#ffc85712;border:1px solid #ffc85740}.res.trade h4{color:var(--warn)}
+.lesson{font-size:12px;color:var(--muted);flex:1}
+.side{display:flex;flex-direction:column;gap:14px}
+.dash{padding:18px}
+.dash h4{font-size:13px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.dash h4 i{width:6px;height:6px;border-radius:50%;background:var(--blue);box-shadow:0 0 10px var(--blue)}
+.dash .meter .row span:first-child{color:var(--muted)}
+.d{font-size:12px;font-weight:600;margin-left:4px}
+.d.up{color:var(--good)}.d.down{color:var(--bad)}.d.zero{color:var(--dim)}
+.kv{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0}
+.kv span{color:var(--muted)}.kv b{font-weight:600}
+.mini-globe{width:100%;aspect-ratio:1.6;border-radius:16px;overflow:hidden;position:relative;background:#000}
+.mini-globe img{position:absolute;width:62%;left:50%;top:50%;transform:translate(-50%,-50%);filter:drop-shadow(0 0 24px #3b82f677)}
+.orbit{position:absolute;left:50%;top:50%;width:84%;height:30%;border:1px dashed #ffffff40;border-radius:50%;transform:translate(-50%,-50%) rotate(-12deg)}
+.sat{position:absolute;width:8px;height:8px;border-radius:50%;background:#fff;box-shadow:0 0 12px 3px #5aa9ff;left:18%;top:42%}
+
+/* modal */
+.modal-wrap{position:fixed;inset:0;z-index:40;display:grid;place-items:center;background:rgba(0,0,0,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:fade .3s}
+.modal{width:min(480px,92vw);padding:28px;background:rgba(14,18,28,.72)}
+.modal .eyebrow{color:var(--bad)}
+.modal h2{font-family:Anton,sans-serif;font-weight:400;font-size:40px;text-transform:uppercase;line-height:1;margin:10px 0 12px}
+.modal p{color:var(--muted);line-height:1.6}
+.modal .decide{margin:16px 0 20px;padding:12px 14px;border-radius:12px;background:#ffffff0d;font-size:12.5px;color:var(--muted)}
+.modal .decide b{color:#fff}
+.modal .acts{display:flex;gap:10px}.modal .acts .btn{flex:1}
+
+/* report */
+.report{display:grid;grid-template-columns:380px 1fr;gap:20px;padding:20px 28px 28px;max-width:1400px;margin:0 auto}
+.score{padding:26px;position:relative;overflow:hidden;min-height:230px;background:linear-gradient(180deg,#0006,#000c),var(--img-half) center/cover}
+.score .big{font-family:Anton,sans-serif;font-size:110px;line-height:.9}
+.score .big small{font-family:Poppins;font-size:18px;color:var(--muted);margin-left:6px}
+.req{display:flex;align-items:center;gap:10px;font-size:12.5px;padding:6px 0}
+.req .ck{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:12px;flex:none}
+.req .ck.y{background:var(--good);color:#032015}.req .ck.n{background:var(--bad);color:#2a0905}
+.req span{flex:1;color:var(--muted)}
+.dec{display:grid;grid-template-columns:170px 1fr 1fr;gap:16px;padding:14px 0;border-bottom:1px solid #ffffff12;font-size:12px;line-height:1.55}
+.dec:last-child{border-bottom:0}
+.dec .t b{display:block;font-size:13px}
+.dec .t span{color:var(--muted)}
+.dec .g{color:var(--good)}.dec .w{color:var(--warn)}
+.acts-row{display:flex;gap:12px;justify-content:flex-end;margin-top:18px}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:60;padding:12px 20px;border-radius:999px;background:#fff;color:#000;font-weight:600;font-size:13px;animation:fade .3s}
+
+@media(max-width:1000px){
+  .signin,.build,.ops,.report{grid-template-columns:1fr}
+  .dest-grid,.mis-grid{grid-template-columns:1fr}
+  .card-sign{justify-self:stretch}
+  .steps .step span.lbl,.step-line{display:none}
+  .dec{grid-template-columns:1fr}
+  .pad{min-height:520px}
+}
+
+/* ---- Sign-in: teammate demo style (navy gradient, white card) ---- */
+.screen.signin{background:linear-gradient(180deg,#0c1631 0%,#18264a 45%,#2a3f6c 100%);font-family:Inter,system-ui,sans-serif;gap:6vw}
+.signin .eyebrow{color:#a9bff5;font-family:Inter,sans-serif;font-weight:500;font-size:15px;letter-spacing:.2em}
+.signin h1.display{font-family:"Space Grotesk",Inter,sans-serif;font-weight:700;text-transform:none;letter-spacing:-.01em;line-height:1.0;font-size:clamp(48px,5.4vw,104px);margin:22px 0 26px;color:#fff}
+.signin p.lead{color:#cdd8ef;font-size:clamp(16px,1.35vw,22px);line-height:1.55;max-width:560px}
+.signin .card-sign{background:#fff;color:#16213e;border:none;border-radius:26px;padding:clamp(28px,3.6vw,56px);box-shadow:0 30px 80px #0007;backdrop-filter:none;max-width:600px;width:100%;justify-self:end}
+.signin .card-sign h2{font-family:"Space Grotesk",Inter,sans-serif;font-weight:700;font-size:clamp(28px,2.6vw,40px);color:#16213e;text-transform:none;letter-spacing:0;margin-bottom:10px}
+.signin .card-sign .muted{color:#55607a!important;font-size:clamp(14px,1.1vw,17px)!important}
+.signin .card-sign .field label{color:#16213e;font-weight:600;font-size:15px;letter-spacing:0;text-transform:none;font-family:Inter,sans-serif}
+.signin .card-sign input{background:#fff;color:#16213e;border:1.5px solid #e1e5ed;border-radius:12px;height:56px;font-size:17px;padding:0 18px;font-family:Inter,sans-serif}
+.signin .card-sign input::placeholder{color:#6b7488}
+.signin .card-sign input:focus{outline:none;border-color:#2f6fe8;box-shadow:0 0 0 3px #2f6fe833}
+.signin .card-sign .btn.primary{background:#2f6fe8;color:#fff;border-radius:10px;height:60px;width:100%;font-family:Inter,sans-serif;font-weight:600;font-size:19px;letter-spacing:0;text-transform:none;box-shadow:none;margin-top:8px}
+.signin .card-sign .btn.primary:hover{background:#285fd0}
+.signin .card-sign .field{margin-top:20px}
+.signin .card-sign .small{color:#55607a;text-align:center;font-size:16px;margin-top:18px}
+.signin .card-sign .small a{color:#2f6fe8;text-decoration:underline}
+</style>
+</head>
+<body>
+<div id="bg"><div class="photo" id="bgPhoto"></div><div class="shade" id="bgShade"></div><div class="stars"></div><div id="flares"></div></div>
+<div id="app"></div>
+<div id="layer"></div>
+
+<script src="scenario.js"></script>
+<script src="provenance.js"></script>
+<script src="nasa-data.js"></script>
+<script src="nasa-s1.js"></script>
+<script src="engine.js"></script>
+<script src="wildfire-engine.js"></script>
+<script src="flood-engine.js"></script>
+<script>
+const GLOBE='assets/globe.webp';
+const $=s=>document.querySelector(s);
+const fmt=n=>(Math.round(n*10)/10).toString();
+
+/* ================== DATA ================== */
+const ENG=window.SWEngine, CFG=ENG.makeConfig('v34');
+const PARTLABEL={instrument:'Scientific instrument',observation:'Observation system',power:'Power system',comms:'Communication system',storage:'Data storage'};
+const PARTFX={
+ instrument:{std:p=>`${p.sizeGB} GB/image · ${p.basePts} pt/image · ${p.imgKW} kW while imaging`,adv:p=>`${p.sizeGB} GB/image · ${p.basePts} pts/image · ${p.imgKW} kW while imaging`},
+ observation:{std:p=>`Up to ${p.maxPerHour} image/hour`,adv:p=>`Up to ${p.maxPerHour} images/hour`},
+ power:{std:p=>`${p.solarKW} kW solar · ${p.battKWh} kWh battery`,adv:p=>`${p.solarKW} kW solar · ${p.battKWh} kWh battery`},
+ comms:{std:p=>`Up to ${p.rateGBh} GB/hour to Earth`,adv:p=>`Up to ${p.rateGBh} GB/hour to Earth`},
+ storage:{std:p=>`${p.capGB} GB on board`,adv:p=>`${p.capGB} GB on board`}};
+const PARTS=Object.keys(PARTLABEL).map(k=>({key:k,label:PARTLABEL[k],
+  std:Object.assign({n:CFG.parts[k].std.name,kg:CFG.parts[k].std.kg,m:CFG.parts[k].std.costM,fx:PARTFX[k].std(CFG.parts[k].std)}),
+  adv:Object.assign({n:CFG.parts[k].adv.name,kg:CFG.parts[k].adv.kg,m:CFG.parts[k].adv.costM,fx:PARTFX[k].adv(CFG.parts[k].adv)})}));
+const MAX_KG=CFG.limits.kg, MAX_M=CFG.limits.costM, BUS=CFG.bus;
+
+const CH=[
+ {title:'The storm is developing',sub:'Forecasters need a first look at the storm’s structure.',
+  alert:'A hurricane is strengthening over the Atlantic. Forecasters need images that show the storm’s shape and its eye.',
+  decide:'how sharp your images are and how much of the storm you scan.',
+  groups:[{lab:'Instrument mode',opts:[['std','Standard resolution','Smaller files, less power'],['high','High resolution','Sharper, bigger files']]},
+          {lab:'Observation mode',opts:[['wide','Wide scan','Covers 90% of the storm area'],['focus','Focused scan','Covers 45%: sharp core, half the data']]}],
+  lesson:'Sharper, more frequent images mean more data to store and send.'},
+ {title:'Storage is filling up',sub:'Keep useful images without running out of space.',
+  alert:'Images are piling up on board. More are coming, and storage is limited.',
+  decide:'image quality and what to do when storage is full.',
+  groups:[{lab:'Instrument mode',opts:[['std','Standard resolution','Saves space'],['high','High resolution','Best detail, more space']]},
+          {lab:'Storage plan',opts:[['keep','Keep all images','New images are refused when full'],['prio','Prioritize key images','Drop low-value images to make room']]}],
+  lesson:'Storage is a buffer, not a bin: what can’t be sent or stored is lost.'},
+ {title:'Power anomaly!',sub:'Solar generation is down to 35%.',
+  alert:'A fault cuts your solar power to 35% for six hours. The battery must cover the gap, and the spacecraft’s essential systems always come first.',
+  decide:'how hard to run the satellite while power is low.',
+  groups:[{lab:'Power mode',opts:[['normal','Normal operations','Full activity, more drain'],['save','Power saving','25% less extra power, 1 picture/hour max']]},
+          {lab:'Observation mode',opts:[['freq','Frequent','As many pictures as hardware allows'],['occ','Occasional','One picture every 2 hours']]}],
+  lesson:'Solar panels and batteries work as a team; when sunlight drops, stored energy decides what you can do.'},
+ {title:'Urgent hurricane update',sub:'Deliver a fresh image before the deadline.',
+  alert:'The storm is nearing the coast. Forecasters need a fresh image delivered before hour 24.',
+  decide:'how fast to send data and how much power to spend.',
+  groups:[{lab:'Downlink speed',opts:[['std','Standard','Half speed, less power'],['fast','High-speed','Full speed, more power']]},
+          {lab:'Power mode',opts:[['full','Full power','Full sending rate'],['eco','Eco mode','30% less power, 30% slower']]}],
+  lesson:'Data only helps people once it reaches the ground, on time. A big file already being sent can hold up a fresh one.'},
+];
+
+/* ================== STATE ================== */
+const S={screen:'signin',design:{instrument:'std',observation:'std',power:'std',comms:'std',storage:'std'},unlocked:false};
+function resetOps(){
+  S.ops={ci:0,phase:'alert',choice:CH.map(c=>c.groups.map(g=>g.opts[0][0])),M:Object.assign(ENG.newMission(S.design,'v34',S.scn.storm),{traceOn:true}),delta:{},log:[]};
+}
+function D(){return ENG.derive(S.ops.M)}
+
+/* ================== BACKGROUND ================== */
+const BG={
+ signin:{img:'var(--img-hero)',flip:true,blur:0,shade:'linear-gradient(90deg,#000 0,#000c 30%,#0004 60%,#0000)',flares:[[8,78,'sm'],[46,14,'']]},
+ ready:{img:'var(--img-horizon)',blur:0,shade:'linear-gradient(180deg,#000a,#0000 50%,#0006)',flares:[[14,20,''],[84,66,'sm tilt']]},
+ dest:{img:'none',blur:0,shade:'radial-gradient(80% 60% at 50% 100%,#0b2a5a55,#000 70%)',flares:[[6,30,''],[92,12,'sm'],[78,88,'sm tilt']]},
+ missions:{img:'var(--img-half)',blur:6,shade:'linear-gradient(90deg,#000e,#000b 50%,#0008)',flares:[[90,18,'']]},
+ build:{img:'var(--img-side)',blur:22,shade:'#000c',flares:[]},
+ ops:{img:'var(--img-side)',blur:28,shade:'linear-gradient(180deg,#000d,#000b)',flares:[]},
+ report:{img:'var(--img-horizon)',blur:24,shade:'#000c',flares:[]},
+};
+function setBg(key){
+  const b=BG[key];const p=$('#bgPhoto');
+  p.style.backgroundImage=b.img;p.style.filter=b.blur?`blur(${b.blur}px) brightness(.9)`:'none';
+  p.style.transform=b.flip?'scaleX(-1)':'none';
+  $('#bgShade').style.background=b.shade;
+  $('#flares').innerHTML=b.flares.map(([x,y,c])=>`<div class="flare ${c}" style="left:calc(${x}% - 90px);top:calc(${y}% - 90px)"><i></i></div>`).join('');
+}
+
+/* ================== PIECES ================== */
+const LOGO=`<svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="7" fill="#fff"/><ellipse cx="16" cy="16" rx="14" ry="5" stroke="#fff" stroke-width="1.6" transform="rotate(-20 16 16)"/></svg>`;
+function nav(step,name='Storm Watch',chip='Earth · Mission 1'){
+  const names=['Build','Launch','Operate','Report'];
+  return `<div class="nav"><div class="nav-in">
+   <button class="backbtn" data-a="back">‹ Back</button>
+   <div class="logo">${LOGO}<span>${name}</span><span class="chip">${chip}</span></div>
+   <div class="steps">${names.map((n,i)=>`${i?'<div class="step-line"></div>':''}<div class="step ${i<step?'done':i===step?'on':''}"><div class="dot">${i<step?'✓':i+1}</div><span class="lbl">${n}</span></div>`).join('')}</div>
+   <div class="who"><button class="navbtn" data-a="sources">Data & sources</button></div></div></div>`;
+}
+let stormArt=()=>`<div class="ocean"></div><div class="land"></div><div class="storm"><div class="arms"></div><div class="arms b"></div><div class="eye"></div></div>`;
+const rocketSVG=(cls,label='STORM WATCH')=>`<svg class="${cls}" viewBox="0 0 120 520" fill="none">
+ <path d="M60 4C38 40 30 90 30 130h60c0-40-8-90-30-126z" fill="#f4f7fb"/>
+ <rect x="30" y="130" width="60" height="320" fill="#eef2f8"/><rect x="30" y="130" width="60" height="320" fill="url(#sh)"/>
+ <rect x="30" y="236" width="60" height="9" fill="#2f7dff"/>
+ <path d="M30 380L6 470h24zM90 380l24 90H90z" fill="#0b1830"/>
+ <rect x="40" y="450" width="40" height="18" fill="#3a4250"/>
+ <text x="64" y="290" fill="#0b1830" font-family="Anton,Impact" font-size="15" transform="rotate(90 64 290)" letter-spacing="2">${label}</text>
+ <defs><linearGradient id="sh" x1="30" x2="90"><stop stop-color="#000" stop-opacity=".0"/><stop offset=".7" stop-color="#000" stop-opacity=".05"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></linearGradient></defs></svg>`;
+function meter(label,val,max,unit,cls,delta){
+  const pct=Math.max(0,Math.min(100,val/max*100));
+  return `<div class="meter"><div class="row"><span>${label}</span><span>${unit(val)}${delta||''}</span></div><div class="bar"><i class="${cls||''}" style="width:${pct}%"></i></div></div>`;
+}
+function dlt(v,suf=''){if(v===undefined)return'';const r=Math.round(v*10)/10;if(r===0)return`<span class="d zero">±0${suf}</span>`;return `<span class="d ${r>0?'up':'down'}">${r>0?'+':''}${r}${suf}</span>`}
+
+/* ================== SCREENS ================== */
+const V={};
+V.signin=()=>`<div class="screen signin">
+  <div><div class="eyebrow">NASA-inspired mission lab</div>
+   <h1 class="display">Design it.<br>Launch it.<br>Run the mission.</h1>
+   <p class="lead">Build a real-style satellite, make engineering trade-offs, and see if your mission succeeds.</p></div>
+  <form class="glass card-sign" id="signForm">
+   <h2>Sign in</h2><p class="muted" style="font-size:13px">Pick up your missions where you left off.</p>
+   <div class="field"><label>Email</label><input type="email" placeholder="you@school.edu"></div>
+   <div class="field"><label>Password</label><input type="password" value="••••••••"></div>
+   <button class="btn primary" type="submit">Sign in</button>
+   <p class="small">New here? <a href="#" onclick="return false">Create an account</a></p>
+  </form></div>`;
+V.ready=()=>`<div class="screen center-hero">
+  <div class="eyebrow">Welcome back, Cadet</div>
+  <h1 class="display">Mission Control<br>is ready</h1>
+  <p>Every mission takes about 10–15 minutes. Choose wisely: every part you add costs mass, money and power.</p>
+  <button class="btn primary" data-a="go" data-to="dest">Start →</button></div>`;
+V.dest=()=>`<div class="screen page">
+  <div class="eyebrow">Step 1 · Choose a destination</div>
+  <h1 class="display">Where will your<br>mission go?</h1>
+  <div class="dest-grid">
+   <div class="glass dest"><div class="planet earth"></div><h3>Earth</h3><p>3 missions · Beginner to intermediate</p><button class="btn blue" data-a="go" data-to="missions">Explore Earth</button></div>
+   <div class="glass dest locked"><div class="planet moon"></div><h3>Moon</h3><p>🔒 Coming soon</p><button class="btn ghost" disabled>Locked</button></div>
+   <div class="glass dest locked"><div class="planet mars"></div><h3>Mars</h3><p>🔒 Coming soon</p><button class="btn ghost" disabled>Locked</button></div>
+  </div></div>`;
+V.missions=()=>`<div class="screen page">
+  <button class="linkback" data-a="go" data-to="dest">← All destinations</button>
+  <h1 class="display">Earth missions</h1>
+  <p class="sub">Satellites help people on Earth see storms, fires and floods from above. Storm Watch is the easier start.</p>
+  <div class="mis-grid">
+   <div class="glass mis active"><div class="art">${stormArt()}<span class="chip solid">Beginner</span></div>
+    <div class="body"><h3>Storm Watch</h3><p>Watch a growing Atlantic hurricane from geostationary orbit and get key images to forecasters in 24 hours.</p>
+    <div><button class="btn blue" data-a="startMission">Start mission →</button></div></div></div>
+   <div class="glass mis active"><div class="art" style="background:radial-gradient(60% 80% at 60% 60%,#ff7a3d,#7a2410 55%,#1a0703)"><span class="chip solid">Intermediate</span></div>
+    <div class="body"><h3>Wildfire Watch</h3><p>Spot fires from low Earth orbit. Limited passes, short ground contacts: get the alert to responders in time.</p><div><button class="btn blue" data-a="fstart">Start mission →</button></div></div></div>
+   <div class="glass mis active"><div class="art" style="background:radial-gradient(70% 90% at 40% 60%,#5aa9ff,#123a6a 55%,#040d1a)"><span class="chip solid">Beginner–Intermediate</span></div>
+    <div class="body"><h3>Flood Watch</h3><p>Map a flooding river valley with an optical camera or radar. Clouds, night and short contacts stand in your way.</p><div><button class="btn blue" data-a="lstart">Start mission →</button></div></div></div>
+  </div></div>`;
+
+function totals(){let kg=BUS.kg,m=BUS.costM;PARTS.forEach(p=>{const o=p[S.design[p.key]];kg+=o.kg;m+=o.m});return{kg,m}}
+V.build=()=>{const t=totals();const okKg=t.kg<=MAX_KG,okM=t.m<=MAX_M,ok=okKg&&okM;
+ return `<div class="screen">${nav(0)}<div class="build">
+  <div class="glass panel"><h2>Build your satellite</h2><p class="muted" style="font-size:12.5px;margin-top:6px">Choose Standard or Advanced for each part. Watch mass and budget above the parts.</p>
+   <div class="parts">${PARTS.map((p,i)=>{const v=S.design[p.key];const o=p[v];return `<div class="part"><div class="n">${i+1}</div>
+     <div><div class="k">${p.label}</div><div class="v">${o.n}</div><div class="fx">${o.fx} · ${o.kg} kg · $${o.m}M</div></div>
+     <div class="seg"><button class="${v==='std'?'on':''}" data-a="part" data-k="${p.key}" data-v="std">Std</button><button class="${v==='adv'?'on adv':''}" data-a="part" data-k="${p.key}" data-v="adv">Adv</button></div></div>`}).join('')}</div>
+   ${scenarioCard('storm')}<div class="ready"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-weight:600">Launch readiness</b><span class="chip ${ok?'good':'bad'}">${ok?'Launch ready':okKg?'Over budget':'Too heavy'}</span></div>
+    ${meter('Total mass',t.kg,MAX_KG,v=>`${v.toLocaleString()} / ${MAX_KG.toLocaleString()} kg`,okKg?(t.kg/MAX_KG>.95?'warn':''):'bad')}
+    ${meter('Mission budget',t.m,MAX_M,v=>`$${v}M / $${MAX_M}M`,okM?(t.m/MAX_M>.95?'warn':''):'bad')}
+    <div class="muted" style="font-size:12px;margin-top:8px">Includes fixed spacecraft bus: ${BUS.kg.toLocaleString()} kg · $${BUS.costM}M (structure, propulsion, fuel, thermal).</div>
+    ${!ok?`<div class="muted" style="font-size:12px;margin-top:6px;color:var(--bad)">${!okKg?`Too heavy by ${(t.kg-MAX_KG).toLocaleString()} kg. `:''}${!okM?`Over budget by $${t.m-MAX_M}M. Try a Standard part.`:''}</div>`:''}
+    <button class="btn good" style="width:100%;margin-top:16px;height:48px" data-a="mrr" data-m="storm" ${ok?'':'disabled'}>Readiness review →</button></div>
+  </div>
+  <div class="pad">${rocketSVG('rocket')}
+   <div class="glass nose"><div class="t">Inside the nose cone</div>${PARTS.map(p=>`<div class="r"><span class="muted">${p.label.replace('Scientific ','')}</span><b class="${S.design[p.key]}">${S.design[p.key]==='adv'?'Advanced':'Standard'}</b></div>`).join('')}<div class="muted" style="font-size:12px;margin-top:10px">Orbit: Geostationary (fixed) · 35,786 km</div></div>
+  </div></div></div>`};
+
+/* ---------- operate ---------- */
+function scanRect(){const o=S.ops;const c=o.choice[o.ci];
+  if(o.ci===0&&c[1]==='focus')return{l:52,t:30,w:20,h:44};
+  if(o.ci===2&&c[1]==='occ')return{l:46,t:20,w:32,h:64};
+  return{l:34,t:8,w:56,h:84};}
+function predict(){const o=S.ops,c=o.choice[o.ci],ci=o.ci;
+  if(ci===0)return `Data ${c[0]==='high'?'high':'low'} · Detail ${c[0]==='high'?'higher':'lower'} · Coverage ${c[1]==='wide'?'90%':'45%'}`;
+  if(ci===1)return `Storage growth ${c[0]==='high'?'fast':'slow'} · When full: ${c[1]==='keep'?'refuse new images':'drop low-value images'}`;
+  if(ci===2)return `Battery drain ${c[0]==='normal'?'high':'moderate'} · Images ${c[1]==='freq'?(c[0]==='save'?'some':'many'):'few'}`;
+  return `Sending speed ${c[0]==='fast'?(c[1]==='eco'?'medium-high':'high'):(c[1]==='eco'?'low':'medium')} · Power use ${c[0]==='fast'&&c[1]==='full'?'high':'lower'}`;}
+function dash(){const o=S.ops,d=o.delta,x=live(D());
+ return `<div class="side">
+  <div class="glass dash"><div class="mini-globe"><img src="${GLOBE}" alt=""><div class="orbit"></div><div class="sat"></div></div></div>
+  <div class="glass dash"><h4><i></i>Mission goal</h4>
+   ${meter('Storm coverage',x.coveredPhases,4,v=>`<b>${v} / 4 phases</b>`,x.coveredPhases>=3?'':'warn',dlt(d.cov))}
+   ${meter('Useful data delivered',x.deliveredScience,12,v=>`<b>${fmt(v)} / 12 pts</b>`,x.deliveredScience>=12?'':'warn',dlt(d.pts,' pts'))}</div>
+  <div class="glass dash"><h4><i></i>Satellite status</h4>
+   ${meter('Battery',x.batteryPct,100,v=>`<b>${Math.round(v)}%</b>`,x.batteryPct<30?'bad':x.batteryPct<70?'warn':'',dlt(d.batt,'%'))}
+   ${meter('Storage used',x.storagePct,100,v=>`<b>${Math.round(v)}%</b>`,x.storagePct>85?'bad':x.storagePct>60?'warn':'blue',dlt(d.st,'%'))}
+   ${meter('Health',x.health,100,v=>`<b>${v}%</b>`,x.health<80?'warn':'',dlt(d.health,'%'))}</div>
+  <div class="glass dash">
+   <div class="kv"><span>Mission time</span><b>${String(Math.round(x.t)).padStart(2,'0')}:00 / 24:00</b></div>
+   <div class="kv"><span>Time left</span><b>${24-Math.round(x.t)} h</b></div>
+   <div class="kv"><span>Critical update</span><b style="color:${x.criticalStatus==='Delivered'?'var(--good)':x.criticalStatus==='Missed'?'var(--bad)':x.criticalStatus==='Pending'?'var(--warn)':'#fff'}">${x.criticalStatus}</b></div>
+   <div class="muted" style="font-size:12px;margin-top:8px">Useful data = science points delivered to Earth, worth less the older they are when they arrive.</div></div>
+ </div>`;}
+V.ops=()=>{const o=S.ops,ch=chx('storm',o.ci),r=scanRect(),c=o.choice[o.ci];
+ let body;
+ if(o.phase==='result'){const L=o.log[o.ci];
+  body=`<div class="glass decision"><div style="display:flex;justify-content:space-between;align-items:center"><div class="dhead" style="margin:0"><div><h3>Challenge ${o.ci+1} result</h3><p>Your choices: <b style="color:#fff">${L.choices}</b></p></div></div><span class="chip ${L.met?'good':'warn'}">${L.badge}</span></div>
+   <div class="res-grid"><div class="res good"><h4>What went well</h4>${L.good}</div><div class="res trade"><h4>The trade-off</h4>${L.trade}</div></div>
+   <div class="dfoot"><div class="lesson">Lesson: ${ch.lesson} The dashboard on the right shows the updated numbers.</div><button class="btn primary" data-a="next">${o.ci===3?'View final report →':'Next challenge →'}</button></div></div>`;
+ } else {
+  body=`<div class="glass decision"><div class="dhead"><div class="ic">!</div><div><h3>${ch.title}</h3><p>${ch.sub}</p></div></div>
+   <div class="opts">${ch.groups.map((g,gi)=>`<div class="og"><div class="lab">${g.lab}</div>${g.opts.map(op=>`<button class="opt ${c[gi]===op[0]?'on':''}" data-a="opt" data-g="${gi}" data-v="${op[0]}"><div class="rd"></div><div><b>${op[1]}</b><span>${op[2]}</span></div></button>`).join('')}</div>`).join('')}</div>
+   ${predChips()}<div class="dfoot"><div class="pred"><b>Prediction:</b> ${predict()} <span style="opacity:.6">(estimates)</span></div><button class="btn blue" data-a="run">Confirm & run 6 hours</button></div></div>`;
+ }
+ if(o.phase==='playing')body=journeyPanel();
+ return `<div class="screen">${nav(2)}<div class="ops"><div>
+  <div class="view ${fpAttr()?'clickfp':''}" ${fpAttr()}>${stormArt()}
+   <div class="tags"><span class="chip solid">Challenge ${o.ci+1} / 4</span><span class="chip">Hours ${o.ci*6}–${o.ci*6+6}</span></div>
+   ${satOverlay()}<div class="scanbox" style="left:${r.l}%;top:${r.t}%;width:${r.w}%;height:${r.h}%"></div>
+   <div class="note" style="left:12px">Illustration · not real imagery</div>
+   <div class="note" style="right:12px;color:var(--warn)">Yellow box = what your camera is scanning</div>
+  </div>${body}</div>${dash()}</div></div>`};
+
+/* ---------- report ---------- */
+function scoreCard(){const sc=ENG.score(S.ops.M),x=sc.derived;
+  const req=[['Delivered science ≥ 12 pts',sc.gates.G1,fmt(x.deliveredScience)+' / 12'],['Coverage ≥ 3 storm phases',sc.gates.G2,x.coveredPhases+' / 4'],
+   ['Critical update on time (a phase-4 image delivered by hour 24)',sc.gates.G3,x.critical?`captured ${fmt(x.criticalRec.t)} h → delivered ${fmt(x.criticalRec.deliveredAt)} h`:'Missed'],['Essential systems running',sc.gates.G4,x.health+'% health']];
+  return{sci:Math.round(sc.sci*10)/10,tim:Math.round(sc.del*10)/10,res:Math.round(sc.eff*10)/10,rel:Math.round(sc.rel*10)/10,total:sc.total,req,success:sc.outcome==='Mission Success',outcome:sc.outcome,sc,x};}
+V.report=()=>{const o=S.ops,s=scoreCard(),x=s.x,M=o.M;
+ const chip=s.outcome==='Mission Success'?'good':s.outcome==='Partial Success'?'warn':'bad';
+ const lessons=[];
+ if(!s.sc.gates.G3)lessons.push(x.hasPhase4?'A fresh phase-4 image was taken but did not reach Earth by hour 24. Older images are not a substitute for a timely update.':'No usable phase-4 image could be taken in the final 6 hours (storage full or battery at reserve).');
+ if(x.meanLatency!==null&&x.meanLatency>6)lessons.push(`Delivered images arrived ${fmt(x.meanLatency)} h after capture on average, so forecasters got less value from them. The downlink was the bottleneck.`);
+ if(M.failed)lessons.push('Essential systems lost power for 2 hours during the anomaly. Running at full activity drained the battery that keeps the spacecraft alive.');
+ if(x.missedCaptures>0)lessons.push(`${x.missedCaptures} planned image(s) could not be taken (${Object.entries(M.missedReasons).map(([k,v])=>`${v} × ${k==='storage'?'storage full':'battery at reserve'}`).join(', ')}).`);
+ if(x.nOnboard>0)lessons.push(`${x.nOnboard} image(s) were still on board at hour 24 and count for nothing.`);
+ if(!lessons.length)lessons.push('Collection, storage, power and delivery stayed in balance. Try a cheaper design: can it still succeed?');
+ const advs=PARTS.filter(p=>S.design[p.key]==='adv').length;
+ const nextTry=s.success?(advs?'Try an all-Standard design. Can cheaper parts still succeed with smarter choices?':'Try one Advanced part. Does the extra mass and cost pay off in points?'):'Retry with the same satellite and change the decision closest to the red requirement, or redesign around the bottleneck named above.';
+ const ed=s.sc.effDetail;
+ return `<div class="screen">${nav(3)}<div class="report">
+  <div class="side">
+   <div class="glass score"><div class="eyebrow">Storm Watch · Mission report</div>
+    <div class="big" style="margin-top:16px;white-space:nowrap">${s.total}<small>/ 100</small></div><span class="chip ${chip}" style="margin-top:10px">${s.outcome}</span>
+    <p class="muted" style="font-size:12.5px;margin-top:8px">Delivered ${fmt(x.deliveredScience)} useful science points (${fmt(x.deliveredRaw)} before ageing) across ${x.coveredPhases} storm phases. Final battery ${Math.round(x.batteryPct)}%, health ${x.health}%.</p></div>
+   <div class="glass dash">${meter('Scientific observations',s.sci,35,v=>`<b>${fmt(v)} / 35</b>`,s.sci<35?'warn':'')}${meter('Timely data delivery',s.tim,35,v=>`<b>${fmt(v)} / 35</b>`,s.tim<35?'warn':'')}${meter('Resource efficiency',s.res,20,v=>`<b>${fmt(v)} / 20</b>`,s.res<20?'warn':'')}${meter('Spacecraft reliability',s.rel,10,v=>`<b>${fmt(v)} / 10</b>`,s.rel<10?'warn':'')}</div>
+   <div class="glass dash"><h4><i></i>Mission success requirements</h4>${s.req.map(r=>`<div class="req"><div class="ck ${r[1]?'y':'n'}">${r[1]?'✓':'✕'}</div><span>${r[0]}</span><b style="color:${r[1]?'var(--good)':'var(--bad)'}">${r[2]}</b></div>`).join('')}
+    <p class="muted" style="font-size:12px;margin-top:8px">Score and outcome are separate: success needs all four requirements, whatever the score.</p></div>
+  </div>
+  <div>
+   <div class="glass panel"><h2 style="font-size:30px;margin-bottom:6px">Your decisions & their trade-offs</h2>
+    ${o.log.map((L,i)=>`<div class="dec"><div class="t"><b>${CH[i].title}</b><span>${L.choices}</span></div><div class="g">+ ${L.good}</div><div class="w">− ${L.trade}</div></div>`).join('')}</div>
+   <div class="glass panel" style="margin-top:16px"><h2 style="font-size:26px;margin-bottom:8px">Mission analysis</h2>
+    <ul class="muted" style="line-height:1.6;padding-left:18px">${lessons.map(l=>`<li>${l}</li>`).join('')}</ul>
+    <p style="margin-top:8px"><b>Next attempt:</b> <span class="muted">${nextTry}</span></p>
+    <details style="margin-top:12px"><summary class="muted" style="cursor:pointer">Detailed metrics</summary>
+     <div class="muted" style="font-size:12.5px;line-height:1.7;margin-top:8px">
+      Images taken ${x.nCaptured} · delivered ${x.nDelivered} · lost ${x.nLost} · still on board ${x.nOnboard} · not taken ${x.missedCaptures}<br>
+      Data generated ${fmt(x.generatedGB)} GB · delivered ${fmt(x.deliveredGB)} GB · average delay ${x.meanLatency===null?'–':fmt(x.meanLatency)+' h'}<br>
+      Collected science ${fmt(x.collectedScience)} pts · per phase ${x.collectedByPhase.map(fmt).join(' / ')} · delivered per phase ${x.deliveredByPhase.map(fmt).join(' / ')} (target 3 each)<br>
+      Optional energy used ${fmt(M.energy.imaging+M.energy.comms)} kWh, ${Math.round((ed.energyYield||0)*100)}% of it produced delivered science · ${Math.round((ed.dataYield||0)*100)}% of generated data reached Earth (age-weighted)<br>
+      Essential systems powered ${fmt(M.essentialHours)} / 24 h · incidents ${M.incidents}</div></details></div>
+   ${reportExtras('storm')}<div class="acts-row"><button class="btn blue" data-a="retry">Retry, same satellite</button><button class="btn ghost" data-a="redesign">Redesign satellite</button><button class="btn primary" data-a="nextMission">Next mission →</button></div>
+  </div></div></div>`};
+
+/* ================== SIMULATION ================== */
+function simulate(){
+  const o=S.ops,ci=o.ci,c=o.choice[ci],M=o.M,g=CH[ci].groups;
+  const chName=c.map((v,i)=>g[i].opts.find(x=>x[0]===v)[1]).join(' + ');
+  const before=ENG.derive(M);
+  const sn=ENG.runChallenge(M,ci,c);const after=sn.after;
+  const capPts=sn.captured.reduce((a,r)=>a+r.pts,0),delPts=after.deliveredScience-before.deliveredScience;
+  const eNet=sn.solarKWh-sn.essentialKWh-sn.imagingKWh-sn.commsKWh;
+  const miss=sn.missed?` ${sn.missed} planned image(s) could not be taken.`:'';
+  let good='',trade='',met=true,badge='Objective met';
+  if(ci===0){const cov=c[1]==='wide'?90:45,det=Math.round(100*CFG.res[c[0]==='high'?'high':'std'].quality*CFG.c1Scan[c[1]].detail);
+    good=`You took ${sn.captured.length} images worth ${fmt(capPts)} science points (scan coverage ${cov}%, image detail ${det}/100). ${sn.delivered.length} already reached Earth.`;
+    trade=`Imaging used ${fmt(sn.imagingKWh)} kWh. Storage ${Math.round(before.storagePct)}% → ${Math.round(after.storagePct)}% (images are cleared once delivered).${c[1]==='focus'?' The focused scan missed the outer rain bands, so each image is worth less.':''}${miss}`;
+    met=after.coveredPhases>before.coveredPhases;badge=met?'Phase 1 covered':'Phase 1 missed';}
+  else if(ci===1){const lost=sn.lost.length;
+    good=`${sn.captured.length} new images (${fmt(capPts)} pts). ${sn.delivered.length} images reached Earth this period.`;
+    trade=`Storage: ${Math.round(before.storagePct)}% → ${Math.round(after.storagePct)}%.${lost?` ${lost} lower-value image(s) were dropped to make room.`:''}${miss} ${after.nOnboard} image(s) still waiting to be sent.`;
+    met=!sn.missed;badge=met?'All images stored':'Storage limited';}
+  else if(ci===2){
+    good=`${sn.captured.length} images during the anomaly (${fmt(capPts)} pts); ${sn.delivered.length} reached Earth.`;
+    trade=`Battery ${Math.round(before.batteryPct)}% → ${Math.round(after.batteryPct)}%. Energy balance over 6 h: ${eNet>=0?'+':''}${fmt(eNet)} kWh (solar ${fmt(sn.solarKWh)}, essential ${fmt(sn.essentialKWh)}, imaging ${fmt(sn.imagingKWh)}, sending ${fmt(sn.commsKWh)}).${miss}${after.health<before.health?` Essential systems lost power: health ${before.health}% → ${after.health}%.`:''}${M.failed?' Critical failure: science and sending stopped.':''}`;
+    met=!sn.missed&&after.health===before.health;badge=M.failed?'Critical failure':after.health<before.health?'Safe-mode incident':sn.missed?'Operations reduced':'Anomaly managed';}
+  else {
+    good=`Sent ${sn.delivered.length} images in the final 6 hours (+${fmt(delPts)} useful pts). ${after.critical?`Fresh image captured at ${fmt(after.criticalRec.t)} h reached forecasters at ${fmt(after.criticalRec.deliveredAt)} h.`:''}`;
+    trade=after.critical?`Sending used ${fmt(sn.commsKWh)} kWh. ${after.nOnboard} image(s) never left the satellite.`:`No fresh phase-4 image reached Earth by hour 24${after.hasPhase4?' (it was stuck behind other data)':' (none could be taken)'}. ${after.nOnboard} image(s) never left the satellite.`;
+    met=after.critical;badge=met?'Update delivered':'Update missed';}
+  o.delta={cov:after.coveredPhases-before.coveredPhases,pts:delPts,batt:after.batteryPct-before.batteryPct,st:after.storagePct-before.storagePct,health:after.health-before.health};
+  o.log[ci]={choices:chName,good,trade,met,badge};
+  if(ci===3&&ENG.score(M).outcome==='Mission Success')S.unlocked=true;
+}
+
+/* ================== MODAL / LAUNCH ================== */
+function showAlert(){const o=S.ops,ch=chx('storm',o.ci);
+  $('#layer').innerHTML=`<div class="modal-wrap"><div class="glass modal"><div class="eyebrow">Mission control alert · Challenge ${o.ci+1} of 4</div>
+   <h2>${ch.title}</h2><p>${ch.alert}</p><div class="decide"><b>You’ll decide:</b> ${ch.decide}</div>
+   <div class="acts"><button class="btn ghost" data-a="alertBack">Go back</button><button class="btn blue" data-a="accept">Accept challenge</button></div></div></div>`;}
+let launchTimer;
+function runLaunch(){
+  const caps=['Ignition','Liftoff','Max-Q','Stage separation','Nose cone opens','Satellite deployed'];
+  $('#layer').innerHTML=`<div class="launch" id="L"><div class="sky"></div><div style="position:absolute;left:50%;bottom:8%;height:46vh;transform:translateX(-50%)" id="rw">${rocketSVG('lrocket',S.mission==='fire'?'WILDFIRE WATCH':S.mission==='flood'?'FLOOD WATCH':'STORM WATCH')}</div>
+   <div class="hud"><div class="eyebrow">${S.mission==='fire'?'Wildfire Watch':S.mission==='flood'?'Flood Watch':'Storm Watch'} · Launch</div><div class="display" id="cap">T-minus 3</div></div>
+   <div class="foot"><div class="bar"><i id="lp" style="width:0"></i></div><button class="btn ghost" data-a="skip">Skip animation</button></div></div>`;
+  const L=$('#L'),rw=$('#rw');rw.style.transition='bottom 6s cubic-bezier(.6,0,.2,1)';
+  let t=0;const total=7000;
+  setTimeout(()=>{L.classList.add('go');rw.style.bottom='130%'},900);
+  launchTimer=setInterval(()=>{t+=100;$('#lp').style.width=(t/total*100)+'%';
+    const i=Math.min(caps.length-1,Math.floor(t/total*caps.length));const el=$('#cap');if(el&&el.textContent!==caps[i])el.textContent=caps[i];
+    if(t>=total+400)endLaunch();},100);
+}
+function endLaunch(){clearInterval(launchTimer);$('#layer').innerHTML='';if(S.mission==='fire'){resetF();go('fops');setTimeout(showFAlert,350);}else if(S.mission==='flood'){resetL();go('lops');setTimeout(showLAlert,350);}else{resetOps();go('ops');setTimeout(showAlert,350);}}
+function toast(m){const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2400)}
+
+
+/* ================== WILDFIRE WATCH ================== */
+const WF=window.WFEngine, WC=WF.CONFIG;
+const FLABEL={instrument:'Thermal imager',observation:'Observation system',power:'Power system',comms:'Communication system',storage:'Data storage'};
+const FFX={instrument:p=>`${p.sizeGB} GB/image · ${p.basePts} pt${p.basePts>1?'s':''}/image · +${p.imgKW} kW while imaging · detects ${p.sens>1?'weak':'strong'} fires`,
+ observation:p=>`Up to ${p.perPass} image${p.perPass>1?'s':''} per pass`,power:p=>`${p.solarKW} kW solar (0 in eclipse) · ${p.battKWh} kWh battery`,
+ comms:p=>`${p.rateGBh} GB/hour during contacts · +${p.commKW} kW`,storage:p=>`${p.capGB} GB on board`};
+const FPARTS=Object.keys(FLABEL).map(k=>({key:k,label:FLABEL[k],std:WC.parts[k].std,adv:WC.parts[k].adv}));
+const fmtH=h=>{const H=Math.floor(h+1e-9),m=Math.round((h-H)*60);return `${String(H).padStart(2,'0')}:${String(m).padStart(2,'0')}`};
+const CHF=[
+ {title:'Initial fire detection',sub:'First pass over the reported fire at 02:00.',hours:'00:00–06:00',win:'Pass 02:00 · contact 03:00–04:00',
+  alert:'Emergency teams report a wildfire in region A. Your satellite will pass overhead at 02:00 and can talk to a ground station from 03:00 to 04:00.',
+  decide:'where to look and how detailed your thermal images are.',
+  groups:[{lab:'Footprint',opts:[['wide','Wide-area survey','Regions A, B and C · weaker detection'],['targeted','Targeted on known fire','Region A only · stronger detection']]},
+          {lab:'Image mode',opts:[['std','Standard','Smaller files · may miss weaker fires'],['high','High detail','Bigger files · finds weaker fires']]}],
+  lesson:'You can only detect what is inside your footprint and strong enough for your instrument. No detection does not mean no fire.'},
+ {title:'Limited ground contact',sub:'One hour of contact at 09:00. What goes first?',hours:'06:00–12:00',win:'Pass 08:00 · contact 09:00–10:00',
+  alert:'Images and fire alerts are waiting on board. The next ground contact lasts only one hour.',
+  decide:'the order data is sent in, and whether to shrink images.',
+  groups:[{lab:'Downlink order',opts:[['alerts','Alerts first','Small urgent alerts jump the queue'],['fifo','First in, first out','Oldest data goes first']]},
+          {lab:'Imagery',opts:[['full','Full imagery','Full detail, big files'],['compress','Compress imagery','Half the size, 75% of the science value']]}],
+  lesson:'Contact time is the bottleneck in low Earth orbit. A 10 MB alert takes a minute; a big image can take hours.'},
+ {title:'Power anomaly!',sub:'Solar output drops to 15% from 12:00 to 18:00.',hours:'12:00–18:00',win:'Pass 14:00 · contact 15:00–16:00',
+  alert:'A fault cuts solar generation to 15% for six hours, and the satellite still passes into Earth’s shadow every orbit. Essential systems always come first.',
+  decide:'how hard to run the satellite and whether to image the 14:00 pass.',
+  groups:[{lab:'Power mode',opts:[['normal','Normal operations','Full activity, more drain'],['save','Power saving','Lower load, 1 image, slower sending']]},
+          {lab:'14:00 pass',opts:[['image','Image the pass','Keep watching the fire'],['skip','Skip the pass','Save energy and storage']]}],
+  lesson:'With little sunlight and regular eclipses, the battery decides what you can do. Below 5% the satellite enters safe mode.'},
+ {title:'Wildfire expansion',sub:'New activity reported near the community.',hours:'18:00–24:00',win:'Pass 20:00 · contacts 21:00 and 23:00',
+  alert:'Responders report new fire activity near the community in region C. One pass left at 20:00, then two short contacts before the deadline.',
+  decide:'where to look on the final pass and how fast to send.',
+  groups:[{lab:'Final footprint',opts:[['wide','Search wide area','Only way to see region C'],['targeted','Monitor known fire','More detail on region A']]},
+          {lab:'Downlink rate',opts:[['std','Standard rate','Half speed, half the power'],['fast','High-speed','Full speed, full power']]}],
+  lesson:'Information only helps responders if it reaches them in time.'},
+];
+S.fdesign={instrument:'std',observation:'std',power:'std',comms:'std',storage:'std'};
+function resetF(){S.f={ci:0,phase:'alert',choice:CHF.map(c=>c.groups.map(g=>g.opts[0][0])),M:Object.assign(WF.newMission(S.fdesign,S.scn.fire),{traceOn:true}),log:[],delta:{}};}
+function fTotals(){let kg=WC.bus.kg,cr=WC.bus.credits;FPARTS.forEach(p=>{const o=p[S.fdesign[p.key]];kg+=o.kg;cr+=o.credits});return{kg,cr}}
+function fD(){const M=S.f.M,d=WF.derive(M),t=M.step*WC.stepMin/60;
+  const crit=M.items.find(i=>i.kind==='alert'&&i.critical);
+  d.t=t;
+  d.critStatus=t<20?'Not yet required':(crit&&crit.status==='delivered')?(crit.deliveredAt-crit.t<=WC.alertOnTimeH+1e-9?'Delivered on time':'Delivered late'):t>=24-1e-9?'Missed':crit?'Pending':(t>20.2?'Not detected':'Pending');
+  d.finalStatus=t<20?'Not yet required':d.finalUpdate?'Delivered':t>=24-1e-9?'Missed':'Pending';
+  const nextP=WC.passes.map(p=>p.h).find(h=>h>=t-1e-9),nextC=WC.contacts.map(c=>c[0]).find(h=>h>=t-1e-9);
+  d.nextPass=nextP===undefined?'none':fmtH(nextP);d.nextContact=nextC===undefined?'none':fmtH(nextC);
+  return d;}
+const EVPOS={E1:[24,44],E1b:[31,54],E1c:[22,62],E1d:[36,40],E2:[63,24],E3:[57,42],E4:[71,36],E5:[78,76]};
+const REG={A:{l:10,t:24,w:38,h:52,n:'A · Known fire'},B:{l:52,t:10,w:36,h:46,n:'B · Forest'},C:{l:62,t:62,w:30,h:30,n:'C · Community'}};
+function fireArt(reveal){const M=S.f.M;const det=[...M.detected];
+  const regs=Object.entries(REG).map(([k,r])=>`<div class="freg ${k==='C'?'comm':''}" style="left:${r.l}%;top:${r.t}%;width:${r.w}%;height:${r.h}%"><b>${r.n}</b></div>`).join('');
+  const shown=reveal?WC.events:WC.events.filter(e=>M.detected.has(e.id)&&(!S.live||WC.passes[e.pass].h<=S.live.t+1e-9));
+  const hs=shown.map(e=>{const [x,y]=EVPOS[e.id];const miss=!M.detected.has(e.id);const cont=/continued/.test(e.name);return `<div class="hot ${miss?'missed':''}" title="${e.name}" style="left:${x}%;top:${y}%">${reveal&&(!cont||miss)?`<span class="lb ${x>65?'l':''}">${cont?'Known fire, '+fmtH(WC.passes[e.pass].h):e.name}${miss?' · missed':''}</span>`:''}</div>`}).join('');
+  return `<div class="fmap"></div>${regs}${hs}`;}
+function fScan(){const o=S.f;const fp=(o.ci===3?o.choice[3][0]:o.ci===0?o.choice[0][0]:(o.log[0]?o.choice[0][0]:'wide'));
+  return fp==='targeted'?{l:REG.A.l-1,t:REG.A.t-1,w:REG.A.w+2,h:REG.A.h+2}:{l:6,t:6,w:88,h:88};}
+function fPredict(){const o=S.f,c=o.choice[o.ci],ci=o.ci,P=o.M.P;
+  if(ci===0){const det=P.instrument.sens*WC.mode[c[1]].detect*WC.footprint[c[0]].detect;return `Detection strength ${det.toFixed(2)} (strong fires ≥ 0.5, moderate ≥ 0.8, weak ≥ 1.2) · image size ${(P.instrument.sizeGB*WC.mode[c[1]].size).toFixed(2)} GB`;}
+  if(ci===1)return `${c[0]==='alerts'?'Alerts reach Earth first':'Oldest data first: alerts may wait behind images'} · ${c[1]==='compress'?'images shrink to half, lose 25% value':'full-size images'} · contact moves ${P.comms.rateGBh} GB/hour`;
+  if(ci===2)return `Battery drain ${c[0]==='normal'?(c[1]==='image'?'high':'medium'):(c[1]==='image'?'medium':'low')} · ${c[1]==='image'?'keeps watching the fire':'no images at 14:00'}`;
+  const det=P.instrument.sens*WC.mode[o.choice[0][1]].detect*WC.footprint[c[0]].detect;
+  return `${c[0]==='wide'?`Region C in view · detection strength ${det.toFixed(2)}`:'Region C not in view'} · sending ${c[1]==='fast'?'fast, more power':'half speed, less power'}`;}
+function fDash(){const o=S.f,d=o.delta,x=live(fD()),M=o.M;
+ const col=v=>v.startsWith('Delivered on')||v==='Delivered'?'var(--good)':v==='Missed'||v==='Not detected'||v==='Delivered late'?'var(--bad)':v==='Pending'?'var(--warn)':'#fff';
+ return `<div class="side">
+  <div class="glass dash"><h4><i></i>Mission goal</h4>
+   ${meter('Passes covered',x.coveredPasses,4,v=>`<b>${v} / 4 passes</b>`,x.coveredPasses>=3?'':'warn',dlt(d.cov))}
+   ${meter('Useful data delivered',x.deliveredScience,WC.requiredScience,v=>`<b>${fmt(v)} / ${WC.requiredScience} pts</b>`,x.deliveredScience>=WC.requiredScience?'':'warn',dlt(d.pts,' pts'))}</div>
+  <div class="glass dash"><h4><i></i>Satellite status</h4>
+   ${meter('Battery',x.batteryPct,100,v=>`<b>${Math.round(v)}%</b>`,x.batteryPct<30?'bad':x.batteryPct<70?'warn':'',dlt(d.batt,'%'))}
+   ${meter('Storage used',x.storagePct,100,v=>`<b>${Math.round(v)}%</b>`,x.storagePct>85?'bad':x.storagePct>60?'warn':'blue',dlt(d.st,'%'))}
+   ${meter('Health',x.health,100,v=>`<b>${v}%</b>`,x.health<80?'warn':'',dlt(d.health,'%'))}</div>
+  <div class="glass dash">
+   <div class="kv"><span>Mission time</span><b>${fmtH(x.t)} / 24:00</b></div>
+   <div class="kv"><span>Next pass · contact</span><b>${x.nextPass} · ${x.nextContact}</b></div>
+   <div class="kv"><span>New-hotspot alert</span><b style="color:${col(x.critStatus)}">${x.critStatus}</b></div>
+   <div class="kv"><span>Final update</span><b style="color:${col(x.finalStatus)}">${x.finalStatus}</b></div>
+   <div class="kv"><span>Alerts sent</span><b>${x.alertsDelivered} / ${x.alertsTotal}</b></div>
+   <div class="muted" style="font-size:12px;margin-top:8px">${M.safe?'<b style="color:var(--bad)">SAFE MODE</b> · ':''}Useful data = science points delivered to Earth, worth less the older they are when they arrive.</div></div>
+ </div>`;}
+V.fbuild=()=>{const t=fTotals();const okKg=t.kg<=WC.limits.kg,okC=t.cr<=WC.limits.credits,ok=okKg&&okC;
+ return `<div class="screen">${nav(0,'Wildfire Watch','Earth · Mission 2')}<div class="build">
+  <div class="glass panel"><h2>Build your satellite</h2><p class="muted" style="font-size:12.5px;margin-top:6px">Low Earth orbit: you see the fire only on 4 passes and can send data only during 5 short contacts.</p>
+   <div class="parts">${FPARTS.map((p,i)=>{const v=S.fdesign[p.key];const o=p[v];return `<div class="part"><div class="n">${i+1}</div>
+     <div><div class="k">${p.label}</div><div class="v">${o.name}</div><div class="fx">${FFX[p.key](o)} · ${o.kg} kg · ${o.credits} cr</div></div>
+     <div class="seg"><button class="${v==='std'?'on':''}" data-a="fpart" data-k="${p.key}" data-v="std">Std</button><button class="${v==='adv'?'on adv':''}" data-a="fpart" data-k="${p.key}" data-v="adv">Adv</button></div></div>`}).join('')}</div>
+   ${scenarioCard('fire')}<div class="ready"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-weight:600">Launch readiness</b><span class="chip ${ok?'good':'bad'}">${ok?'Launch ready':!okKg?'Too heavy':'Over budget'}</span></div>
+    ${meter('Total mass',t.kg,WC.limits.kg,v=>`${v.toLocaleString()} / ${WC.limits.kg.toLocaleString()} kg`,okKg?(t.kg/WC.limits.kg>.95?'warn':''):'bad')}
+    ${meter('Mission budget',t.cr,WC.limits.credits,v=>`${v} / ${WC.limits.credits} credits`,okC?(t.cr/WC.limits.credits>.95?'warn':''):'bad')}
+    <div class="muted" style="font-size:12px;margin-top:8px">Includes fixed bus and propellant: ${WC.bus.kg} kg · ${WC.bus.credits} credits.</div>
+    ${!ok?`<div class="muted" style="font-size:12px;margin-top:6px;color:var(--bad)">${!okKg?`Too heavy by ${t.kg-WC.limits.kg} kg. `:''}${!okC?`Over budget by ${t.cr-WC.limits.credits} credits. `:''}Try a Standard part.</div>`:''}
+    <button class="btn good" style="width:100%;margin-top:16px;height:48px" data-a="mrr" data-m="fire" ${ok?'':'disabled'}>Readiness review →</button></div>
+  </div>
+  <div class="pad">${rocketSVG('rocket','WILDFIRE WATCH')}
+   <div class="glass nose"><div class="t">Inside the nose cone</div>${FPARTS.map(p=>`<div class="r"><span class="muted">${p.label}</span><b class="${S.fdesign[p.key]}">${S.fdesign[p.key]==='adv'?'Advanced':'Standard'}</b></div>`).join('')}<div class="muted" style="font-size:12px;margin-top:10px">Orbit: low Earth, near-polar · 824 km · ~101 min per orbit</div></div>
+  </div></div></div>`};
+V.fops=()=>{const o=S.f,ch=chx('fire',o.ci),r=fScan(),c=o.choice[o.ci];let body;
+ if(o.phase==='result'){const L=o.log[o.ci];
+  body=`<div class="glass decision"><div style="display:flex;justify-content:space-between;align-items:center"><div class="dhead" style="margin:0"><div><h3>Challenge ${o.ci+1} result</h3><p>Your choices: <b style="color:#fff">${L.choices}</b></p></div></div><span class="chip ${L.met?'good':'warn'}">${L.badge}</span></div>
+   <div class="res-grid"><div class="res good"><h4>What went well</h4>${L.good}</div><div class="res trade"><h4>The trade-off</h4>${L.trade}</div></div>
+   <div class="dfoot"><div class="lesson">Lesson: ${ch.lesson}</div><button class="btn primary" data-a="fnext">${o.ci===3?'View final report →':'Next challenge →'}</button></div></div>`;
+ } else {
+  body=`<div class="glass decision"><div class="dhead"><div class="ic">!</div><div><h3>${ch.title}</h3><p>${ch.sub}</p></div></div>
+   <div class="opts">${ch.groups.map((g,gi)=>`<div class="og"><div class="lab">${g.lab}</div>${g.opts.map(op=>`<button class="opt ${c[gi]===op[0]?'on':''}" data-a="fopt" data-g="${gi}" data-v="${op[0]}"><div class="rd"></div><div><b>${op[1]}</b><span>${op[2]}</span></div></button>`).join('')}</div>`).join('')}</div>
+   ${predChips()}<div class="dfoot"><div class="pred"><b>Prediction:</b> ${fPredict()} <span style="opacity:.6">(estimates)</span></div><button class="btn blue" data-a="frun">Confirm & run 6 hours</button></div></div>`;
+ }
+ if(o.phase==='playing')body=journeyPanel();
+ return `<div class="screen">${nav(2,'Wildfire Watch','Earth · Mission 2')}<div class="ops"><div>
+  <div class="view ${fpAttr()?'clickfp':''}" ${fpAttr()}>${fireArt(false)}
+   <div class="tags"><span class="chip solid">Challenge ${o.ci+1} / 4</span><span class="chip">${ch.hours}</span><span class="chip">${ch.win}</span></div>
+   ${satOverlay()}<div class="scanbox" style="left:${r.l}%;top:${r.t}%;width:${r.w}%;height:${r.h}%"></div>
+   <div class="note" style="left:12px">Synthetic training scenario · not a real fire</div>
+   <div class="note" style="right:12px;color:var(--warn)">Yellow box = footprint · fires appear only when detected</div>
+  </div>${body}</div>${fDash()}</div></div>`};
+function fsim(){const o=S.f,ci=o.ci,c=o.choice[ci],M=o.M,g=CHF[ci].groups;
+ const chName=c.map((v,i)=>g[i].opts.find(x=>x[0]===v)[1]).join(' + ');
+ const before=fD(),maxId=M.nextId,h0=ci*6,h1=h0+6,evN=M.events.length;
+ WF.runChallenge(M,ci,c);const after=fD();
+ const fresh=M.items.filter(i=>i.id>=maxId),imgs=fresh.filter(i=>i.kind==='image'),alerts=fresh.filter(i=>i.kind==='alert');
+ const sent=M.items.filter(i=>i.status==='delivered'&&i.deliveredAt>h0-1e-9&&i.deliveredAt<=h1+1e-9);
+ const sentI=sent.filter(i=>i.kind==='image'),sentA=sent.filter(i=>i.kind==='alert');
+ const evs=M.events.slice(evN).map(e=>e.msg),skipped=evs.filter(m=>m.startsWith('Imaging skipped'));
+ const found=[...new Set(imgs.flatMap(i=>i.found))].map(id=>WC.events.find(e=>e.id===id).name);
+ const waitGB=M.items.filter(i=>i.status==='stored').reduce((a,i)=>a+i.remainingGB,0);
+ let good='',trade='',met=true,badge='Objective met';
+ const sentTxt=`${sentA.length} alert(s) and ${sentI.length} image(s) reached Earth this period.`;
+ if(ci===0){good=imgs.length?`${imgs.length} image(s) at 02:00 found: ${found.length?found.join(', '):'nothing strong enough to detect'}. ${sentTxt}`:'No image was taken.';
+   trade=`${c[0]==='wide'?'Wide survey: weaker detection everywhere.':'Targeted scan: regions B and C were not observed at all.'} ${c[1]==='std'?'Standard mode may miss weaker fires.':`High-detail images are ${(M.P.instrument.sizeGB).toFixed(1)} GB each.`} ${fmt(waitGB)} GB still waiting to be sent.${skipped.length?' '+skipped.join('; ')+'.':''}`;
+   met=found.length>0;badge=met?'Fire detected':'Nothing detected';}
+ else if(ci===1){good=`${sentTxt} ${imgs.length?`08:00 pass found: ${found.length?found.join(', '):'nothing new'}.`:''}`;
+   const late=sentA.filter(a=>a.deliveredAt-a.t>WC.alertOnTimeH+1e-9).length;
+   trade=`${c[0]==='fifo'?'Oldest data went first'+(late?`: ${late} alert(s) arrived more than 2 h after detection.`:'.'):'Alerts went first; images waited.'} ${c[1]==='compress'?'Compressed images lost 25% of their science value.':''} ${fmt(waitGB)} GB still on board.`;
+   met=!late;badge=met?'Contact used':'Alerts late';}
+ else if(ci===2){const safe=evs.some(m=>m.includes('Safe mode entered'));
+   good=`${imgs.length?`${imgs.length} image(s) at 14:00 (${found.length?found.join(', '):'no detection'}).`:'14:00 pass not imaged.'} ${sentTxt}`;
+   trade=`Battery ${Math.round(before.batteryPct)}% → ${Math.round(after.batteryPct)}% with solar at ${faultPct('fire')} and an eclipse every orbit.${safe?' The satellite dropped into SAFE MODE (health −10).':''}${skipped.length?' '+skipped.join('; ')+'.':''}${M.failed?' Critical failure.':''}`;
+   met=!safe&&!M.failed;badge=M.failed?'Critical failure':safe?'Safe mode':'Anomaly managed';}
+ else {const e5=fresh.find(i=>i.kind==='alert'&&i.critical);
+   good=`${imgs.length?`Final pass found: ${found.length?found.join(', '):'nothing'}.`:'No final image.'} ${sentTxt}`;
+   trade=`${e5?(after.critStatus==='Delivered on time'?`New-hotspot alert delivered ${fmt(e5.deliveredAt-e5.t)} h after detection.`:`New-hotspot alert ${after.critStatus.toLowerCase()}.`):'The new hotspot in region C was never detected.'} ${after.finalUpdate?'A 20:00 image reached Earth before the deadline.':'No 20:00 image reached Earth by 24:00.'} ${M.items.filter(i=>i.status==='stored').length} item(s) never left the satellite.`;
+   met=after.critStatus==='Delivered on time'&&after.finalUpdate;badge=met?'Responders updated':'Update incomplete';}
+ o.delta={cov:after.coveredPasses-before.coveredPasses,pts:after.deliveredScience-before.deliveredScience,batt:after.batteryPct-before.batteryPct,st:after.storagePct-before.storagePct,health:after.health-before.health};
+ o.log[ci]={choices:chName,good,trade,met,badge};}
+function showFAlert(){const o=S.f,ch=chx('fire',o.ci);
+  $('#layer').innerHTML=`<div class="modal-wrap"><div class="glass modal"><div class="eyebrow">Mission control alert · Challenge ${o.ci+1} of 4 · ${ch.win}</div>
+   <h2>${ch.title}</h2><p>${ch.alert}</p><div class="decide"><b>You’ll decide:</b> ${ch.decide}</div>
+   <div class="acts"><button class="btn ghost" data-a="falertBack">Go back</button><button class="btn blue" data-a="faccept">Accept challenge</button></div></div></div>`;}
+V.freport=()=>{const o=S.f,M=o.M,sc=WF.score(M),x=fD();
+ const chip=sc.outcome==='Mission Success'?'good':sc.outcome==='Partial Success'?'warn':'bad';
+ const req=[[`Delivered science ≥ ${WC.requiredScience} pts`,sc.gates.G1,`${fmt(x.deliveredScience)} / ${WC.requiredScience}`],['New-hotspot alert within 2 h',sc.gates.G2,x.critStatus],['Final update: a 20:00 image delivered by 24:00',sc.gates.G3,x.finalStatus],['Essential systems running',sc.gates.G4,x.health+'% health']];
+ const fpFor=p=>p<3?o.choice[0][0]:o.choice[3][0];
+ const reveal=WC.events.map(e=>{const d=M.detected.has(e.id);let why='';if(!d){const imaged=M.items.some(i=>i.kind==='image'&&i.pass===e.pass);
+   why=!imaged?'pass not imaged':!WC.footprint[fpFor(e.pass)].regions.includes(e.region)?'outside footprint':'too weak for your instrument/mode';}
+   const al=M.items.find(i=>i.kind==='alert'&&i.event===e.id);
+   return `<div class="req"><div class="ck ${d?'y':'n'}">${d?'✓':'✕'}</div><span>${fmtH(WC.passes[e.pass].h)} · ${e.name} (region ${e.region}, ${e.cls.toLowerCase()} activity)</span><b style="color:${d?'var(--good)':'var(--bad)'}">${d?(al&&al.status==='delivered'?'alert sent '+fmtH(al.deliveredAt):'alert not sent'):'missed: '+why}</b></div>`}).join('');
+ const lessons=[];
+ if(!sc.gates.G2)lessons.push(M.detected.has('E5')?'You detected the new hotspot near the community, but its alert did not reach responders within 2 hours.':'The new hotspot near the community was never detected. Only a wide search on the final pass can see region C, with enough detection strength.');
+ if(!sc.gates.G3)lessons.push('No image from the final pass reached Earth before 24:00. Big images need more contact time than the last two contacts provide.');
+ if(!sc.gates.G1)lessons.push('Too little useful science reached Earth in time. Images that arrive hours later are worth less, and images still on board count for nothing.');
+ if(M.events.some(e=>e.msg.includes('Safe mode entered')))lessons.push('The battery fell below 5% during the anomaly and the satellite entered safe mode.');
+ if(!lessons.length)lessons.push('You watched the right places and got the information down in time. Try a cheaper design: can it still succeed?');
+ return `<div class="screen">${nav(3,'Wildfire Watch','Earth · Mission 2')}<div class="report">
+  <div class="side">
+   <div class="glass score"><div class="eyebrow">Wildfire Watch · Mission report</div>
+    <div class="big" style="margin-top:16px;white-space:nowrap">${sc.total}<small>/ 100</small></div><span class="chip ${chip}" style="margin-top:10px">${sc.outcome}</span>
+    <p class="muted" style="font-size:12.5px;margin-top:8px">Delivered ${fmt(x.deliveredScience)} useful science points, ${x.alertsDelivered} of ${x.alertsTotal} alerts, across ${x.coveredPasses} passes. Final battery ${Math.round(x.batteryPct)}%, health ${x.health}%.</p></div>
+   <div class="glass dash">${meter('Scientific observations',sc.sci,35,v=>`<b>${fmt(v)} / 35</b>`,sc.sci<34.95?'warn':'')}${meter('Timely data delivery',sc.del,35,v=>`<b>${fmt(v)} / 35</b>`,sc.del<34.95?'warn':'')}${meter('Resource efficiency',sc.eff,20,v=>`<b>${fmt(v)} / 20</b>`,sc.eff<19.95?'warn':'')}${meter('Spacecraft reliability',sc.rel,10,v=>`<b>${fmt(v)} / 10</b>`,sc.rel<9.95?'warn':'')}</div>
+   <div class="glass dash"><h4><i></i>Mission success requirements</h4>${req.map(r=>`<div class="req"><div class="ck ${r[1]?'y':'n'}">${r[1]?'✓':'✕'}</div><span>${r[0]}</span><b style="color:${r[1]?'var(--good)':'var(--bad)'}">${r[2]}</b></div>`).join('')}
+    <p class="muted" style="font-size:12px;margin-top:8px">Score and outcome are separate: success needs all four requirements, whatever the score.</p></div>
+  </div>
+  <div>
+   <div class="glass panel"><h2 style="font-size:28px;margin-bottom:10px">What was really burning</h2>
+    <div class="view" style="height:300px;margin-bottom:12px">${fireArt(true)}<div class="note" style="left:12px">Dashed circles = fires your satellite never saw</div></div>${reveal}</div>
+   <div class="glass panel" style="margin-top:16px"><h2 style="font-size:28px;margin-bottom:6px">Your decisions & their trade-offs</h2>
+    ${o.log.map((L,i)=>`<div class="dec"><div class="t"><b>${CHF[i].title}</b><span>${L.choices}</span></div><div class="g">+ ${L.good}</div><div class="w">− ${L.trade}</div></div>`).join('')}</div>
+   <div class="glass panel" style="margin-top:16px"><h2 style="font-size:26px;margin-bottom:8px">Mission analysis</h2><ul class="muted" style="line-height:1.6;padding-left:18px">${lessons.map(l=>`<li>${l}</li>`).join('')}</ul></div>
+   ${reportExtras('fire')}<div class="acts-row"><button class="btn blue" data-a="fretry">Retry, same satellite</button><button class="btn ghost" data-a="fredesign">Redesign satellite</button><button class="btn primary" data-a="go" data-to="missions">All missions →</button></div>
+  </div></div></div>`};
+
+
+/* ================== FLOOD WATCH ================== */
+const FL=window.FLEngine, LC=FL.makeConfig('v41');
+const LLABEL={instrument:'Imaging instrument',observation:'Targeting system',power:'Power system',comms:'Communication system',storage:'Data storage'};
+const LFX={instrument:p=>p.kind==='optical'?`Needs daylight & clear sky · ${p.sizeGB} GB/map · +${p.imgKW} kW`:`Sees through clouds & at night · ${p.sizeGB} GB/map · +${p.imgKW} kW`,
+ observation:p=>`Up to ${p.perPass} map${p.perPass>1?'s':''} per pass`,power:p=>`${p.solarKW} kW solar · ${p.battKWh} kWh battery`,
+ comms:p=>`${(p.rateGBmin*10).toFixed(1)} GB per 10-min contact · +${p.txKW} kW`,storage:p=>`${p.capGB} GB on board`};
+const LPARTS=Object.keys(LLABEL).map(k=>({key:k,label:LLABEL[k],std:LC.parts[k].std,adv:LC.parts[k].adv}));
+const LCH=[
+ {title:'The river breaks its banks',sub:'Water is spreading from the Upper Valley onto the farmland.',hours:'10:00–16:00',win:'Passes 11:00, 14:00 (sunny)',
+  alert:'Torrential rain has pushed the river out of its banks. Responders need a first picture of where the water is. Two sunny daytime passes are coming.',
+  decide:'how detailed your maps are (for the whole mission) and how much of the valley each map covers.',
+  groups:[{lab:'Map detail',opts:[['std','Standard detail','Smaller files, 80% quality'],['high','High detail','Full quality, bigger files']]},
+          {lab:'Map footprint',opts:[['wide','Wide-area','All 3 zones per map, less detail'],['focused','Focused','One zone per map, full detail']]}],
+  lesson:'Mapping a big area or one area in detail is a trade: footprint and detail decide data size and map value.'},
+ {title:'Clouds over the valley',sub:'Evening storm bands roll back in.',hours:'16:00–22:00',win:'Passes 17:00 (70% cloud), 20:00 (twilight, 85% cloud)',
+  alert:'Storm clouds cover most of the valley as evening falls. A camera only sees gaps in the clouds; radar sees through them but makes big files.',
+  decide:'whether to process maps on board and what to do when storage is full.',
+  groups:[{lab:'Onboard processing',opts:[['raw','Raw imagery','Full size and quality'],['mask','Onboard water mask','30% of the size, 90% quality; drops cloudy optical maps']]},
+          {lab:'Storage policy',opts:[['keep','Keep all maps','Reject new maps when full'],['prio','Prioritize key maps','Drop low-value maps to fit better ones']]}],
+  lesson:'A high-detail photo of clouds is worth almost nothing. Processing on board can save storage and downlink time.'},
+ {title:'Power anomaly in the dark',sub:'Solar arrays misaligned: 25% power for 6 hours.',hours:'22:00–04:00',win:'Passes 23:00, 02:00 (night)',
+  alert:'A solar-array drive fault leaves only 25% of normal power through the night. Below 10% battery the satellite enters safe mode and stops science until it recovers to 30%.',
+  decide:'how hard to run the satellite and how many maps to attempt at night.',
+  groups:[{lab:'Power mode',opts:[['normal','Normal operations','Full activity, standby load on'],['save','Power saving','Shed standby load, slower sending, 1 map per pass']]},
+          {lab:'Imaging plan',opts:[['full','Full imaging','Both night passes'],['minimal','Minimal imaging','1 map at 23:00 only; 1 map per pass after']]}],
+  lesson:'Cameras cannot map at night; radar can, but only on battery. Safe mode protects the satellite but stops the science.'},
+ {title:'Emergency update for Riverside Town',sub:'The flood crest is moving toward the town and its bridge.',hours:'04:00–10:00',win:'Passes 05:00 (night), 08:00 (day)',
+  alert:'Responders need a fresh map of Riverside Town before 10:00. The first map of each pass is aimed at the town automatically.',
+  decide:'how the data gets down and how much power to spend sending it.',
+  groups:[{lab:'Downlink path',opts:[['ground','Ground contacts only','Contacts at 06:30 and 09:30'],['relay','Ground + relay satellite','Extra 15-min windows right after each pass, +0.3 kW']]},
+          {lab:'Power mode',opts:[['full','Full power','Full sending rate'],['eco','Eco mode','70% rate, 70% sending power']]}],
+  lesson:'A map that never reaches the ground does not help responders.'},
+];
+const LZ=[['UV','Upper Valley',0],['FARM','Farmland',33.3],['TOWN','Riverside Town',66.6]];
+S.ldesign={instrument:'std',observation:'std',power:'std',comms:'std',storage:'std'};
+const lt=h=>{const H=(10+Math.floor(h+1e-9))%24,m=Math.round((h-Math.floor(h+1e-9))*60);return `${String(H).padStart(2,'0')}:${String(m).padStart(2,'0')}`};
+function resetL(){S.l={ci:0,phase:'alert',choice:LCH.map(c=>c.groups.map(g=>g.opts[0][0])),M:Object.assign(FL.newMission(S.ldesign,'v41',S.scn.flood),{traceOn:true}),log:[],delta:{}};}
+function lTotals(){let kg=LC.bus.kg,m=LC.bus.costM;LPARTS.forEach(p=>{const o=p[S.ldesign[p.key]];kg+=o.kg;m+=o.costM});return{kg,m}}
+function lD(){const M=S.l.M,d=FL.derive(M);const nextP=LC.passes.find(p=>p.h>=d.t-1e-9),nextC=LC.contacts.find(c=>c>=d.t-1e-9);
+  d.nextPass=nextP?lt(nextP.h):'none';d.nextContact=nextC!==undefined?lt(nextC):'none';return d;}
+function valleyArt(reveal){const M=S.l.M,x=live(FL.derive(M)),o=S.l;
+  const delZ=new Set(M.items.filter(i=>i.status==='delivered'&&(!S.live||i.deliveredAt<=S.live.t+1e-9)).flatMap(i=>i.zones.filter(z=>i.zoneScore[z]>=LC.qualify)));
+  const nextP=reveal?null:LC.passes.find(p=>p.h>=x.t-1e-9&&p.h<(o.ci+1)*6);
+  const zones=LZ.map(([k,n,l])=>`<div class="vzone ${x.zonesQ.includes(k)?'q':''} ${delZ.has(k)?'d':''}" style="left:${l}%;width:33.3%"><b>${n}${delZ.has(k)?' · delivered':x.zonesQ.includes(k)?' · mapped':''}</b></div>`).join('');
+  const floods=reveal?`<div class="flood" style="left:6%;top:36%;width:22%;height:26%"></div><div class="flood" style="left:36%;top:30%;width:28%;height:40%"></div><div class="flood" style="left:68%;top:38%;width:20%;height:28%"></div>`:'';
+  const sky=nextP?`${nextP.illum===0?'<div class="night" style="opacity:.55"></div>':nextP.illum<1?'<div class="night" style="opacity:.3"></div>':''}<div class="clouds" style="opacity:${(nextP.cloud*0.9).toFixed(2)}"></div>`:'';
+  return `<div class="vmap"></div><div class="river"></div>${floods}${zones}${sky}`;}
+function lScan(){const o=S.l,ci=o.ci,fp=o.choice[0][1];
+  if(ci===3)return{l:66.6,t:6,w:33,h:88};
+  if(fp==='wide')return{l:1,t:6,w:98,h:88};
+  const tgt=LC.targets[ci][0];const z=LZ.find(q=>q[0]===tgt);return{l:z[2]+1,t:6,w:31,h:88};}
+function lPredict(){const o=S.l,c=o.choice[o.ci],ci=o.ci,P=o.M.P,opt=P.instrument.kind==='optical';
+  if(ci===0)return `Map size ${(P.instrument.sizeGB*LC.detail[c[0]].size).toFixed(2)} GB · ${c[1]==='wide'?'all 3 zones per map, detail 80%':'one zone per map (Upper Valley, then Farmland)'}`;
+  if(ci===1)return opt?`Clouds: 70% and 85% · ${c[0]==='mask'?'cloudy maps screened before storage':'cloudy maps stored anyway'}`:`Radar sees through clouds · ${c[0]==='mask'?'maps shrink to 30%':'2 GB-class maps fill storage fast'}`;
+  if(ci===2)return opt?'Camera cannot map at night: focus on the battery and sending the backlog':`Radar night maps cost ${P.instrument.imgKW} kW each · battery drain ${c[0]==='normal'?'high':'lower'}`;
+  return `${c[0]==='relay'?'Relay windows right after each pass':'Wait for the 06:30 and 09:30 contacts'} · sending ${c[1]==='eco'?'slower, less power':'full speed'}`;}
+function lDash(){const o=S.l,d=o.delta,x=live(lD());
+ const col=v=>v==='Delivered'?'var(--good)':v==='Missed'?'var(--bad)':v==='Pending'?'var(--warn)':'#fff';
+ return `<div class="side">
+  <div class="glass dash"><h4><i></i>Mission goal</h4>
+   ${meter('Flood map coverage',x.coveredZones,3,v=>`<b>${v} / 3 zones</b>`,x.coveredZones>=3?'':'warn',dlt(d.cov))}
+   ${meter('Useful maps delivered',x.delivered,LC.requiredMaps,v=>`<b>${fmt(v)} / ${LC.requiredMaps} map pts</b>`,x.delivered>=LC.requiredMaps?'':'warn',dlt(d.pts,' pts'))}</div>
+  <div class="glass dash"><h4><i></i>Satellite status</h4>
+   ${meter('Battery',x.batteryPct,100,v=>`<b>${Math.round(v)}%</b>`,x.batteryPct<30?'bad':x.batteryPct<70?'warn':'',dlt(d.batt,'%'))}
+   ${meter('Storage used',x.storagePct,100,v=>`<b>${Math.round(v)}%</b>`,x.storagePct>85?'bad':x.storagePct>60?'warn':'blue',dlt(d.st,'%'))}
+   ${meter('Health',x.health,100,v=>`<b>${v}%</b>`,x.health<80?'warn':'',dlt(d.health,'%'))}</div>
+  <div class="glass dash">
+   <div class="kv"><span>Mission time</span><b>${String(Math.floor(x.t)).padStart(2,'0')}:${String(Math.round((x.t%1)*60)).padStart(2,'0')} / 24:00 (${lt(x.t)})</b></div>
+   <div class="kv"><span>Next pass · contact</span><b>${x.nextPass} · ${x.nextContact}</b></div>
+   <div class="kv"><span>Town update</span><b style="color:${col(x.townStatus)}">${x.townStatus}</b></div>
+   ${x.safe?'<div class="kv"><span>Status</span><b style="color:var(--bad)">SAFE MODE</b></div>':''}
+   <div class="muted" style="font-size:12px;margin-top:8px">Map points count map value, not GB. Real satellites revisit a spot every few days; this game compresses it to 8 passes in 24 h.</div></div>
+ </div>`;}
+V.lbuild=()=>{const t=lTotals();const okKg=t.kg<=LC.limits.kg,okM=t.m<=LC.limits.costM,ok=okKg&&okM;
+ return `<div class="screen">${nav(0,'Flood Watch','Earth · Mission 3')}<div class="build">
+  <div class="glass panel"><h2>Build your satellite</h2><p class="muted" style="font-size:12.5px;margin-top:6px">Pick one of two options for each part. Neither instrument is "advanced": choose for clouds, darkness and terrain.</p>
+   <div class="parts">${LPARTS.map((p,i)=>{const v=S.ldesign[p.key];const o=p[v];return `<div class="part"><div class="n">${i+1}</div>
+     <div><div class="k">${p.label}</div><div class="v">${o.name}</div><div class="fx">${LFX[p.key](o)} · ${o.kg} kg · $${o.costM}M</div></div>
+     <div class="seg"><button class="${v==='std'?'on':''}" data-a="lpart" data-k="${p.key}" data-v="std">A</button><button class="${v==='adv'?'on adv':''}" data-a="lpart" data-k="${p.key}" data-v="adv">B</button></div></div>`}).join('')}</div>
+   ${scenarioCard('flood')}<div class="ready"><div style="display:flex;justify-content:space-between;align-items:center"><b style="font-weight:600">Launch readiness</b><span class="chip ${ok?'good':'bad'}">${ok?'Launch ready':!okKg?'Too heavy':'Over budget'}</span></div>
+    ${meter('Total mass',t.kg,LC.limits.kg,v=>`${v.toLocaleString()} / ${LC.limits.kg.toLocaleString()} kg`,okKg?(t.kg/LC.limits.kg>.95?'warn':''):'bad')}
+    ${meter('Mission budget',t.m,LC.limits.costM,v=>`$${v}M / $${LC.limits.costM}M`,okM?(t.m/LC.limits.costM>.95?'warn':''):'bad')}
+    <div class="muted" style="font-size:12px;margin-top:8px">Includes fixed bus: ${LC.bus.kg.toLocaleString()} kg · $${LC.bus.costM}M.</div>
+    ${!ok?`<div class="muted" style="font-size:12px;margin-top:6px;color:var(--bad)">${!okKg?`Too heavy by ${t.kg-LC.limits.kg} kg. `:''}${!okM?`Over budget by $${t.m-LC.limits.costM}M. `:''}Radar cannot fly with High-Capacity Power.</div>`:''}
+    <button class="btn good" style="width:100%;margin-top:16px;height:48px" data-a="mrr" data-m="flood" ${ok?'':'disabled'}>Readiness review →</button></div>
+  </div>
+  <div class="pad">${rocketSVG('rocket','FLOOD WATCH')}
+   <div class="glass nose"><div class="t">Inside the nose cone</div>${LPARTS.map(p=>`<div class="r"><span class="muted">${p.label}</span><b class="${S.ldesign[p.key]}">${p[S.ldesign[p.key]].name.split(' ').slice(0,2).join(' ')}</b></div>`).join('')}<div class="muted" style="font-size:12px;margin-top:10px">Orbit: sun-synchronous LEO · 747 km · ~100 min per orbit</div></div>
+  </div></div></div>`};
+V.lops=()=>{const o=S.l,ch=chx('flood',o.ci),r=lScan(),c=o.choice[o.ci];let body;
+ if(o.phase==='result'){const L=o.log[o.ci];
+  body=`<div class="glass decision"><div style="display:flex;justify-content:space-between;align-items:center"><div class="dhead" style="margin:0"><div><h3>Challenge ${o.ci+1} result</h3><p>Your choices: <b style="color:#fff">${L.choices}</b></p></div></div><span class="chip ${L.met?'good':'warn'}">${L.badge}</span></div>
+   <div class="res-grid"><div class="res good"><h4>What went well</h4>${L.good}</div><div class="res trade"><h4>The trade-off</h4>${L.trade}</div></div>
+   <div class="dfoot"><div class="lesson">Lesson: ${ch.lesson}</div><button class="btn primary" data-a="lnext">${o.ci===3?'View final report →':'Next challenge →'}</button></div></div>`;
+ } else {
+  body=`<div class="glass decision"><div class="dhead"><div class="ic">!</div><div><h3>${ch.title}</h3><p>${ch.sub}</p></div></div>
+   <div class="opts">${ch.groups.map((g,gi)=>`<div class="og"><div class="lab">${g.lab}</div>${g.opts.map(op=>`<button class="opt ${c[gi]===op[0]?'on':''}" data-a="lopt" data-g="${gi}" data-v="${op[0]}"><div class="rd"></div><div><b>${op[1]}</b><span>${op[2]}</span></div></button>`).join('')}</div>`).join('')}</div>
+   ${predChips()}<div class="dfoot"><div class="pred"><b>Prediction:</b> ${lPredict()} <span style="opacity:.6">(estimates)</span></div><button class="btn blue" data-a="lrun">Confirm & run 6 hours</button></div></div>`;
+ }
+ if(o.phase==='playing')body=journeyPanel();
+ return `<div class="screen">${nav(2,'Flood Watch','Earth · Mission 3')}<div class="ops"><div>
+  <div class="view ${fpAttr()?'clickfp':''}" ${fpAttr()}>${valleyArt(false)}
+   <div class="tags"><span class="chip solid">Challenge ${o.ci+1} / 4</span><span class="chip">${ch.hours}</span><span class="chip">${ch.win}</span></div>
+   ${satOverlay()}<div class="scanbox" style="left:${r.l}%;top:${r.t}%;width:${r.w}%;height:${r.h}%"></div>
+   <div class="note" style="left:12px">Riverbend Valley · fictional · clouds shown for the next pass</div>
+   <div class="note" style="right:12px;color:var(--warn)">Yellow box = map footprint</div>
+  </div>${body}</div>${lDash()}</div></div>`};
+function lsim(){const o=S.l,ci=o.ci,c=o.choice[ci],M=o.M,g=LCH[ci].groups,opt=M.P.instrument.kind==='optical';
+ const chName=c.map((v,i)=>g[i].opts.find(x=>x[0]===v)[1]).join(' + ');
+ const before=lD(),maxId=M.nextId,h0=ci*6,h1=h0+6,logN=M.log.length,sk=Object.assign({},M.skipped),safe0=M.safeSteps;
+ FL.runChallenge(M,ci,c);const after=lD();
+ const fresh=M.items.filter(i=>i.id>=maxId),sent=M.items.filter(i=>i.status==='delivered'&&i.deliveredAt>h0-1e-9&&i.deliveredAt<=h1+1e-9);
+ const qual=fresh.filter(i=>i.zones.some(z=>i.zoneScore[z]>=LC.qualify));
+ const dsk=Object.fromEntries(Object.keys(M.skipped).map(k=>[k,M.skipped[k]-sk[k]]));
+ const skTxt=Object.entries(dsk).filter(([k,v])=>v>0).map(([k,v])=>`${v} × ${({dark:'too dark',energy:'battery at reserve',storage:'storage full',screened:'screened as cloud',safe:'safe mode'})[k]}`).join(', ');
+ const safeH=(M.safeSteps-safe0)*5/60,newZ=after.zonesQ.filter(z=>!before.zonesQ.includes(z)).map(z=>FL.ZNAME[z]);
+ const pts=fresh.reduce((a,i)=>a+i.pts,0);
+ let good=`${fresh.length} map(s) taken worth ${fmt(pts)} map points; ${qual.length} show water clearly enough to count.${newZ.length?` New zones mapped: ${newZ.join(', ')}.`:''} ${sent.length} map(s) reached responders.`;
+ let trade=`${skTxt?`Not taken: ${skTxt}. `:''}Storage ${Math.round(before.storagePct)}% → ${Math.round(after.storagePct)}%, battery ${Math.round(before.batteryPct)}% → ${Math.round(after.batteryPct)}%.`;
+ let met=true,badge='Objective met';
+ if(ci===0){met=newZ.length>0;badge=met?`${after.coveredZones}/3 zones mapped`:'No zone mapped';
+   trade=(c[1]==='wide'?'Wide maps covered every zone but with 80% detail. ':'Focused maps were sharp but each covered one zone. ')+trade;}
+ else if(ci===1){met=qual.length>0;badge=met?'Maps through the clouds':'Clouds won';
+   if(opt)trade='Thick cloud: a camera only sees gaps. '+trade;else trade='Radar saw through the clouds, but its maps are large. '+trade;}
+ else if(ci===2){met=safeH===0;badge=safeH>0?`Safe mode ${fmt(safeH)} h`:'Anomaly managed';
+   trade=(opt?'Night: the camera cannot map. ':'Radar mapped at night on battery power. ')+trade+(safeH>0?` The satellite spent ${fmt(safeH)} h in safe mode with science paused.`:'');}
+ else {met=after.town;badge=met?'Town update delivered':'Town update missed';
+   good+=after.town?` Fresh town map taken at ${lt(after.townRec.t)} reached responders at ${lt(after.townRec.deliveredAt)}.`:'';
+   trade=(after.town?'':'No fresh town map reached the ground by 10:00. ')+trade+` ${after.nOnboard} map(s) never left the satellite.`;}
+ o.delta={cov:after.coveredZones-before.coveredZones,pts:after.delivered-before.delivered,batt:after.batteryPct-before.batteryPct,st:after.storagePct-before.storagePct,health:after.health-before.health};
+ o.log[ci]={choices:chName,good,trade,met,badge};}
+function showLAlert(){const o=S.l,ch=chx('flood',o.ci);
+  $('#layer').innerHTML=`<div class="modal-wrap"><div class="glass modal"><div class="eyebrow">Mission control alert · Challenge ${o.ci+1} of 4 · ${ch.win}</div>
+   <h2>${ch.title}</h2><p>${ch.alert}</p><div class="decide"><b>You’ll decide:</b> ${ch.decide}</div>
+   <div class="acts"><button class="btn ghost" data-a="lalertBack">Go back</button><button class="btn blue" data-a="laccept">Accept challenge</button></div></div></div>`;}
+V.lreport=()=>{const o=S.l,M=o.M,sc=FL.score(M),x=lD(),opt=M.P.instrument.kind==='optical';
+ const chip=sc.outcome==='Mission Success'?'good':sc.outcome==='Partial Success'?'warn':'bad';
+ const req=[[`Delivered maps ≥ ${LC.requiredMaps} map pts`,sc.gates.G1,`${fmt(x.delivered)} / ${LC.requiredMaps}`],['All 3 zones mapped',sc.gates.G2,`${x.coveredZones} / 3`],['Town update: fresh map (taken after 04:00) delivered by 10:00',sc.gates.G3,x.townStatus],['Essential systems running',sc.gates.G4,x.health+'% health']];
+ const delZ=z=>M.items.some(i=>i.status==='delivered'&&(i.zoneScore[z]||0)>=LC.qualify);
+ const zrows=LZ.map(([k,n])=>{const q=x.zonesQ.includes(k),d=delZ(k);return `<div class="req"><div class="ck ${d?'y':'n'}">${d?'✓':'✕'}</div><span>${n}</span><b style="color:${d?'var(--good)':q?'var(--warn)':'var(--bad)'}">${d?'map delivered':q?'mapped, never sent':'never mapped clearly'}</b></div>`}).join('');
+ const lessons=[];
+ if(!sc.gates.G3)lessons.push('No fresh Riverside Town map reached responders. An older town map cannot stand in for a fresh one.');
+ if(!sc.gates.G2)lessons.push(`Not every zone got a clear map${opt?': clouds and darkness blocked the camera on many passes':': radar maps of hills and towns score lower'}.`);
+ if(!sc.gates.G1)lessons.push('Too few useful map points reached the ground. Contacts are only 10 minutes; big maps wait in the queue.');
+ if(x.safeHours>0)lessons.push(`The satellite spent ${fmt(x.safeHours)} h in safe mode: it survived, but science stopped.`);
+ if(M.skipped.dark>0)lessons.push(`${M.skipped.dark} map(s) could not be taken because it was dark: a camera needs sunlight.`);
+ if(!lessons.length)lessons.push(`Your ${opt?'camera':'radar'} design and decisions worked together. Replay with the other instrument and compare what clouds and darkness do.`);
+ return `<div class="screen">${nav(3,'Flood Watch','Earth · Mission 3')}<div class="report">
+  <div class="side">
+   <div class="glass score"><div class="eyebrow">Flood Watch · Mission report</div>
+    <div class="big" style="margin-top:16px;white-space:nowrap">${sc.total}<small>/ 100</small></div><span class="chip ${chip}" style="margin-top:10px">${sc.outcome}</span>
+    <p class="muted" style="font-size:12.5px;margin-top:8px">Delivered ${fmt(x.delivered)} map points across ${x.coveredZones} zones with ${opt?'an optical camera':'radar'}. Final battery ${Math.round(x.batteryPct)}%, health ${x.health}%, safe mode ${fmt(x.safeHours)} h.</p></div>
+   <div class="glass dash">${meter('Flood mapping',sc.sci,35,v=>`<b>${fmt(v)} / 35</b>`,sc.sci<34.95?'warn':'')}${meter('Timely delivery',sc.del,35,v=>`<b>${fmt(v)} / 35</b>`,sc.del<34.95?'warn':'')}${meter('Resource efficiency',sc.eff,20,v=>`<b>${fmt(v)} / 20</b>`,sc.eff<19.95?'warn':'')}${meter('Spacecraft reliability',sc.rel,10,v=>`<b>${fmt(v)} / 10</b>`,sc.rel<9.95?'warn':'')}</div>
+   <div class="glass dash"><h4><i></i>Mission success requirements</h4>${req.map(r=>`<div class="req"><div class="ck ${r[1]?'y':'n'}">${r[1]?'✓':'✕'}</div><span>${r[0]}</span><b style="color:${r[1]?'var(--good)':'var(--bad)'}">${r[2]}</b></div>`).join('')}
+    <p class="muted" style="font-size:12px;margin-top:8px">Score and outcome are separate: success needs all four requirements, whatever the score.</p></div>
+  </div>
+  <div>
+   <div class="glass panel"><h2 style="font-size:28px;margin-bottom:10px">Where the water really was</h2>
+    <div class="view" style="height:260px;margin-bottom:12px">${valleyArt(true)}<div class="note" style="left:12px">Simulated flood extent (blue) · fictional valley</div></div>${zrows}</div>
+   <div class="glass panel" style="margin-top:16px"><h2 style="font-size:28px;margin-bottom:6px">Your decisions & their trade-offs</h2>
+    ${o.log.map((L,i)=>`<div class="dec"><div class="t"><b>${LCH[i].title}</b><span>${L.choices}</span></div><div class="g">+ ${L.good}</div><div class="w">− ${L.trade}</div></div>`).join('')}</div>
+   <div class="glass panel" style="margin-top:16px"><h2 style="font-size:26px;margin-bottom:8px">Mission analysis</h2><ul class="muted" style="line-height:1.6;padding-left:18px">${lessons.map(l=>`<li>${l}</li>`).join('')}</ul></div>
+   ${reportExtras('flood')}<div class="acts-row"><button class="btn blue" data-a="lretry">Retry, same satellite</button><button class="btn ghost" data-a="lredesign">Redesign satellite</button><button class="btn primary" data-a="go" data-to="missions">All missions →</button></div>
+  </div></div></div>`};
+
+/* ================== ROUTER ================== */
+const BGKEY={signin:'signin',ready:'ready',dest:'dest',missions:'missions',build:'build',ops:'ops',report:'report',fbuild:'build',fops:'ops',freport:'report',lbuild:'build',lops:'ops',lreport:'report'};
+function go(s){S.screen=s;render();window.scrollTo(0,0)}
+function render(){setBg(BGKEY[S.screen]);$('#app').innerHTML=V[S.screen]();
+  const f=$('#signForm');if(f)f.onsubmit=e=>{e.preventDefault();go('ready')};}
+
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,o=S.ops;
+  switch(a){
+   case'go':go(b.dataset.to);break;
+   case'toast':toast(b.dataset.msg);break;
+   case'startMission':S.mission='storm';go('build');break;
+   case'fstart':S.mission='fire';go('fbuild');break;
+   case'lstart':S.mission='flood';go('lbuild');break;
+   case'lpart':S.ldesign[b.dataset.k]=b.dataset.v;render();break;
+   case'llaunch':S.mission='flood';runLaunch();break;
+   case'laccept':$('#layer').innerHTML='';S.l.phase='choose';render();break;
+   case'lalertBack':$('#layer').innerHTML='';if(S.l.ci===0)go('lbuild');break;
+   case'lopt':S.l.choice[S.l.ci][+b.dataset.g]=b.dataset.v;render();break;
+   case'lrun':runWithJourney('flood');break;
+   case'lnext':if(S.l.ci===3){go('lreport');}else{S.l.ci++;S.l.phase='alert';S.l.delta={};render();showLAlert();}break;
+   case'lretry':resetL();go('lops');setTimeout(showLAlert,300);break;
+   case'lredesign':go('lbuild');break;
+   case'fpart':S.fdesign[b.dataset.k]=b.dataset.v;render();break;
+   case'flaunch':S.mission='fire';runLaunch();break;
+   case'faccept':$('#layer').innerHTML='';S.f.phase='choose';render();break;
+   case'falertBack':$('#layer').innerHTML='';if(S.f.ci===0)go('fbuild');break;
+   case'fopt':S.f.choice[S.f.ci][+b.dataset.g]=b.dataset.v;render();break;
+   case'frun':runWithJourney('fire');break;
+   case'fnext':if(S.f.ci===3){go('freport');}else{S.f.ci++;S.f.phase='alert';S.f.delta={};render();showFAlert();}break;
+   case'fretry':resetF();go('fops');setTimeout(showFAlert,300);break;
+   case'fredesign':go('fbuild');break;
+   case'part':S.design[b.dataset.k]=b.dataset.v;render();break;
+   case'launch':S.mission='storm';runLaunch();break;
+   case'skip':endLaunch();break;
+   case'back':
+     if(S.screen==='build')go('missions');
+     else if(S.screen==='ops'){$('#layer').innerHTML='';go('build');}
+     else if(S.screen==='report'||S.screen==='freport'||S.screen==='lreport'||S.screen==='lbuild')go('missions');
+     else if(S.screen==='lops'){$('#layer').innerHTML='';go('lbuild');}
+     else if(S.screen==='fbuild')go('missions');
+     else if(S.screen==='fops'){$('#layer').innerHTML='';go('fbuild');}break;
+   case'accept':$('#layer').innerHTML='';o.phase='choose';render();break;
+   case'alertBack':$('#layer').innerHTML='';if(o.ci===0)go('build');break;
+   case'opt':o.choice[o.ci][+b.dataset.g]=b.dataset.v;render();break;
+   case'run':runWithJourney('storm');break;
+   case'next':if(o.ci===3){go('report');}else{o.ci++;o.phase='alert';o.delta={};render();showAlert();}break;
+   case'retry':resetOps();go('ops');setTimeout(showAlert,300);break;
+   case'redesign':go('build');break;
+   case'nextMission':go('missions');break;
+  }
+});
+render();
+</script>
+<script src="upgrade.js"></script>
+<script src="rescue.js"></script>
+<script src="final.js"></script>
+<script src="fun.js"></script>
+<script src="fireplus.js"></script>
+<script src="builder.js"></script>
+<script src="stepper.js"></script>
+<script src="look.js"></script>
+<script src="review.js"></script>
+<script src="launch3d.js"></script>
+<script src="viz.js"></script>
+</body>
+</html>
