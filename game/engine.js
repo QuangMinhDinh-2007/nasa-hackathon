@@ -28,6 +28,10 @@
     reservePct: 0.10,
     incidentHealthLoss: 20,
     failAfterUnpoweredHours: 2,
+    // ---- health v2 (off in BASE so spec33 is unchanged; switched on by the live profile) ----
+    deepDischargePct: 0,       // battery fraction below which a powered hour counts as a deep discharge
+    deepDischargeLoss: 0,      // health lost per deep-discharge hour
+    relHealthWeight: 0,        // share of Reliability that comes from final health (the rest: powered hours)
     powerSaveFactor: 0.75,
     // ---- §23.5 modes ----
     res: { std: { size: 0.70, quality: 0.80 }, high: { size: 1.00, quality: 1.00 } },
@@ -72,6 +76,10 @@
       noPreemption: true,
     },
   };
+  // v3.5 = v3.4 + health v2. Deep discharge wears the battery (NASA Li-ion guidance: avoid over-discharge; shallower
+  // cycling gives longer life). Each fully powered hour that dips below 25% costs 5 health; Reliability counts final health.
+  // v34 stays as it was so records made before health v2 replay to the same score.
+  PROFILES.v35 = Object.assign({}, PROFILES.v34, { deepDischargePct: 0.25, deepDischargeLoss: 5, relHealthWeight: 0.5 });
 
   function makeConfig(profile) {
     const prof = PROFILES[profile || 'v34'];
@@ -108,7 +116,7 @@
       
       C, P, design: Object.assign({}, design),
       t: 0, battery: P.power.battKWh, health: 100, failed: false, unpoweredRun: 0,
-      essentialHours: 0, records: [], nextId: 1, events: [], decisions: [null, null, null, null],
+      essentialHours: 0, deepHours: 0, records: [], nextId: 1, events: [], decisions: [null, null, null, null],
       energy: { solar: 0, curtailed: 0, essential: 0, imaging: 0, comms: 0 },
       generatedGB: 0, missedCaptures: 0, missedReasons: {}, incidents: 0,
       chSnapshots: [], ext: [null, null, null, null],
@@ -221,7 +229,8 @@
     const C = M.C, P = M.P, s = hourSettings(M, h), n = C.stepsPerHour, dt = 1 / n;
     const reserve = C.reservePct * P.power.battKWh;
     const captureSteps = s.perHour >= 2 ? [0, n / 2] : s.perHour === 1 ? [0] : [];
-    let poweredSteps = 0;
+    let poweredSteps = 0, deep = false;
+    const deepKWh = C.deepDischargePct * P.power.battKWh;
     for (let k = 0; k < n; k++) {
       M.t = h + k * dt;
       // 1-2. solar + essential
@@ -232,6 +241,7 @@
       if (e < 0) { M.energy.essential += ess + e; e = 0; M._unpowered = true; } else { M.energy.essential += ess; poweredSteps++; }
       if (e > P.power.battKWh) { M.energy.curtailed += e - P.power.battKWh; e = P.power.battKWh; }
       M.battery = e;
+      if (M.battery < deepKWh - 1e-9) deep = true;
       if (M.failed) continue;
       // 3. captures
       const ci = captureSteps.indexOf(k);
@@ -256,9 +266,12 @@
           else log(M, 'delivered', `Delivered obs #${r.id}`, { id: r.id });
         }
       }
+      if (M.battery < deepKWh - 1e-9) deep = true;
     }
     // 6. hourly health bookkeeping
-    if (poweredSteps === n) { M.essentialHours += 1; M.unpoweredRun = 0; }
+    if (poweredSteps === n) { M.essentialHours += 1; M.unpoweredRun = 0;
+      if (deep && C.deepDischargeLoss && !M.failed) { M.deepHours++; M.health = Math.max(0, M.health - C.deepDischargeLoss);
+        log(M, 'deep', `Battery below ${Math.round(100 * C.deepDischargePct)}% during hour ${h}: health −${C.deepDischargeLoss}`); } }
     else {
       M.essentialHours += poweredSteps / n; M.unpoweredRun += 1; M.incidents++; M.health = Math.max(0, M.health - C.incidentHealthLoss);
       log(M, 'incident', 'Essential bus unpowered during hour ' + h);
@@ -316,7 +329,7 @@
       critical: !!critical, criticalRec: critical || null, criticalStatus, hasPhase4: hasP4,
       batteryPct: 100 * M.battery / M.P.power.battKWh, batteryKWh: M.battery,
       storagePct: 100 * storedGB(M) / M.P.storage.capGB, storedGB: storedGB(M),
-      health: M.health, failed: M.failed,
+      health: M.health, failed: M.failed, deepHours: M.deepHours, unpoweredHours: M.incidents,
       nCaptured: M.records.length, nDelivered: delivered.length, nLost: M.records.filter(r => r.status === 'lost').length,
       nOnboard: M.records.filter(r => r.status === 'stored').length, missedCaptures: M.missedCaptures,
       generatedGB: M.generatedGB, deliveredGB: delivered.reduce((a, r) => a + r.origGB, 0),
@@ -359,7 +372,8 @@
       eff = 20 * activity * (0.5 * (1 - ew) + 0.5 * (1 - dw));
       effDetail = { energyWasteFraction: ew, dataWasteFraction: dw, activity };
     }
-    const rel = 10 * clamp01(M.essentialHours / 24) * (M.failed ? 0 : 1);
+    const hw = C.relHealthWeight || 0;
+    const rel = 10 * ((1 - hw) * clamp01(M.essentialHours / 24) + hw * M.health / 100) * (M.failed ? 0 : 1);
     const total = Math.round(sci + del + eff + rel);
     const gates = {
       G1: d.deliveredScience >= C.requiredScience - 1e-9,
@@ -381,7 +395,7 @@
     return { M, s: score(M) };
   }
 
-  const API = { VERSION: 'storm-3.6.0', BASE, PROFILES, CHALLENGES, makeConfig, designTotals, newMission, runChallenge, derive, score, runFull, timelinessFactor, trackPoint, trackDev, normBox, boxScan };
+  const API = { VERSION: 'storm-3.7.0', BASE, PROFILES, CHALLENGES, makeConfig, designTotals, newMission, runChallenge, derive, score, runFull, timelinessFactor, trackPoint, trackDev, normBox, boxScan };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
   else root.SWEngine = API;
 })(typeof window !== 'undefined' ? window : globalThis);

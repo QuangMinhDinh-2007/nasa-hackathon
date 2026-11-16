@@ -26,19 +26,19 @@ const SCORE_TEXT = {
     how: ['60%: science points collected in each of the 4 storm phases (3 points fills a phase). 40%: how many phases have at least one good image.',
           '85%: science points that reached Earth in each phase, worth less the older they are (up to 3 h 100%, 6 h 75%, 12 h 50%, older 25%). 15%: the critical update arrived before 24:00.',
           'Share of camera and radio energy, and of data created, that ended up as delivered science. Scaled by how much of the 12-point goal you delivered.',
-          'Hours the essential systems had power, out of 24. Zero after a critical failure.'],
+          'Half: hours the essential systems had power, out of 24. Half: spacecraft health at the end. Zero after a critical failure.'],
     fail: M => `a critical failure, or fewer than ${M.C.failBelowDelivered} science points delivered` },
   fire: { names: ['Fire science', 'Alerts and delivery', 'Efficiency', 'Reliability'],
     how: ['50%: science collected on each of the 4 passes. 25%: passes with a useful image. 25%: share of the fires that were detected.',
           '70%: science that reached Earth for each pass. 15%: the new-hotspot alert arrived within 2 hours. 15%: the final update arrived.',
           'Share of camera and radio energy, and of data created, that ended up as delivered science. Scaled by how much of the goal you delivered.',
-          'Hours the satellite was operating, out of 24. Zero after a critical failure.'],
+          'Half: hours the satellite was operating, out of 24. Half: spacecraft health at the end. Zero after a critical failure.'],
     fail: () => `a critical failure, or fewer than ${WF.CONFIG.failBelowDelivered} science points delivered` },
   flood: { names: ['Flood mapping', 'Map delivery', 'Efficiency', 'Reliability'],
     how: ['60%: map quality collected in each of the 3 zones. 40%: how many zones were mapped.',
           '85%: maps that reached Earth for each zone. 15%: a fresh map of the town was delivered.',
           'Share of energy and of data created that ended up as delivered maps. Scaled by how much of the goal you delivered.',
-          'Hours the essential systems ran, minus half of any hours in safe mode, out of 24. Zero after a critical failure.'],
+          'Half: hours the essential systems ran, minus half of any hours in safe mode, out of 24. Half: spacecraft health at the end. Zero after a critical failure.'],
     fail: M => `a critical failure, or fewer than ${M.C.failBelow} maps delivered` },
 };
 function scorePanel(m) { const X = MX[m], M = X.st().M, sc = X.eng.score(M), T = SCORE_TEXT[m], pts = [sc.sci, sc.del, sc.eff, sc.rel], max = [35, 35, 20, 10];
@@ -153,4 +153,4 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-a="t
   else S.l.task[S.l.ci].zones[+b.dataset.k] = b.dataset.z;
   render(); });
 MX.fire.runFull = (d, dec, scn) => { const st = S.f, e = JSON.parse(JSON.stringify(st.M.ext)); [0, 3].forEach(ci => { if (dec[ci][0] !== st.choice[ci][0]) e[ci] = { regions: dec[ci][0] === 'wide' ? ['A', 'B', 'C'] : ['A'] }; }); return WF.runFull(d, dec, scn, e, archOf('fire')); };
-MX.flood.runFull = (d, dec, scn) => { const st = S.l, e = JSON.parse(JSON.stringify(st.M.ext)); if (dec[0][1] !== st.choice[0][1]) e[0] = { zones: dec[0][1] === 'wide' ? ['ALL', 'ALL'] : st.M.C.targets[0].slice() }; return FL.runFull(d, dec, 'v41', scn, e); };
+MX.flood.runFull = (d, dec, scn) => { const st = S.l, e = JSON.parse(JSON.stringify(st.M.ext)); if (dec[0][1] !== st.choice[0][1]) e[0] = { zones: dec[0][1] === 'wide' ? ['ALL', 'ALL'] : st.M.C.targets[0].slice() }; return FL.runFull(d, dec, 'v42', scn, e); };

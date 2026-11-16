@@ -57,7 +57,8 @@ const CR_ZERO = /\b0(\.0+)?\s*(kWh|GB|pts?|%)?\b.*?(used|→|->)|(\bused|→|->)
 function crSentences(s) { return (s || '').split(/(?<=\.)\s+/).map(x => x.trim()).filter(Boolean); }
 function crPickLine(good, trade) {
   const cand = crSentences(trade).concat(crSentences(good)).filter(x => !CR_ZERO.test(x));
-  return cand[0] || crSentences(trade)[0] || crSentences(good)[0] || '';
+  // health v2: when a challenge cost health, that is the line to show
+  return cand.find(x => /^Health \d+% →/.test(x)) || cand[0] || crSentences(trade)[0] || crSentences(good)[0] || '';
 }
 
 function crBestChange(m) {
@@ -98,7 +99,7 @@ V.report = () => {
      <div class="cr-bar"><i style="width:${s.total}%"></i></div>
      <div class="cr-patch">${patchSvg(patch, 92)}<span aria-label="${stars} of 3 stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span></div>
     </div>
-    <div class="glass cr-panel"><h3>Mission Goals <span class="cnt">${goalsDone} / 4</span></h3><div class="cr-goals">${s.req.map(r => `<div class="cr-g ${r[1] ? 'y' : 'n'}"><i>${r[1] ? '✓' : '✕'}</i><span>${r[0]}</span></div>`).join('')}</div></div>
+    <div class="glass cr-panel"><h3>Mission Goals <span class="cnt">${goalsDone} / 4</span></h3><div class="cr-goals">${s.req.map((r, i) => `<div class="cr-g ${r[1] ? 'y' : 'n'}"><i>${r[1] ? '✓' : '✕'}</i><span>${r[0]}${i === 3 && r[2] ? ` (${r[2]})` : ''}</span></div>`).join('')}</div></div>
    </div>
    <div class="cr-right">
     <div class="glass cr-panel cr-decs-panel"><h3>Your Decisions</h3><div class="cr-decs">${o.log.map((L, i) => `<div class="cr-dec"><b>${i + 1}. ${CH[i].title}</b><span class="ch">${L.choices}</span><p>${crPickLine(L.good, L.trade)}</p></div>`).join('')}</div></div>

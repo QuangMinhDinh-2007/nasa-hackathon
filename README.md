@@ -71,6 +71,7 @@ node tools/wildfire_balance_check.js
 node tools/flood_balance_check.js
 node tools/builder_tests.js
 node tools/fireplus_tests.js
+node tools/health_tests.js
 ```
 
 `tools/replay_record.js` replays a copied mission record and checks that it gives the same score.

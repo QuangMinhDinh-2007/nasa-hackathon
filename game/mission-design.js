@@ -22,7 +22,7 @@
   const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
   /* ---------- engine access (the only place that knows the three engines' call shapes) ---------- */
-  const CFG = { storm: () => SW.makeConfig('v34'), fire: () => WF.CONFIG, flood: () => FL.makeConfig('v41') };
+  const CFG = { storm: () => SW.makeConfig('v35'), fire: () => WF.CONFIG, flood: () => FL.makeConfig('v42') };
   const fireArch = id => (WF.archProfile ? WF.archProfile(id) : { id: 'pm-sso', version: '1.0', passes: WF.CONFIG.passes, contacts: WF.CONFIG.contacts, eclipse: WF.CONFIG.eclipse });
   const DEFAULT_ARCH = { storm: null, fire: 'pm-sso', flood: null };
   function totals(m, design) {
@@ -33,11 +33,16 @@
   const costText = (m, v) => m === 'fire' ? `${v} credits` : `$${v}M`;
   const limits = m => { const C = CFG[m](); return { kg: C.limits.kg, cost: m === 'fire' ? C.limits.credits : C.limits.costM }; };
   const part = (m, design, k) => CFG[m]().parts[k][design[k]];
-  function runFull(m, design, decisions, scn, ext, arch) {
-    if (m === 'storm') return SW.runFull(design, decisions, 'v34', scn, ext);
-    if (m === 'fire') return (arch && arch !== DEFAULT_ARCH.fire) ? WF.runFull(design, decisions, scn, ext, arch) : WF.runFull(design, decisions, scn, ext);
-    return FL.runFull(design, decisions, 'v41', scn, ext);
+  // legacy = true replays with the rules before health v2 (storm v34, fire 'health-v1', flood v41); the game always plays current rules.
+  function runFull(m, design, decisions, scn, ext, arch, legacy) {
+    if (m === 'storm') return SW.runFull(design, decisions, legacy ? 'v34' : 'v35', scn, ext);
+    if (m === 'fire') { const rules = legacy ? 'health-v1' : undefined;
+      return (arch && arch !== DEFAULT_ARCH.fire) || rules ? WF.runFull(design, decisions, scn, ext, arch, rules) : WF.runFull(design, decisions, scn, ext); }
+    return FL.runFull(design, decisions, legacy ? 'v41' : 'v42', scn, ext);
   }
+  // First engine version of each mission that uses health v2. Records without an engine version (v6.3) or older ones replay on the old rules.
+  const HEALTH_V2 = { storm: [3, 7], fire: [3, 4], flood: [4, 4] };
+  function usesOldHealth(m, v) { const x = /-(\d+)\.(\d+)/.exec(v || ''); if (!x) return true; const [a, b] = HEALTH_V2[m]; return +x[1] < a || (+x[1] === a && +x[2] < b); }
   const score = (m, M) => (m === 'storm' ? SW : m === 'fire' ? WF : FL).score(M);
   const challenges = m => m === 'storm' ? SW.CHALLENGES : m === 'fire' ? WF.CHALLENGES : FL.challengesFor(CFG.flood());
   const engineVersion = m => (m === 'storm' ? SW : m === 'fire' ? WF : FL).VERSION;
@@ -127,7 +132,7 @@
             constraint: `${n1(queue)} GB still queued at 24:00` }; } },
       { id: 'G4', text: 'Keep the spacecraft alive', threshold: 'no critical failure (essential systems never unpowered 2 hours in a row)', parts: ['power'], ch: [2],
         ev: (M, sc) => { const inc = M.events.filter(e => e.type === 'incident').map(e => e.msg.replace('Essential bus unpowered during hour ', 'hour '));
-          return { measured: M.failed ? 'critical failure' : `no failure, health ${M.health}%`, evidence: [`essential systems powered ${n1(M.essentialHours)} of 24 h`, inc.length ? `unpowered: ${inc.join(', ')}` : 'no unpowered hour', `battery at 24:00: ${Math.round(sc.derived.batteryPct)}%`],
+          return { measured: M.failed ? 'critical failure' : `no failure, health ${M.health}%`, evidence: [`battery below 25% (deep discharge): ${sc.derived.deepHours || 0} h`, `essential systems powered ${n1(M.essentialHours)} of 24 h`, inc.length ? `unpowered: ${inc.join(', ')}` : 'no unpowered hour', `battery at 24:00: ${Math.round(sc.derived.batteryPct)}%`],
             why: M.failed ? 'The battery ran empty for two hours in a row during the solar fault.' : inc.length ? 'The battery ran empty for a short time, but not long enough to lose the spacecraft.' : 'The battery always covered the essential systems.', constraint: `battery ${M.P.power.battKWh} kWh, solar ${M.P.power.solarKW} kW` }; } },
     ],
     fire: [
@@ -152,7 +157,7 @@
           return { measured: ok ? `delivered ${hm(ok.deliveredAt)}` : 'not delivered', evidence: ev, why, constraint: `link ${M.P.comms.rateGBh} GB/h, final image ${last.length ? n2(last[0].origGB) : '–'} GB` }; } },
       { id: 'G4', text: 'Keep the spacecraft alive', threshold: 'no critical failure (never unpowered for 2 hours)', parts: ['power'], ch: [2],
         ev: (M, sc) => { const safe = M.events.filter(e => /Safe mode entered/.test(e.msg)).map(e => hm(e.h));
-          return { measured: M.failed ? 'critical failure' : `no failure, health ${M.health}%`, evidence: [`lowest battery ${Math.round(M.minBatt)}%`, safe.length ? `safe mode entered at ${safe.join(', ')}` : 'never in safe mode', `operating ${n1(M.opHours)} of 24 h`],
+          return { measured: M.failed ? 'critical failure' : `no failure, health ${M.health}%`, evidence: [`battery below 25% (deep discharge): ${sc.derived.deepHours || 0} h`, `lowest battery ${Math.round(M.minBatt)}%`, safe.length ? `safe mode entered at ${safe.join(', ')}` : 'never in safe mode', `operating ${n1(M.opHours)} of 24 h`],
             why: M.failed ? 'The battery stayed empty for two hours during the solar fault.' : safe.length ? 'The battery dropped below 5% and the satellite protected itself in safe mode, but it survived.' : 'The battery always covered the essential systems.', constraint: `lowest battery ${Math.round(M.minBatt)}%` }; } },
     ],
     flood: [
@@ -176,7 +181,7 @@
           const why = del ? 'A fresh town map got down before the deadline.' : tq.length ? 'A fresh town map was taken but did not finish sending in the contact time left.' : lateTown.length ? 'The late town maps were not clear enough to count.' : `No town map could be taken in the last 6 hours (${M.P.instrument.kind === 'optical' ? 'the first late pass is at night, when a camera cannot map' : 'battery reserve, safe mode or full storage'}).`;
           return { measured: del ? `delivered ${hm(del.deliveredAt)}` : 'not delivered', evidence: ev, why, constraint: `${n2(M.P.comms.rateGBmin * M.C.contactMin)} GB per contact, map ${n2(M.P.instrument.sizeGB)} GB raw` }; } },
       { id: 'G4', text: 'Keep the spacecraft alive', threshold: 'no critical failure (never unpowered 2 hours in a row)', parts: ['power'], ch: [2],
-        ev: (M, sc) => ({ measured: M.failed ? 'critical failure' : `no failure, health ${M.health}%`, evidence: [`lowest battery ${Math.round(M.minBatt)}%`, `safe mode ${n1(sc.derived.safeHours)} h`, `unpowered hours: ${M.unpoweredHours.size}`],
+        ev: (M, sc) => ({ measured: M.failed ? 'critical failure' : `no failure, health ${M.health}%`, evidence: [`battery below 25% (deep discharge): ${sc.derived.deepHours || 0} h`, `lowest battery ${Math.round(M.minBatt)}%`, `safe mode ${n1(sc.derived.safeHours)} h`, `unpowered hours: ${M.unpoweredHours.size}`],
           why: M.failed ? 'The battery stayed empty for two hours in a row during the night-time solar fault.' : sc.derived.safeHours > 0 ? 'The battery fell below 10% and the satellite paused science in safe mode, but it survived.' : 'The battery always covered the essential systems.', constraint: `lowest battery ${Math.round(M.minBatt)}%` }) },
     ],
   };
@@ -399,11 +404,11 @@
       result: { score: sc.total, outcome: sc.outcome, science: +sc.sci.toFixed(2), delivery: +sc.del.toFixed(2), efficiency: +sc.eff.toFixed(2), reliability: +sc.rel.toFixed(2), gates: sc.gates },
       summary: summarize(m, M, sc, tid), attempt: o.attempt || { n: 1, basedOn: null, mode: 'played', resets: [] }, simulatedEvents: scn.events.map(e => e.text) }; }
   function replay(rec) { const p = Sc.parseCode(rec.missionCode), scn = Sc.generate(p.mission, p.seed), arch = rec.architecture ? rec.architecture.id : undefined; // v1 records have no architecture: default profile
-    const out = runFull(rec.mission, rec.design, rec.decisions, scn, rec.manipulations, arch), tid = rec.requirement && rec.requirement.target ? rec.requirement.target.id : null;
+    const out = runFull(rec.mission, rec.design, rec.decisions, scn, rec.manipulations, arch, usesOldHealth(rec.mission, rec.engineVersion)), tid = rec.requirement && rec.requirement.target ? rec.requirement.target.id : null;
     return { M: out.M, s: out.s, scn, matches: out.s.total === rec.result.score && out.s.outcome === rec.result.outcome, summary: summarize(rec.mission, out.M, out.s, tid) }; }
 
   const API = { DEF_VERSION, RECORD_VERSION, GAME_VERSION, MISSIONS, PARTS, NAME, BRIEFING, BRIEF, WHY_ORBIT, GATES, TARGETS, LAUNCH, LAUNCH_COST_NOTE, DEFAULT_ARCH,
     totals, limits, runFull, score, challenges, fireArch, archOptions, archInfo, contactWindows, targetDef, evaluateTarget, requirementState, attach, launchProfile, launchCheck, designCheck, partLink, targetReach, changeNote,
-    verify, summarize, compare, carry, makeRecord, replay, hm };
+    verify, summarize, compare, carry, makeRecord, replay, usesOldHealth, hm };
   if (node) module.exports = API; else root.MissionDesign = API;
 })(typeof window !== 'undefined' ? window : globalThis);

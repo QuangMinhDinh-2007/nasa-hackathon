@@ -30,7 +30,9 @@ Score = four parts, 35 + 35 + 20 + 10 = 100. The report shows each part with the
 | Science / mapping | 35 | 60% points collected per storm phase (3 fills a phase) + 40% phases covered | 50% collected per pass + 25% passes covered + 25% fires detected | 60% map quality per zone + 40% zones mapped |
 | Delivery | 35 | 85% points delivered per phase, weighted by age (≤3 h 100%, ≤6 h 75%, ≤12 h 50%, older 25%) + 15% critical update | 70% delivered per pass + 15% hotspot alert within 2 h + 15% final update | 85% maps delivered per zone + 15% fresh town map |
 | Efficiency | 20 | (goal achieved, capped at 1) × (50% share of optional energy that became delivered data + 50% share of generated data that was delivered) | same | same |
-| Reliability | 10 | powered hours ÷ 24; 0 after critical failure | operating hours ÷ 24; 0 after critical failure | (essential hours − ½ safe-mode hours) ÷ 24; 0 after critical failure |
+| Reliability | 10 | ½ × powered hours ÷ 24 + ½ × health; 0 after critical failure | ½ × operating hours ÷ 24 + ½ × health; 0 after critical failure | ½ × (essential hours − ½ safe-mode hours) ÷ 24 + ½ × health; 0 after critical failure |
+
+**Health** starts at 100%. It falls 20 for each hour the essential systems are unpowered (two in a row is a critical failure, health 0) and 5 for each hour the battery dips below 25%, because deep discharge wears a lithium-ion battery (NASA guidance: avoid over-discharge; shallower cycling gives longer life). Safe mode costs no health: it is the spacecraft protecting itself, and its cost is lost science time. Health counts for half of Reliability.
 
 Outcome is decided separately by four requirements per mission:
 

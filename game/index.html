@@ -339,9 +339,11 @@ details[open]>.gl-sum::after{content:'▾'}
 const GLOBE='assets/globe.webp';
 const $=s=>document.querySelector(s);
 const fmt=n=>(Math.round(n*10)/10).toString();
+// Health v2: explain any health change in a challenge result (unpowered hours and deep-discharge hours come from the engine).
+function healthNote(b,a){if(a.health>=b.health)return '';const uh=(a.unpoweredHours||0)-(b.unpoweredHours||0),dh=(a.deepHours||0)-(b.deepHours||0);const why=[uh>0?`essential systems unpowered ${uh} h`:'',dh>0?`battery below 25% for ${dh} h, which wears it out`:''].filter(Boolean).join('; ');return ` Health ${b.health}% → ${a.health}%${why?` (${why})`:''}.`;}
 
 /* ================== DATA ================== */
-const ENG=window.SWEngine, CFG=ENG.makeConfig('v34');
+const ENG=window.SWEngine, CFG=ENG.makeConfig('v35');
 const PARTLABEL={instrument:'Scientific instrument',observation:'Observation system',power:'Power system',comms:'Communication system',storage:'Data storage'};
 const PARTFX={
  instrument:{std:p=>`${p.sizeGB} GB/image · ${p.basePts} pt/image · ${p.imgKW} kW while imaging`,adv:p=>`${p.sizeGB} GB/image · ${p.basePts} pts/image · ${p.imgKW} kW while imaging`},
@@ -372,7 +374,7 @@ const CH=[
   decide:'how hard to run the satellite while power is low.',
   groups:[{lab:'Power mode',opts:[['normal','Normal operations','Full activity, more drain'],['save','Power saving','25% less extra power, 1 picture/hour max']]},
           {lab:'Observation mode',opts:[['freq','Frequent','As many pictures as hardware allows'],['occ','Occasional','One picture every 2 hours']]}],
-  lesson:'Solar panels and batteries work as a team; when sunlight drops, stored energy decides what you can do.'},
+  lesson:'Solar panels and batteries work as a team; when sunlight drops, stored energy decides what you can do. Draining the battery below 25% wears it out and costs health.'},
  {title:'Urgent hurricane update',sub:'Deliver a fresh image before the deadline.',
   alert:'The storm is nearing the coast. Forecasters need a fresh image delivered before hour 24.',
   decide:'how fast to send data and how much power to spend.',
@@ -384,7 +386,7 @@ const CH=[
 /* ================== STATE ================== */
 const S={screen:'signin',design:{instrument:'std',observation:'std',power:'std',comms:'std',storage:'std'},unlocked:false};
 function resetOps(){
-  S.ops={ci:0,phase:'alert',choice:CH.map(c=>c.groups.map(g=>g.opts[0][0])),M:Object.assign(ENG.newMission(S.design,'v34',S.scn.storm),{traceOn:true}),delta:{},log:[]};
+  S.ops={ci:0,phase:'alert',choice:CH.map(c=>c.groups.map(g=>g.opts[0][0])),M:Object.assign(ENG.newMission(S.design,'v35',S.scn.storm),{traceOn:true}),delta:{},log:[]};
 }
 function D(){return ENG.derive(S.ops.M)}
 
@@ -606,12 +608,13 @@ function simulate(){
     met=!sn.missed;badge=met?'All images stored':'Storage limited';}
   else if(ci===2){
     good=`${sn.captured.length} images during the anomaly (${fmt(capPts)} pts); ${sn.delivered.length} reached Earth.`;
-    trade=`Battery ${Math.round(before.batteryPct)}% → ${Math.round(after.batteryPct)}%. Energy balance over 6 h: ${eNet>=0?'+':''}${fmt(eNet)} kWh (solar ${fmt(sn.solarKWh)}, essential ${fmt(sn.essentialKWh)}, imaging ${fmt(sn.imagingKWh)}, sending ${fmt(sn.commsKWh)}).${miss}${after.health<before.health?` Essential systems lost power: health ${before.health}% → ${after.health}%.`:''}${M.failed?' Critical failure: science and sending stopped.':''}`;
-    met=!sn.missed&&after.health===before.health;badge=M.failed?'Critical failure':after.health<before.health?'Safe-mode incident':sn.missed?'Operations reduced':'Anomaly managed';}
+    trade=`Battery ${Math.round(before.batteryPct)}% → ${Math.round(after.batteryPct)}%. Energy balance over 6 h: ${eNet>=0?'+':''}${fmt(eNet)} kWh (solar ${fmt(sn.solarKWh)}, essential ${fmt(sn.essentialKWh)}, imaging ${fmt(sn.imagingKWh)}, sending ${fmt(sn.commsKWh)}).${miss}${M.failed?' Critical failure: science and sending stopped.':''}`;
+    met=!sn.missed&&after.health===before.health;badge=M.failed?'Critical failure':after.unpoweredHours>before.unpoweredHours?'Power incident':after.health<before.health?'Battery stressed':sn.missed?'Operations reduced':'Anomaly managed';}
   else {
     good=`Sent ${sn.delivered.length} images in the final 6 hours (+${fmt(delPts)} useful pts). ${after.critical?`Fresh image captured at ${fmt(after.criticalRec.t)} h reached forecasters at ${fmt(after.criticalRec.deliveredAt)} h.`:''}`;
     trade=after.critical?`Sending used ${fmt(sn.commsKWh)} kWh. ${after.nOnboard} image(s) never left the satellite.`:`No fresh phase-4 image reached Earth by hour 24${after.hasPhase4?' (it was stuck behind other data)':' (none could be taken)'}. ${after.nOnboard} image(s) never left the satellite.`;
     met=after.critical;badge=met?'Update delivered':'Update missed';}
+  trade+=healthNote(before,after);
   o.delta={cov:after.coveredPhases-before.coveredPhases,pts:delPts,batt:after.batteryPct-before.batteryPct,st:after.storagePct-before.storagePct,health:after.health-before.health};
   o.log[ci]={choices:chName,good,trade,met,badge};
   if(ci===3&&ENG.score(M).outcome==='Mission Success')S.unlocked=true;
@@ -667,7 +670,7 @@ const CHF=[
   decide:'where to scan at 14:00. Click the map to select areas A, B, or C.',
   groups:[{lab:'Power mode',opts:[['normal','Normal operations','Full activity, more drain'],['save','Power saving','Lower load, 1 image, slower sending']]},
           {lab:'14:00 pass',opts:[['image','Image the pass','Keep watching the fire'],['skip','Skip the pass','Save energy and storage']]}],
-  lesson:'With little sunlight and regular eclipses, the battery decides what you can do. Below 5% the satellite enters safe mode.'},
+  lesson:'With little sunlight and regular eclipses, the battery decides what you can do. Below 25% the battery wears out (health −5 per hour); below 5% the satellite enters safe mode.'},
  {title:'Wildfire expansion',sub:'New activity reported near the community.',hours:'18:00–24:00',win:'Pass 20:00 · contacts 21:00 and 23:00',
   alert:'Responders report new fire activity near the community in region C. One pass left at 20:00, then two short contacts before the deadline.',
   decide:'where to look on the final pass and how fast to send.',
@@ -775,12 +778,13 @@ function fsim(){const o=S.f,ci=o.ci,c=o.choice[ci],M=o.M,g=CHF[ci].groups;
    met=!late;badge=met?'Contact used':'Alerts late';}
  else if(ci===2){const safe=evs.some(m=>m.includes('Safe mode entered'));
    good=`${imgs.length?`${imgs.length} image(s) at ${pT(2)} (${found.length?found.join(', '):'no detection'}).`:`${pT(2)} pass not imaged.`} ${sentTxt}`;
-   trade=`Battery ${Math.round(before.batteryPct)}% → ${Math.round(after.batteryPct)}% with solar at ${faultPct('fire')}${fA().eclipse.eclipseSteps.length?' and an eclipse every orbit':' (this orbit has no eclipse)'}.${safe?' The satellite dropped into SAFE MODE (health −10).':''}${skipped.length?' '+skipped.join('; ')+'.':''}${M.failed?' Critical failure.':''}`;
+   trade=`Battery ${Math.round(before.batteryPct)}% → ${Math.round(after.batteryPct)}% with solar at ${faultPct('fire')}${fA().eclipse.eclipseSteps.length?' and an eclipse every orbit':' (this orbit has no eclipse)'}.${safe?' The satellite dropped into SAFE MODE and paused science to protect itself.':''}${skipped.length?' '+skipped.join('; ')+'.':''}${M.failed?' Critical failure.':''}`;
    met=!safe&&!M.failed;badge=M.failed?'Critical failure':safe?'Safe mode':'Anomaly managed';}
  else {const e5=fresh.find(i=>i.kind==='alert'&&i.critical);
    good=`${imgs.length?`Final pass found: ${found.length?found.join(', '):'nothing'}.`:'No final image.'} ${sentTxt}`;
    trade=`${e5?(after.critStatus==='Delivered on time'?`New-hotspot alert delivered ${fmt(e5.deliveredAt-e5.t)} h after detection.`:`New-hotspot alert ${after.critStatus.toLowerCase()}.`):'The new hotspot in region C was never detected.'} ${after.finalUpdate?`A ${pT(3)} image reached Earth before the deadline.`:`No ${pT(3)} image reached Earth by 24:00.`} ${M.items.filter(i=>i.status==='stored').length} item(s) never left the satellite.`;
    met=after.critStatus==='Delivered on time'&&after.finalUpdate;badge=met?'Responders updated':'Update incomplete';}
+ trade+=healthNote(before,after);
  o.delta={cov:after.coveredPasses-before.coveredPasses,pts:after.deliveredScience-before.deliveredScience,batt:after.batteryPct-before.batteryPct,st:after.storagePct-before.storagePct,health:after.health-before.health};
  o.log[ci]={choices:chName,good,trade,met,badge};}
 function showFAlert(){const o=S.f,ch=chx('fire',o.ci);
@@ -821,7 +825,7 @@ V.freport=()=>{const o=S.f,M=o.M,sc=WF.score(M),x=fD();
 
 
 /* ================== FLOOD WATCH ================== */
-const FL=window.FLEngine, LC=FL.makeConfig('v41');
+const FL=window.FLEngine, LC=FL.makeConfig('v42');
 const LLABEL={instrument:'Imaging instrument',observation:'Targeting system',power:'Power system',comms:'Communication system',storage:'Data storage'};
 const LFX={instrument:p=>p.kind==='optical'?`Needs daylight & clear sky · ${p.sizeGB} GB/map · +${p.imgKW} kW`:`Sees through clouds & at night · ${p.sizeGB} GB/map · +${p.imgKW} kW`,
  observation:p=>`Up to ${p.perPass} map${p.perPass>1?'s':''} per pass`,power:p=>`${p.solarKW} kW solar · ${p.battKWh} kWh battery`,
@@ -841,7 +845,7 @@ const LCH=[
           {lab:'Storage policy',opts:[['keep','Keep every map','New maps are turned away when storage is full'],['prio','Make room for the best maps','Drops the least useful map to fit a better one']]}],
   lesson:'A high-detail photo of clouds is worth almost nothing. Processing on board can save storage and downlink time.'},
  {title:'Power anomaly in the dark',sub:'Solar arrays misaligned: 25% power for 6 hours.',hours:'22:00–04:00',win:'Passes 23:00, 02:00 (night)',
-  alert:'A solar-array drive fault leaves only 25% of normal power through the night. Below 10% battery the satellite enters safe mode and stops science until it recovers to 30%.',
+  alert:'A solar-array drive fault leaves only 25% of normal power through the night. Below 25% the battery wears out (health −5 per hour). Below 10% the satellite enters safe mode and stops science until it recovers to 30%.',
   decide:'how hard to run the satellite and how many maps to attempt at night.',
   groups:[{lab:'Power mode',opts:[['normal','Normal operations','Full activity, standby load on'],['save','Power saving','Shed standby load, slower sending, 1 map per pass']]},
           {lab:'Imaging plan',opts:[['full','Full imaging','Both night passes'],['minimal','Minimal imaging','1 map at 23:00 only; 1 map per pass after']]}],
@@ -856,7 +860,7 @@ const LCH=[
 const LZ=[['UV','Upper Valley',0],['FARM','Farmland',33.3],['TOWN','Riverside Town',66.6]];
 S.ldesign={instrument:'std',observation:'std',power:'std',comms:'std',storage:'std'};
 const lt=h=>{const H=(10+Math.floor(h+1e-9))%24,m=Math.round((h-Math.floor(h+1e-9))*60);return `${String(H).padStart(2,'0')}:${String(m).padStart(2,'0')}`};
-function resetL(){S.l={ci:0,phase:'alert',choice:LCH.map(c=>c.groups.map(g=>g.opts[0][0])),M:Object.assign(FL.newMission(S.ldesign,'v41',S.scn.flood),{traceOn:true}),log:[],delta:{}};}
+function resetL(){S.l={ci:0,phase:'alert',choice:LCH.map(c=>c.groups.map(g=>g.opts[0][0])),M:Object.assign(FL.newMission(S.ldesign,'v42',S.scn.flood),{traceOn:true}),log:[],delta:{}};}
 function lTotals(){let kg=LC.bus.kg,m=LC.bus.costM;LPARTS.forEach(p=>{const o=p[S.ldesign[p.key]];kg+=o.kg;m+=o.costM});return{kg,m}}
 function lD(){const M=S.l.M,d=FL.derive(M);const nextP=LC.passes.find(p=>p.h>=d.t-1e-9),nextC=LC.contacts.find(c=>c>=d.t-1e-9);
   d.nextPass=nextP?lt(nextP.h):'none';d.nextContact=nextC!==undefined?lt(nextC):'none';return d;}
@@ -950,6 +954,7 @@ function lsim(){const o=S.l,ci=o.ci,c=o.choice[ci],M=o.M,g=LCH[ci].groups,opt=M.
  else {met=after.town;badge=met?'Town update delivered':'Town update missed';
    good=after.town?'A fresh map of Riverside Town reached responders before the deadline.':(sent.length?'You pushed more maps down to the ground in the final hours.':'You tried to clear the backlog in the final hours.');
    trade=after.town?(after.nOnboard>0?'But a few maps never left the satellite.':'You gave up very little: the downlink kept up with everything you mapped.'):'But no fresh town map reached the ground in time.';}
+ trade+=healthNote(before,after);
  o.delta={cov:after.coveredZones-before.coveredZones,pts:after.delivered-before.delivered,batt:after.batteryPct-before.batteryPct,st:after.storagePct-before.storagePct,health:after.health-before.health};
  o.log[ci]={choices:chName,good,trade,met,badge};}
 function showLAlert(){const o=S.l,ch=chx('flood',o.ci);

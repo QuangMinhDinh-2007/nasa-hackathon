@@ -41,7 +41,7 @@ const PART = {
 const partKey = k => /instr|sensor|payload|radar|optic/i.test(k) ? 'instrument' : /obs|proc|rate/i.test(k) ? 'observation' : /pow|solar|batt/i.test(k) ? 'power' : /com|link|relay|radio/i.test(k) ? 'comms' : /stor|mem/i.test(k) ? 'storage' : null;
 const SIDE = [[/^Battery$/, 'Battery', 'Sunlight fills it. The computer, camera and radio drain it. If it runs too low, the satellite stops taking images to protect itself.'],
   [/^Storage used$/, 'Storage used', 'Images waiting on board. It climbs when the camera makes data faster than the radio can send it.'],
-  [/^Health$/, 'Health', 'Falls when essential systems lose power. At zero the mission is lost.'],
+  [/^Health$/, 'Health', 'Falls when essential systems lose power (−20 per hour) or the battery runs below 25%, which wears it out (−5 per hour). Half of the Reliability score. At zero the mission is lost.'],
   [/^Useful (data|maps) delivered$/, 'Delivered', 'Only data that reached Earth counts, and older data counts for less.'],
   [/coverage$|^Passes covered$/, 'Coverage', 'How much of the event your satellite has actually seen so far.'],
   [/^(Critical update|Town update|Final update|New-hotspot alert)$/, 'The delivery that matters most', 'People on the ground are waiting for this one. Miss it and the mission cannot be a full success.'],
@@ -91,7 +91,7 @@ function patchSvg(p, size) { const h = Scenario.hash32(p.m + p.code), hue = { st
   return `<svg viewBox="0 0 120 120" width="${size}" height="${size}" role="img" aria-label="Mission patch ${MNAME[p.m]} ${p.code}, ${p.pstars} of 3 stars"><polygon points="${poly}" fill="hsl(${hue} 62% 20%)" stroke="hsl(${h2} 85% 62%)" stroke-width="4" stroke-linejoin="round"/><circle cx="60" cy="60" r="41" fill="none" stroke="#ffffff33" stroke-dasharray="2 4"/>${icon}
    <text x="60" y="27" text-anchor="middle" font-size="7.5" font-weight="700" fill="#fff" letter-spacing="1">${MNAME[p.m]}</text><text x="60" y="96" text-anchor="middle" font-size="7" fill="hsl(${h2} 85% 72%)" font-family="monospace">${p.code}</text><text x="60" y="107" text-anchor="middle" font-size="9" fill="#ffcc66">${'★'.repeat(p.pstars)}${'☆'.repeat(3 - p.pstars)}</text></svg>`; }
 function parScore(m) { const X = MX[m], st = X.st(); if (st.par != null) return st.par; const d = X.design(), scn = S.scn[m], g = X.CH.map(c => c.groups.map(q => q.opts.map(o => o[0])));
-  const run = { storm: dd => ENG.runFull(d, dd, 'v34', scn), fire: dd => WF.runFull(d, dd, scn, null, archOf('fire')), flood: dd => FL.runFull(d, dd, 'v41', scn) }[m]; let best = 0;
+  const run = { storm: dd => ENG.runFull(d, dd, 'v35', scn), fire: dd => WF.runFull(d, dd, scn, null, archOf('fire')), flood: dd => FL.runFull(d, dd, 'v42', scn) }[m]; let best = 0;
   for (let q = 0; q < 256; q++) { const t = run(g.map((c, ci) => [c[0][(q >> (ci * 2)) & 1], c[1][(q >> (ci * 2 + 1)) & 1]])).s.total; if (t > best) best = t; } return st.par = best; }
 function patchPanel(m) { const X = MX[m], st = X.st(), sc = X.eng.score(st.M), par = parScore(m), code = S.scn[m].code;
   const stars = sc.outcome === 'Mission Failure' ? 0 : sc.outcome !== 'Mission Success' ? 1 : sc.total >= par - 3 ? 3 : 2, p = { m, code, stars, score: sc.total };
