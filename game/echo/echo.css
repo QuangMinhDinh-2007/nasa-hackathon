@@ -290,7 +290,7 @@ html:has(body.echo[data-scr="title"]){background:#3a3f9e}
 body.echo{height:auto;min-height:100vh;min-height:100dvh}
 
 /* ---------- Kim's speech bubble beside Kim in the Mission Room ---------- */
-#echoTalk.near{background:none;pointer-events:none;align-items:flex-start;padding:0}
+#echoTalk.near{background:rgba(74,59,99,.12);align-items:flex-start;padding:0}  /* still blocks the room: a click anywhere advances the line */
 #echoTalk.near .et-box{position:fixed;pointer-events:auto;border-radius:26px;padding:14px 18px;gap:12px}
 #echoTalk.near .et-face{display:none}
 #echoTalk.near .et-box::before{content:"";position:absolute;top:26px;width:22px;height:22px;background:inherit;border:4px solid var(--e-ink);transform:rotate(45deg)}

@@ -382,7 +382,7 @@
     if (m && scr === REPORT[m]) { reportDress(m); saveResult(m); }
     if (scr === 'room') roomFocus();
     hud(); }
-  const _render = render; render = function () { _render(); dress(); };
+  const _render = render; render = function () { const bd = document.body; bd.dataset.scr = S.screen; bd.toggleAttribute('data-ws', !['room', 'title', 'missions'].includes(S.screen)); _render(); dress(); };   // theme markers first, so new elements never fade in from the old colours
   // Gameplay sidebar: the checklist, goal and status boxes become one "Mission Overview" panel. String in, string out,
   // so live updates during playback (which re-render the sidebar from dash()/fDash()/lDash()) keep the same layout.
   function overview(html) { const t = document.createElement('div'); t.innerHTML = html; const side = t.querySelector('.side'); if (!side) return html;
