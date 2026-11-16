@@ -176,3 +176,43 @@ body.echo:is([data-scr$="report"]) .cr-full-in span[style*="background:#1f6f43"]
 /* nav hint label: darker blue for contrast on white (all screens) */
 .e-navsay b{color:var(--p-blue)!important}
 body.echo:is([data-scr$="report"]) .cr-full-in .pstars{color:#9a6a00}
+
+/* ===== 5. Briefing, Data & Sources, How to play, Rewind choice, rank and patches: every remaining popup ===== */
+body.echo #layer .modal-wrap>.glass,body.echo:is([data-scr="brief"]) #app{
+  --text:var(--p-ink);--muted:var(--p-ink2);--dim:var(--p-dim);--line:rgba(74,59,99,.3);--line2:rgba(74,59,99,.6);
+  --glass:var(--p-card);--glass2:#fffbe9;--blue:var(--p-blue);--blue2:#3b7be0;--good:var(--p-good);--warn:var(--p-warn);--bad:var(--p-bad);color:var(--p-ink)}
+body.echo #layer .modal-wrap>.glass{background:var(--p-card)!important;border:4px solid var(--p-ink)!important;box-shadow:0 10px 0 rgba(30,22,60,.55)!important}
+body.echo #layer .modal-wrap>.glass :is(h2,h3,h4){color:var(--p-ink)}
+body.echo #layer .modal-wrap>.glass .eyebrow{color:var(--p-blue)}
+body.echo #layer .modal-wrap>.glass :is(p,li,td,.muted){color:var(--p-ink2)}
+body.echo #layer .modal-wrap>.glass :is(b,strong){color:var(--p-ink)}
+body.echo #layer .modal-wrap>.glass :is(b,span,td,div,p)[style*="#fff"]{color:var(--p-ink)!important}
+body.echo #layer .modal-wrap>.glass [style*="#cfd8ea"],body.echo #layer .modal-wrap>.glass [style*="#cfe0ff"],body.echo #layer .modal-wrap>.glass [style*="#9cc9ff"]{color:var(--p-ink2)!important}
+body.echo #layer .modal-wrap>.glass [style*="background:#0"]{background:#fff!important}
+body.echo #layer .modal-wrap>.glass :is(table,.xtab){background:#fff;color:var(--p-ink)}body.echo #layer .modal-wrap>.glass th{background:var(--p-tint);color:var(--p-ink)}
+body.echo #layer .modal-wrap>.glass :is(.decide,.how div,.badge,.qz button,.src,.prov,.card){background:#fff;border:2px solid rgba(74,59,99,.35);color:var(--p-ink)}
+body.echo #layer .modal-wrap>.glass a{color:var(--p-blue)}
+body.echo #layer .modal-wrap>.glass span[style*="background:#1f6f43"]{color:#fff!important}
+/* briefing (goal screen) */
+body.echo:is([data-scr="brief"]) .brief :is(h1,h2,h3){color:#fff}
+body.echo:is([data-scr="brief"]) .brief>.eyebrow,body.echo:is([data-scr="brief"]) .brief .eyebrow{color:var(--e-sun)}
+body.echo:is([data-scr="brief"]) .brief .lead,body.echo:is([data-scr="brief"]) .brief>p{color:rgba(255,255,255,.92)}
+body.echo:is([data-scr="brief"]) .tg{background:var(--p-card);border:3px solid var(--p-ink);color:var(--p-ink);box-shadow:0 5px 0 rgba(30,22,60,.45)}
+body.echo:is([data-scr="brief"]) .tg .t{color:var(--p-ink)}body.echo:is([data-scr="brief"]) .tg :is(.s,.k){color:var(--p-ink2)}
+body.echo:is([data-scr="brief"]) .tg[aria-checked="true"]{background:#d7f5ea;border-color:var(--p-ink);box-shadow:0 5px 0 rgba(30,22,60,.45),0 0 0 4px var(--e-sun)}
+body.echo:is([data-scr="brief"]) .tg .mark{border:2.5px solid var(--p-ink)}body.echo:is([data-scr="brief"]) .tg[aria-checked="true"] .mark{background:var(--e-sun);border-color:var(--p-ink);color:var(--p-ink)}
+body.echo:is([data-scr="brief"]) .bf-more{color:rgba(255,255,255,.9)}body.echo:is([data-scr="brief"]) .bf-more>summary{color:#fff;font-size:16px;min-height:40px}
+body.echo:is([data-scr="brief"]) .bf-more[open]{background:var(--p-card);border:3px solid var(--p-ink);border-radius:20px;padding:12px 16px;color:var(--p-ink)}
+body.echo:is([data-scr="brief"]) .bf-more[open]>summary{color:var(--p-ink)}
+body.echo:is([data-scr="brief"]) .bf-more[open] :is(p,li,div,span){color:var(--p-ink)}
+body.echo:is([data-scr="brief"]) .bf-more[open] :is(.bf-card h3,.bf-req b){color:var(--p-blue)}
+body.echo:is([data-scr="brief"]) .bf-more[open] .bf-req div{background:#fff;border:2px solid rgba(74,59,99,.3)}
+body.echo:is([data-scr="brief"]) .brief>*>p[class*="note"],body.echo:is([data-scr="brief"]) .ar-wrap+p{color:rgba(255,255,255,.9)}
+body.echo:is([data-scr="brief"]) .brief [style*="#cfe0ff"],body.echo:is([data-scr="brief"]) .brief [style*="#cfd8ea"]{color:var(--p-ink)!important}
+body.echo #layer .modal-wrap>.glass a{color:var(--p-blue)!important}
+body.echo #layer .modal-wrap>.glass .cls{color:#fff!important}
+body.echo:is([data-scr="brief"]) .tg b{color:var(--p-ink)}
+body.echo #layer .cls.A{background:#17704a!important}body.echo #layer .cls.C{background:#6d40d6!important}body.echo #layer .cls.D{background:#7d5410!important}body.echo #layer .cls.B{background:#2459b8!important}
+/* briefing: text that sits on the blue page stays light; only the cards are paper */
+body.echo:is([data-scr="brief"]) #app{--text:#fff;--muted:rgba(255,255,255,.9);--dim:rgba(255,255,255,.82);color:#fff}
+body.echo:is([data-scr="brief"]) :is(.tg,.bf-more[open]){--text:var(--p-ink);--muted:var(--p-ink2);--dim:var(--p-dim)}
