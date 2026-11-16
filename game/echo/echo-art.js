@@ -1,4 +1,4 @@
-/* PROJECT ECHO — illustrated art (inline SVG scenes; ECHO is the mascot image in assets/).
+/* PROJECT ECHO — original illustrated art (inline SVG, no image files, works offline).
  * Everything here is presentation only. Nothing in this file reads or changes a simulation value,
  * except room() which is handed already-computed numbers to draw gauges.
  * Style: soft 2D cartoon, plum outlines, bright fresh pastels (cream, sky, mint, coral, sunny yellow, lavender).
@@ -11,11 +11,31 @@
   const o = w => `stroke="${C.ink}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"`;
 
   /* ---------------- ECHO: a small blue bird with solar-panel wings and an antenna ---------------- */
-  /* ECHO is the mascot illustration (assets/echo.png, assets/echo-s.png). One pose; the mood is shown by a small
-   * emote badge and a tilt (CSS), never by redrawing the face. */
-  const EMOTE = { cheer: '★', worry: '!', think: '?', sad: '…' };
+  /* ---------------- ECHO: a small blue bird with solar-panel wings and an antenna ---------------- */
   function echo(mood) { mood = mood || 'happy';
-    return `<span class="echo-m m-${mood}" aria-hidden="true"><img src="assets/echo-s.png" alt="" draggable="false">${EMOTE[mood] ? `<i class="em">${EMOTE[mood]}</i>` : ''}</span>`; }
+    const eyes = {
+      happy: `<circle cx="47" cy="50" r="8.5" fill="#fff" ${o(2.2)}/><circle cx="73" cy="50" r="8.5" fill="#fff" ${o(2.2)}/><circle cx="48.5" cy="51" r="4.6" fill="${C.ink}"/><circle cx="74.5" cy="51" r="4.6" fill="${C.ink}"/><circle cx="50" cy="49" r="1.7" fill="#fff"/><circle cx="76" cy="49" r="1.7" fill="#fff"/>`,
+      cheer: `<path d="M39 52q8-11 16 0M65 52q8-11 16 0" fill="none" ${o(3.2)}/>`,
+      worry: `<circle cx="47" cy="52" r="8" fill="#fff" ${o(2.2)}/><circle cx="73" cy="52" r="8" fill="#fff" ${o(2.2)}/><circle cx="47" cy="54" r="3.8" fill="${C.ink}"/><circle cx="73" cy="54" r="3.8" fill="${C.ink}"/><path d="M38 41l14 4M82 41l-14 4" fill="none" ${o(2.6)}/>`,
+      think: `<circle cx="47" cy="50" r="8.5" fill="#fff" ${o(2.2)}/><circle cx="73" cy="50" r="8.5" fill="#fff" ${o(2.2)}/><circle cx="50" cy="47" r="4.2" fill="${C.ink}"/><circle cx="76" cy="47" r="4.2" fill="${C.ink}"/>`,
+      sad: `<circle cx="47" cy="53" r="8" fill="#fff" ${o(2.2)}/><circle cx="73" cy="53" r="8" fill="#fff" ${o(2.2)}/><circle cx="47" cy="56" r="4" fill="${C.ink}"/><circle cx="73" cy="56" r="4" fill="${C.ink}"/><path d="M37 46l15-4M83 46l-15-4" fill="none" ${o(2.6)}/><path d="M84 60q3 6 0 9q-3-3 0-9z" fill="${C.sky}" ${o(1.4)}/>`,
+    }[mood] || '';
+    const beak = mood === 'cheer' ? `<path d="M52 61h16l-8 12z" fill="${C.sun}" ${o(2.2)}/><path d="M55 63h10l-5 6z" fill="${C.coral}"/>` : mood === 'worry' || mood === 'sad' ? `<path d="M53 64h14l-7 7z" fill="${C.sun}" ${o(2.2)}/>` : `<path d="M52 61h16l-8 9z" fill="${C.sun}" ${o(2.2)}/>`;
+    const up = mood === 'cheer';
+    const wing = (side) => { const s = side < 0 ? '' : 'transform="translate(120 0) scale(-1 1)"';
+      return `<g ${s}><g class="ew ${up ? 'up' : ''}"><path d="M24 62l-8 ${up ? -8 : 2}" ${o(3)} fill="none"/><g transform="rotate(${up ? -38 : -8} 16 60)"><rect x="-8" y="50" width="24" height="17" rx="3.5" fill="${C.deep}" ${o(2.4)}/><path d="M0 50v17M8 50v17M-8 58.5h24" stroke="#9fd0ff" stroke-width="1.3"/></g></g></g>`; };
+    return `<svg class="echo-bird m-${mood}" viewBox="0 0 120 120" aria-hidden="true">
+      <ellipse cx="60" cy="112" rx="26" ry="4.5" fill="#000" opacity=".12"/>
+      <path d="M60 22v-11" ${o(2.6)} fill="none"/><circle class="e-ant" cx="60" cy="8" r="4.5" fill="${C.sun}" ${o(2.2)}/>
+      ${wing(-1)}${wing(1)}
+      <path d="M78 96q14 6 20-2q-8-2-12-8z" fill="${C.deep}" ${o(2.4)}/>
+      <ellipse cx="60" cy="66" rx="36" ry="38" fill="${C.sky}" ${o(3)}/>
+      <path d="M40 30q8-12 20-8q12-4 20 8" fill="${C.sky}" ${o(3)}/>
+      <ellipse cx="60" cy="80" rx="22" ry="20" fill="${C.cream}"/>
+      <circle cx="36" cy="64" r="5.5" fill="${C.pink}" opacity=".85"/><circle cx="84" cy="64" r="5.5" fill="${C.pink}" opacity=".85"/>
+      ${eyes}${beak}
+      <path d="M50 103v7m-4 0h8M70 103v7m-4 0h8" ${o(2.8)} stroke="${C.coral}" fill="none"/>
+    </svg>`; }
 
   /* ---------------- Flight Director: calm, friendly, headset ---------------- */
   function director() { return `<svg class="echo-dir" viewBox="0 0 120 120" aria-hidden="true">
@@ -50,7 +70,7 @@
   const waves = (x, y, rot, cls) => `<g class="${cls || 'ping'}" transform="translate(${x} ${y}) rotate(${rot})" fill="none" stroke="${C.sun}" stroke-width="5" stroke-linecap="round"><path d="M-10-18q10 18 0 36"/><path d="M6-30q18 30 0 60"/><path d="M22-42q26 42 0 84"/></g>`;
   const frame = (inner, bg) => `<svg class="cm-art" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><rect width="800" height="450" fill="${bg}"/>${inner}</svg>`;
   const space = `<defs><linearGradient id="spg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3f9e"/><stop offset=".6" stop-color="#5a6fe0"/><stop offset="1" stop-color="#8fd3ff"/></linearGradient></defs><rect width="800" height="450" fill="url(#spg)"/>${stars(46, 800, 330, 11)}`;
-  const echoAt = (x, y, s, mood, cls) => `<g class="${cls || 'bob'}"><image href="assets/echo.png" x="${x}" y="${y}" width="${s}" height="${s}" preserveAspectRatio="xMidYMid meet"/>${EMOTE[mood] ? `<circle cx="${x + s * .86}" cy="${y + s * .16}" r="${s * .13}" fill="${C.sun}" ${o(3)}/><text x="${x + s * .86}" y="${y + s * .16 + s * .07}" text-anchor="middle" font-family="Baloo 2,system-ui" font-weight="800" font-size="${s * .2}" fill="${C.ink}">${EMOTE[mood]}</text>` : ''}</g>`;
+  const echoAt = (x, y, s, mood, cls) => `<g class="${cls || 'bob'}"><svg x="${x}" y="${y}" width="${s}" height="${s}" viewBox="0 0 120 120" overflow="visible">${echo(mood).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg></g>`;
   const dirAt = (x, y, s) => `<svg x="${x}" y="${y}" width="${s}" height="${s}" viewBox="0 0 120 120">${director().replace(/^<svg[^>]*>|<\/svg>$/g, '')}</svg>`;
 
   // mission backdrops seen from above (the lower part of an "in orbit" panel)
