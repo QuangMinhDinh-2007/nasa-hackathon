@@ -289,3 +289,8 @@ body.echo.og-on .e-sidekim{visibility:hidden}
 #echoTour:has(.og) .tour-ring{box-shadow:0 0 0 4px var(--e-sun),0 0 0 9999px rgba(24,18,48,.8)}
 #echoTour .og-above{flex-direction:column-reverse}
 #echoTour .og-above .og-card::before{top:auto;bottom:-13px;transform:rotate(225deg)}
+/* sliders on the cream panels: the track was white-on-cream and could not be seen */
+body.echo:is([data-scr$="ops"]) :is(.decision,.side) input[type=range]::-webkit-slider-runnable-track{background:#d9cdbb;box-shadow:inset 0 0 0 2px var(--p-ink)}
+body.echo:is([data-scr$="ops"]) :is(.decision,.side) input[type=range]::-moz-range-track{background:#d9cdbb;box-shadow:inset 0 0 0 2px var(--p-ink)}
+body.echo:is([data-scr$="ops"]) :is(.decision,.side) input[type=range]::-webkit-slider-thumb{border-color:var(--p-ink)}
+body.echo:is([data-scr$="ops"]) :is(.decision,.side) input[type=range]::-moz-range-thumb{border-color:var(--p-ink)}

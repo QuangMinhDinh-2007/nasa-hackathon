@@ -569,6 +569,7 @@
   // so live updates during playback (which re-render the sidebar from dash()/fDash()/lDash()) keep the same layout.
   function overview(html) { const t = document.createElement('div'); t.innerHTML = html; const side = t.querySelector('.side'); if (!side) return html;
     const boxes = [...side.children].filter(c => c.classList.contains('dash') && !c.querySelector('.mini-globe')); if (!boxes.length) return html;
+    side.querySelectorAll(':scope > .dash').forEach(c => { if (c.querySelector('.mini-globe')) c.remove(); });   // no Earth picture: Mission Overview sits at the top, level with the map, Kim under it
     const sec = { check: '', prog: '', stat: '' };
     boxes.forEach(b => { const h = b.querySelector(':scope > h4'), name = h ? h.textContent.trim() : '';
       if (b.querySelector(':scope > details')) sec.check += b.innerHTML;
