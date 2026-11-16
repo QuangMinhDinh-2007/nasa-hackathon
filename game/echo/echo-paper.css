@@ -47,3 +47,28 @@ body.echo:is([data-scr$="build"]) .nose .r b.adv{color:var(--p-blue)}
 body.echo:is([data-scr$="build"]) .htp.eh>h4{color:var(--p-ink)}
 body.echo:is([data-scr$="build"]) .md-strip[style]{background:#fff!important;border:2px solid var(--p-ink)!important}
 body.echo:is([data-scr$="build"]) .md-strip[style] .h b{color:var(--p-ink2)!important}
+
+/* ===== 2. Design Check / readiness review (popup over the Mission Room) ===== */
+body.echo #layer [aria-label^="Mission Readiness Review"]{--text:var(--p-ink);--muted:var(--p-ink2);--dim:var(--p-dim);--line:rgba(74,59,99,.28);--line2:rgba(74,59,99,.55);
+  --blue:var(--p-blue);--good:var(--p-good);--warn:var(--p-warn);--bad:var(--p-bad);
+  background:var(--p-card)!important;border:4px solid var(--p-ink)!important;box-shadow:0 10px 0 rgba(30,22,60,.55)!important;color:var(--p-ink)}
+body.echo #layer [aria-label^="Mission Readiness Review"] h2{color:var(--p-ink)}
+body.echo #layer [aria-label^="Mission Readiness Review"] .rv-h{color:var(--p-ink2);font-weight:700}
+body.echo #layer [aria-label^="Mission Readiness Review"] .rv-pass{background:#d7f5ea;border:2.5px solid var(--p-ink);color:var(--p-ink)}
+body.echo #layer [aria-label^="Mission Readiness Review"] .rv-pass span{background:var(--p-good);color:#fff}
+body.echo #layer [aria-label^="Mission Readiness Review"] .rv-block{background:#ffe3dc;border:2.5px solid var(--p-ink);color:var(--p-ink)}
+body.echo #layer [aria-label^="Mission Readiness Review"] .rv-block b{color:var(--p-bad)}body.echo #layer [aria-label^="Mission Readiness Review"] .rv-block li b{color:var(--p-ink)}
+body.echo #layer [aria-label^="Mission Readiness Review"] .rv-flag{color:var(--p-ink)}
+body.echo #layer [aria-label^="Mission Readiness Review"] .rv-one{color:var(--p-ink)}
+body.echo #layer [aria-label^="Mission Readiness Review"] .rv-watch{background:#fff0c7;border:2px solid var(--p-ink);border-radius:14px;padding:8px 12px;color:var(--p-ink)}
+body.echo #layer [aria-label^="Mission Readiness Review"] .rv-details summary{color:var(--p-blue);text-decoration:underline;font-size:15px;min-height:36px;display:flex;align-items:center}
+body.echo #layer [aria-label^="Mission Readiness Review"] .rv-scope,body.echo #layer [aria-label^="Mission Readiness Review"] .rv-more{color:var(--p-ink2)}
+body.echo #layer [aria-label^="Mission Readiness Review"] .rv-scope b[style],body.echo #layer [aria-label^="Mission Readiness Review"] .rv-tgt b[style]{color:var(--p-ink)!important}
+body.echo #layer [aria-label^="Mission Readiness Review"] .rv-tgt{background:#e4f6ff;border:2px solid var(--p-ink);color:var(--p-ink)}
+body.echo #layer [aria-label^="Mission Readiness Review"] .xtab{background:#fff;color:var(--p-ink);border:2px solid var(--p-ink);border-radius:12px;overflow:hidden}
+body.echo #layer [aria-label^="Mission Readiness Review"] .xtab th{background:var(--p-tint);color:var(--p-ink)}
+body.echo #layer [aria-label^="Mission Readiness Review"] .xtab td,body.echo #layer [aria-label^="Mission Readiness Review"] .xtab th{border-color:rgba(74,59,99,.2)}
+body.echo #layer [aria-label^="Mission Readiness Review"] .rv-cause{color:#8a4a00}
+body.echo #layer [aria-label^="Mission Readiness Review"] .muted{color:var(--p-ink2)}
+body.echo #layer [aria-label^="Mission Readiness Review"] [data-a="goLaunch"][disabled]{background:#e4dcef!important;color:#6e6188!important;opacity:1}
+.er-dir b,.dir .et-name,.ec-say.dir .et-name{color:#136456!important}
