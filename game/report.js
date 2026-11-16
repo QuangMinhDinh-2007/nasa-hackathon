@@ -73,6 +73,13 @@ function crBestChange(m) {
   return { best, total: sc.total };
 }
 
+/* Bonus goal (the student's target) as recorded by MissionDesign, and the collapsed Full Engineering Report:
+ * the existing record, verification, comparison, change-one-thing table and timeline, unchanged, just folded away. */
+function crBonus(m) { const st = MX[m].st(), tid = (S.target || {})[m], t = tid && MissionDesign.targetDef(m, tid); if (!t) return '';
+  const r = MissionDesign.evaluateTarget(m, tid, st.M), met = r.status === 'Met';
+  return `<div class="glass cr-panel cr-bonus"><h3>Bonus Goal</h3><div class="cr-g ${met ? 'y' : 'n'}"><i>${met ? '✓' : '✕'}</i><span><b>${t.title}:</b> ${t.statement} <span class="cr-bv">(${r.status}: ${r.text})</span></span></div></div>`; }
+function crFull(m, extras) { let v = ''; try { if (window.MDUI) v = MDUI.verifyHtml(m) + MDUI.compareHtml(m); } catch (e) {}
+  return `<details class="cr-full"><summary>Full Engineering Report</summary><div class="cr-full-in">${v}${extras || ''}</div></details>`; }
 function crBreakdownModal(m) {
   m = m || 'storm';
   const sc = MX[m].eng.score(MX[m].st().M), T = SCORE_TEXT[m], pts = [sc.sci, sc.del, sc.eff, sc.rel].map(v => Math.round(v * 10) / 10), max = [35, 35, 20, 10];
@@ -86,7 +93,7 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-a="c
 V.report = () => {
   const o = S.ops, s = scoreCard(), chip = s.outcome === 'Mission Success' ? 'good' : s.outcome === 'Partial Success' ? 'warn' : 'bad';
   patchPanel('storm'); // side effect only: records the patch and grants XP, same as before
-  try { reportExtras('storm'); } catch (e) {} // side effect only: creates the mission record that Rewind & Redesign needs; its HTML is not shown
+  let extras = ''; try { extras = reportExtras('storm') || ''; } catch (e) {} // creates the mission record (Rewind needs it); its HTML goes in the collapsed Full Engineering Report
   const sc = s.sc, par = parScore('storm'), stars = sc.outcome === 'Mission Failure' ? 0 : sc.outcome !== 'Mission Success' ? 1 : sc.total >= par - 3 ? 3 : 2;
   const patch = { m: 'storm', code: S.scn.storm.code, stars, score: sc.total };
   const { best } = crBestChange('storm');
@@ -103,6 +110,7 @@ V.report = () => {
      <div class="cr-patch">${patchSvg(patch, 92)}<span aria-label="${stars} of 3 stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span></div>
     </div>
     <div class="glass cr-panel"><h3>Mission Goals <span class="cnt">${goalsDone} / 4</span></h3><div class="cr-goals">${s.req.map((r, i) => `<div class="cr-g ${r[1] ? 'y' : 'n'}"><i>${r[1] ? '✓' : '✕'}</i><span>${r[0]}${i === 3 && r[2] ? ` (${r[2]})` : ''}</span></div>`).join('')}</div></div>
+    ${crBonus('storm')}
    </div>
    <div class="cr-right">
     <div class="glass cr-panel cr-decs-panel"><h3>Your Decisions</h3><div class="cr-decs">${o.log.map((L, i) => `<div class="cr-dec"><b>${i + 1}. ${CH[i].title}</b><span class="ch">${L.choices}</span><p>${crPickLine(L.good, L.trade)}</p></div>`).join('')}</div></div>
@@ -111,5 +119,5 @@ V.report = () => {
    </div>
   </div>
   <div class="acts-row" style="margin-top:12px"><button class="btn good" data-a="improve" data-m="storm">Rewind &amp; Redesign</button><button class="btn blue" data-a="retry">Fly Again, Same Satellite</button><button class="btn primary" data-a="nextMission">All Missions</button></div>
-  </div></div>`;
+  ${crFull('storm', extras)}</div></div>`;
 };

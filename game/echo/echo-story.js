@@ -8,7 +8,7 @@
 'use strict';
 window.EchoStory = {
   prologue: [
-    { art: 'earth', cap: 'Earth is beautiful. And busy.', who: 'echo', say: 'Hi! I’m ECHO. I watch over Earth from orbit.' },
+    { art: 'earth', cap: 'Earth is beautiful. And busy.', who: 'echo', say: 'Hi! I’m Kim. I watch over Earth from orbit.' },
     { art: 'trio', cap: 'Storms. Wildfires. Floods.', who: 'echo', say: 'People down there need warnings. Fast.' },
     { art: 'director', cap: 'Project ECHO needs a mission designer.', who: 'dir', say: 'Welcome, Designer. You build it, you fly it.' },
     { art: 'door', cap: 'Your mission room is ready.', who: 'echo', say: 'Every choice has a trade-off. Let’s go!' },

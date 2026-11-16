@@ -35,7 +35,10 @@
     confirm() { this.tone(523, 0.1, 'triangle', 0.07); this.tone(784, 0.16, 'triangle', 0.07, 0.09); },
     nope() { this.tone(220, 0.14, 'sine', 0.07, 0, 160); }, page() { this.tone(300, 0.16, 'sine', 0.04, 0, 620); },
     chirp() { this.tone(1200, 0.06, 'sine', 0.05, 0, 1700); this.tone(1500, 0.07, 'sine', 0.05, 0.08, 2100); },
-    win() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.18, 'triangle', 0.07, i * 0.11)); }, low() { this.tone(392, 0.2, 'sine', 0.06); this.tone(330, 0.3, 'sine', 0.06, 0.18); } };
+    win() { [523, 659, 784, 1047].forEach((f, i) => this.tone(f, 0.18, 'triangle', 0.07, i * 0.11)); },
+    launch() { [0, .32, .64].forEach(t => this.tone(880, .12, 'square', .045, t)); this.tone(1320, .3, 'square', .05, .96);
+      this.tone(90, 2.6, 'sawtooth', .07, 1.05, 38); this.tone(140, 2.2, 'triangle', .05, 1.1, 60); },
+    deploy() { this.tone(660, .12, 'sine', .06); this.tone(990, .14, 'sine', .06, .12); this.tone(1320, .3, 'triangle', .06, .26); }, low() { this.tone(392, 0.2, 'sine', 0.06); this.tone(330, 0.3, 'sine', 0.06, 0.18); } };
   /* voice hook for later: set ECHO.voice = { play(lineId, who, text) {} } and every story line will call it. Subtitles stay on. */
   const voice = (id, who, text) => { const v = window.ECHO && window.ECHO.voice; if (v && v.play) try { v.play(id, who, text); } catch (e) {} };
 
@@ -58,7 +61,7 @@
   const host = document.createElement('div'); host.id = 'echoHost'; document.body.appendChild(host);
   host.innerHTML = '<div id="echoComic" hidden></div><div id="echoTalk" hidden></div><div id="echoNote" hidden></div><div id="echoFx" aria-hidden="true"></div>';
   const elTalk = host.querySelector('#echoTalk'), elComic = host.querySelector('#echoComic'), elNote = host.querySelector('#echoNote');
-  const NAME = { echo: 'ECHO', dir: 'Flight Director' }, face = (who, mood) => who === 'dir' ? A.director() : A.echo(mood);
+  const NAME = { echo: 'Kim', dir: 'Flight Director' }, face = (who, mood) => who === 'dir' ? A.director() : A.echo(mood);
   function talk(lines, done, opts) { lines = (lines || []).filter(Boolean); if (!lines.length || E.fast) { if (done) done(); return; }
     E.q = { lines, i: 0, done, chip: opts && opts.chip }; showLine(); }
   function showLine() { const q = E.q; if (!q) return; const L = q.lines[q.i], last = q.i === q.lines.length - 1;
@@ -67,9 +70,17 @@
       <div class="et-body"><b class="et-name">${NAME[L.who]}</b>${q.chip && q.i === 0 ? `<span class="et-chip ${q.chip[1]}">${esc(q.chip[0])}</span>` : ''}<p class="et-text">${esc(L.say)}</p></div>
       <div class="et-btns"><button class="eb eb-sun" data-e="talkNext" autofocus>${last ? 'OK' : 'Next'} <span aria-hidden="true">▸</span></button>${last ? '' : '<button class="eb-link" data-e="talkSkip">Skip</button>'}</div></div>`;
     Sfx[L.who === 'echo' ? 'chirp' : 'page'](); voice(L.id || '', L.who, L.say);
+    placeBubble(L.who);
     const b = elTalk.querySelector('[data-e="talkNext"]'); if (b) b.focus({ preventScroll: true }); }
+  // In the Mission Room Kim's lines appear as a speech bubble beside Kim (left or right, whichever side has room).
+  function placeBubble(who) { const box = elTalk.querySelector('.et-box'), bird = document.querySelector('#app .room-echo'); elTalk.classList.remove('near');
+    if (!box || who !== 'echo' || S.screen !== 'room' || !bird || innerWidth < 900) return; const r = bird.getBoundingClientRect(); if (!r.width) return;
+    elTalk.classList.add('near'); const w = Math.min(460, innerWidth - 32), right = r.right + 14 + w <= innerWidth - 16;
+    box.classList.toggle('tail-l', right); box.classList.toggle('tail-r', !right); box.style.width = w + 'px';
+    box.style.left = (right ? r.right + 14 : Math.max(16, r.left - 14 - w)) + 'px';
+    const h = box.offsetHeight; box.style.top = Math.max(84, Math.min(innerHeight - h - 70, r.top + r.height * .2)) + 'px'; }
   function talkNext() { const q = E.q; if (!q) return; if (++q.i >= q.lines.length) return talkEnd(); showLine(); }
-  function talkEnd() { const q = E.q; E.q = null; elTalk.hidden = true; elTalk.innerHTML = ''; if (q && q.done) q.done(); }
+  function talkEnd() { const q = E.q; E.q = null; elTalk.hidden = true; elTalk.classList.remove('near'); elTalk.innerHTML = ''; if (q && q.done) q.done(); }
 
   /* ================= motion-comic panels (skippable) ================= */
   function comic(panels, done, opts) { panels = (panels || []).filter(Boolean); if (!panels.length || E.fast) { if (done) done(); return; }
@@ -130,7 +141,7 @@
         return `<button class="rhot ${on ? 'is-go' : ''} ${L ? 'is-done' : ''}" data-e="hot" data-hot="${k}" style="left:${p[0]}%;top:${p[1]}%;width:${p[2]}%;height:${p[3]}%" aria-label="${T.hotName[k]}${on ? ' (next step)' : ''}">
           <span class="rhot-lab">${T.hotName[k]}</span>${on ? '<span class="rhot-arrow" aria-hidden="true"><svg viewBox="0 0 48 52"><path d="M14 4h20v18h10L24 48 4 22h10z" fill="#ff8f7a" stroke="#4a3b63" stroke-width="4" stroke-linejoin="round"/></svg></span>' : ''}
           ${L && !on ? `<span class="rhot-badge ${L.met ? 'ok' : 'no'}" title="${esc(L.badge)}">${L.met ? '✓' : '!'}</span>` : ''}${tag[k] ? `<span class="rhot-tag">${tag[k]}</span>` : ''}</button>`; }).join('')}
-      <button class="room-echo" data-e="hint" style="left:${ex}%;top:${ey}%" aria-label="Ask ECHO for a hint">${A.echo(g === 'report' ? 'cheer' : 'happy')}</button>
+      <button class="room-echo" data-e="hint" style="left:${ex}%;top:${ey}%" aria-label="Ask Kim for a hint">${A.echo(g === 'report' ? 'cheer' : 'happy')}</button>
       <div class="room-goal" role="status"><small>${T.episodes[m].tag}${flying ? ' · ' + esc(S.scn[m].code) : ''}</small>${esc(objective(m))}</div>
       <div class="room-top"><button class="eb eb-ghost" data-e="toMissions">‹ Missions</button>${topBtns()}</div>
       <div class="room-steps" aria-label="Mission progress">${STEPS.map((x, i) => `${i === 3 ? '<em>Fly</em>' : ''}<span class="${i < idx ? 'done' : i === idx ? 'on' : ''}">${i < idx ? '✓' : x[1]}</span>`).join('')}</div>
@@ -190,7 +201,14 @@
     if (s && E.inCh[m] !== s.ci) { $('#layer').innerHTML = ''; S.mission = m; if (S.screen !== 'room') _go('room'); enterRoom(); return; } f(); };
   showAlert = wrapAlert('storm', showAlert); showFAlert = wrapAlert('fire', showFAlert); showLAlert = wrapAlert('flood', showLAlert);
   const _endLaunch = window.endLaunch;
-  window.endLaunch = function () { const m = S.mission || 'storm'; E.launched[m] = true; E.inCh[m] = null; _endLaunch(); };
+  // When the launch animation finishes on its own, it stops on "Satellite deployed" and waits for Next.
+  // Skip, and any call made with no launch scene on screen, go straight on as before.
+  window.endLaunch = function () { const m = S.mission || 'storm', scene = document.querySelector('#layer .launch, #layer canvas');
+    if (scene && !E.skipLaunch && !E.deployOk && !E.fast) { if (document.querySelector('#layer .e-deploy')) return;
+      Sfx.deploy(); const box = document.querySelector('#layer .launch, #layer > *') || document.getElementById('layer');
+      box.insertAdjacentHTML('beforeend', `<div class="e-deploy" role="dialog" aria-label="Satellite deployed"><div class="et-face">${A.echo('cheer')}</div><div><b class="et-name">Kim</b><p>Satellite deployed! We are in orbit. Let’s go back to the Mission Room.</p></div><button class="eb eb-sun" data-e="deployNext" autofocus>Next <span aria-hidden="true">▸</span></button></div>`);
+      const n = document.querySelector('[data-e="deployNext"]'); if (n) n.focus({ preventScroll: true }); return; }
+    E.skipLaunch = false; E.deployOk = false; E.launched[m] = true; E.inCh[m] = null; _endLaunch(); };
   S.howSeen = true;   // the old pop-up tutorial is replaced by ECHO's one-line hints (still in the notebook)
 
   function newAttempt(m, rewound) { E.run[m]++; E.inCh[m] = null; E.rewound = !!rewound; }
@@ -206,7 +224,8 @@
     if (a === 'retry' || a === 'fretry' || a === 'lretry') { const m = mOfScreen(S.screen) || S.mission; newAttempt(m, true); }
     if (a === 'improve') { const m = b.dataset.m || S.mission; E.designed[m] = false; E.launched[m] = false; newAttempt(m, true); }
     if (a === 'redesign' || a === 'fredesign' || a === 'lredesign') { const m = mOfScreen(S.screen) || S.mission; E.designed[m] = false; E.launched[m] = false; newAttempt(m); }
-    if (a === 'goLaunch') Sfx.win(); else if (a === 'run' || a === 'frun' || a === 'lrun' || a === 'pickTarget') Sfx.confirm(); else Sfx.click();
+    if (a === 'skip') E.skipLaunch = true;
+    if (a === 'goLaunch') Sfx.launch(); else if (a === 'run' || a === 'frun' || a === 'lrun' || a === 'pickTarget') Sfx.confirm(); else Sfx.click();
   }, true);
   // bubble phase: runs after the original handlers
   document.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a;
@@ -217,6 +236,7 @@
   // Project ECHO's own buttons
   document.addEventListener('click', e => { const b = e.target.closest('[data-e]'); if (!b) return; const a = b.dataset.e;
     switch (a) {
+      case 'deployNext': Sfx.confirm(); E.deployOk = true; window.endLaunch(); break;
       case 'talkNext': Sfx.click(); talkNext(); break; case 'talkSkip': Sfx.click(); talkEnd(); break;
       case 'comicNext': comicNext(); break; case 'comicSkip': Sfx.click(); comicEnd(); break;
       case 'begin': Sfx.confirm(); if (LS.get('prologue')) go('missions'); else { LS.set('prologue', '1'); comic(T.prologue, () => go('missions'), { title: 'Project ECHO' }); } break;
@@ -264,7 +284,7 @@
     else body = `<h3>Evidence and sources</h3><p>Every number in the game has a class: <b>A</b> observed NASA data, <b>B</b> published specs, <b>C</b> calculated, <b>D</b> game value.</p>
         <p class="en-dim">Real observations appear in reports. They never drive a score. Maps are simulated training scenes.</p>
         <p><button class="eb eb-sky" data-e="noteSources">Open NASA data & sources</button> <button class="eb eb-ghost" data-e="noteHow">How to play</button></p>
-        <h4>How ECHO works</h4><p class="en-dim">ECHO only reads what the simulation measured. ECHO cannot change a result.</p>`;
+        <h4>How Kim works</h4><p class="en-dim">Kim only reads what the simulation measured. Kim cannot change a result.</p>`;
     elNote.hidden = false; elNote.innerHTML = `<div class="en-wrap" role="dialog" aria-label="Engineering notebook"><div class="en-book">
       <div class="en-head"><span class="en-ic">${ICON.book}</span><h2>Engineering Notebook</h2><button class="eb-icon" data-e="noteClose" aria-label="Close notebook">✕</button></div>
       <div class="en-tabs" role="tablist">${[['mission', 'Mission'], ['numbers', 'Numbers'], ['words', 'Words'], ['story', 'Story'], ['nasa', 'NASA data']].map(x => `<button role="tab" aria-selected="${x[0] === tab}" data-e="noteTab" data-tab="${x[0]}">${x[1]}</button>`).join('')}</div>
@@ -290,6 +310,7 @@
   function reportDress(m) { const hero = document.querySelector('#app .cr-hero'); if (!hero || hero.querySelector('.e-rline')) return; const s = st(m); if (!s || !s.M) return;
     const sc = MX[m].eng.score(s.M), M = T.missions[m], k = sc.outcome === 'Mission Success' ? 'success' : sc.outcome === 'Partial Success' ? 'partial' : 'fail';
     const missed = ['G1', 'G2', 'G3', 'G4'].filter(g => !sc.gates[g]), line = k === 'success' ? M.end[k][1] : missed.length ? M.gateLine[missed[0]] : M.end[k][1];
+    hero.insertAdjacentHTML('afterbegin', `<div class="e-hero-art" aria-hidden="true">${A.scene(k, m)}</div>`);
     hero.insertAdjacentHTML('beforeend', `<div class="e-rline"><span class="e-rface">${A.echo(k === 'success' ? 'cheer' : k === 'partial' ? 'think' : 'sad')}</span><span>${esc(line)}</span></div>`); }
   function dress() { const scr = S.screen, b = document.body; b.dataset.scr = scr; b.dataset.mission = S.mission || ''; b.toggleAttribute('data-ws', !['room', 'title', 'missions'].includes(scr));
     const m = mOfScreen(scr);

@@ -21,7 +21,7 @@ function ffReportBody(m, nav2) {
     : [[`Delivered maps ≥ ${LC.requiredMaps} pts`, sc.gates.G1, `${fmt(x.delivered)} / ${LC.requiredMaps}`], ['All 3 zones mapped', sc.gates.G2, `${x.coveredZones} / 3`], ['Fresh town map delivered', sc.gates.G3, x.townStatus], ['Essential systems running', sc.gates.G4, x.health + '% health']];
   const CH_ = m === 'fire' ? CHF : LCH;
   patchPanel(m); // side effect only: records the patch and grants XP, same as before
-  try { reportExtras(m); } catch (e) {} // side effect only: creates the mission record that Rewind & Redesign needs; its HTML is not shown
+  let extras = ''; try { extras = reportExtras(m) || ''; } catch (e) {} // creates the mission record (Rewind needs it); its HTML goes in the collapsed Full Engineering Report
   const par = parScore(m), stars = sc.outcome === 'Mission Failure' ? 0 : sc.outcome !== 'Mission Success' ? 1 : sc.total >= par - 3 ? 3 : 2;
   const patch = { m, code: S.scn[m].code, stars, score: sc.total };
   const { best } = crBestChange(m);
@@ -38,6 +38,7 @@ function ffReportBody(m, nav2) {
      <div class="cr-patch">${patchSvg(patch, 92)}<span aria-label="${stars} of 3 stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</span></div>
     </div>
     <div class="glass cr-panel"><h3>Mission Goals <span class="cnt">${goalsDone} / 4</span></h3><div class="cr-goals">${req.map((r, i) => `<div class="cr-g ${r[1] ? 'y' : 'n'}"><i>${r[1] ? '✓' : '✕'}</i><span>${r[0]}${i === 3 && r[2] ? ` (${r[2]})` : ''}</span></div>`).join('')}</div></div>
+    ${crBonus(m)}
    </div>
    <div class="cr-right">
     <div class="glass cr-panel cr-decs-panel"><h3>Your Decisions</h3><div class="cr-decs">${o.log.map((L, i) => `<div class="cr-dec"><b>${i + 1}. ${CH_[i].title}</b><span class="ch">${L.choices}</span><p>${crPickLine(L.good, L.trade)}</p></div>`).join('')}</div></div>
@@ -46,7 +47,7 @@ function ffReportBody(m, nav2) {
    </div>
   </div>
   <div class="acts-row" style="margin-top:12px"><button class="btn good" data-a="improve" data-m="${m}">Rewind &amp; Redesign</button><button class="btn blue" data-a="${m === 'fire' ? 'fretry' : 'lretry'}">Fly Again, Same Satellite</button><button class="btn primary" data-a="go" data-to="missions">All Missions</button></div>
-  </div></div>`;
+  ${crFull(m, extras)}</div></div>`;
 }
 
 V.freport = () => ffReportBody('fire', nav(3, 'Wildfire Watch', 'Earth · Mission 2'));
