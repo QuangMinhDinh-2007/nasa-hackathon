@@ -251,6 +251,7 @@
   document.addEventListener('click', e => { const b = e.target.closest('[data-e]'); if (!b) return; const a = b.dataset.e;
     switch (a) {
       case 'moToggle': { E.moOpen = E.moOpen === false; const m = mOfScreen(S.screen), sd = document.querySelector('.ops .side'); if (m && sd) sd.outerHTML = MX[m].dashFn(); const t = document.querySelector('[data-e="moToggle"]'); if (t) t.focus(); break; }
+      case 'ogNext': ogStep(1); break; case 'ogBack': ogStep(-1); break; case 'ogSkip': Sfx.click(); ogEnd(); break;
       case 'tourNext': tourStep(1); break; case 'tourBack': tourStep(-1); break; case 'tourSkip': tourEnd(); break;
       case 'tourReplay': elNote.hidden = true; elNote.innerHTML = ''; if (S.screen !== 'room') toRoom(() => tour(true)); else tour(true); break;
       case 'acct': account(); break; case 'acctClose': elAcct.hidden = true; elAcct.innerHTML = ''; break;
@@ -284,7 +285,7 @@
       case 'sound': E.sound = !E.sound; LS.set('sound', E.sound ? 'on' : 'off'); Sfx.confirm(); render(); hud(); break;
     } });
   elTalk.addEventListener('click', e => { if (e.target === elTalk) talkNext(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (E.q) return talkEnd(); if (E.cm) return comicEnd(); if (E.tour) return tourEnd(); if (!elAcct.hidden && (P.cur() || E.guest)) { elAcct.hidden = true; elAcct.innerHTML = ''; return; } if (!elNote.hidden) { elNote.hidden = true; elNote.innerHTML = ''; } } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (E.q) return talkEnd(); if (E.cm) return comicEnd(); if (E.og) return ogEnd(); if (E.tour) return tourEnd(); if (!elAcct.hidden && (P.cur() || E.guest)) { elAcct.hidden = true; elAcct.innerHTML = ''; return; } if (!elNote.hidden) { elNote.hidden = true; elNote.innerHTML = ''; } } });
   document.addEventListener('mousemove', e => { const r = document.getElementById('roomStage'); if (!r || reduced()) return; r.style.setProperty('--px', ((e.clientX / innerWidth) - 0.5).toFixed(3)); r.style.setProperty('--py', ((e.clientY / innerHeight) - 0.5).toFixed(3)); });
 
   /* ================= five-step room tour ================= */
@@ -306,6 +307,47 @@
       <div class="tour-k">Tour · ${t.i + 1} of ${TOUR.length}</div><h3>${st[1]}</h3><p>${st[2]}</p>
       <div class="tour-btns">${t.i ? '<button class="eb-link" data-e="tourBack">Back</button>' : '<button class="eb-link" data-e="tourSkip">Skip tour</button>'}<span style="flex:1"></span><button class="eb eb-sun" data-e="tourNext" autofocus>${last ? 'Got it!' : 'Next ▸'}</button></div></div>`;
     const n = elTour.querySelector('[data-e="tourNext"]'); if (n) n.focus({ preventScroll: true }); }
+
+  /* ================= Challenge 1 spotlight guide (all three missions) =================
+     Three steps: the map, the challenge panel, Mission Overview. One part stays lit, the rest of the screen is dimmed,
+     and Kim moves next to the lit part with the instructions and a Next button. Shown once per flight; UI only. */
+  const OG_MAP = { storm: 'This is your satellite\'s view of Earth. The <b>yellow box</b> is what your camera scans. Drag the box over the storm. The dashed line shows where the storm is heading.',
+    fire: 'This is the forest seen from orbit. Each <b>yellow box</b> is a region the heat camera can scan. Click a region to target it, or click again to drop it.',
+    flood: 'This is Riverbend Valley seen from orbit. The <b>yellow tags</b> show where each pass is aimed. They move when you pick a zone in the challenge below.' };
+  const OG_DO = { storm: 'Set the box size and the camera mode here.', fire: 'Pick the image mode for this pass here.', flood: 'Pick a zone for each pass and the level of detail here.' };
+  const ogSteps = m => [['.ops .view', 'The map', OG_MAP[m]],
+    ['.ops .decision', 'Your challenge', `${OG_DO[m]} When you are ready, press <b>Confirm &amp; run 6 hours</b> and watch what happens.`],
+    ['.ops .side .mo', 'Mission Overview', `This is your scoreboard: goals, data on Earth, battery and storage. Press <b>${E.moOpen !== false ? 'Show less' : 'Show all'}</b> to see ${E.moOpen !== false ? 'only the key numbers' : 'every detail'}.`]];
+  function ogMaybe(m) { const s = st(m); if (!s || E.og || E.fast || E.q || E.cm || E.tour || s.ci !== 0 || s.phase !== 'choose' || $('#layer').innerHTML) return;
+    E.ogSeen = E.ogSeen || {}; if (E.ogSeen[m] === E.run[m]) return; if (!document.querySelector('#app .ops .view')) return;
+    E.ogSeen[m] = E.run[m]; E.og = { m, i: 0, steps: ogSteps(m) }; document.body.classList.add('og-on');
+    elTour.hidden = false; elTour.innerHTML = `<div class="tour-ring"></div><div class="og"><span class="og-face" aria-hidden="true">${A.echo('happy')}</span><div class="tour-card og-card" role="dialog" aria-live="polite"></div></div>`;
+    addEventListener('scroll', ogPlace, true); addEventListener('resize', ogPlace); ogDraw(); }
+  function ogStep(d) { const g = E.og; if (!g) return; g.i = Math.max(0, g.i + d); if (g.i >= g.steps.length) return ogEnd(); Sfx.click(); ogDraw(); }
+  function ogEnd() { if (!E.og) return; E.og = null; document.body.classList.remove('og-on'); removeEventListener('scroll', ogPlace, true); removeEventListener('resize', ogPlace);
+    elTour.hidden = true; elTour.innerHTML = ''; scrollTo(0, 0); }
+  function ogDraw() { const g = E.og, sp = g.steps[g.i], n = g.steps.length, last = g.i === n - 1, el = document.querySelector('#app ' + sp[0]), card = elTour.querySelector('.og-card');
+    if (!el || !card) return ogEnd();
+    card.setAttribute('aria-label', `Guide step ${g.i + 1} of ${n}`);
+    card.innerHTML = `<div class="tour-k">Kim's guide · ${g.i + 1} of ${n}</div><h3>${sp[1]}</h3><p>${sp[2]}</p>
+      <div class="tour-btns">${g.i ? '<button class="eb-link" data-e="ogBack">Back</button>' : '<button class="eb-link" data-e="ogSkip">Skip guide</button>'}<span style="flex:1"></span><button class="eb eb-sun" data-e="ogNext">${last ? 'Got it!' : 'Next ▸'}</button></div>`;
+    ogPlace(true); const b = card.querySelector('[data-e="ogNext"]'); if (b) b.focus({ preventScroll: true }); }
+  // Light the target and put Kim beside it: right or left when there is room, otherwise stacked below or above it.
+  // With scroll=true (a new step) the page first scrolls so both the lit part and Kim are on screen.
+  function ogPlace(scroll) { const g = E.og; if (!g) return; const el = document.querySelector('#app ' + g.steps[g.i][0]), ring = elTour.querySelector('.tour-ring'), og = elTour.querySelector('.og'); if (!el || !ring || !og) return;
+    const W = innerWidth, H = innerHeight, pad = 8, gap = 22; let r = el.getBoundingClientRect();
+    const roomR = W - r.right - gap - 12, roomL = r.left - gap - 12, beside = roomR >= 250 ? 'right' : roomL >= 250 ? 'left' : '';
+    const w = Math.round(Math.min(360, beside === 'right' ? roomR : beside === 'left' ? roomL : W - 32));
+    og.className = 'og og-' + (beside || 'below'); og.style.width = w + 'px'; const h = og.offsetHeight, under = r.height + h + gap + 100 <= H;
+    if (scroll === true) { let top = beside ? (r.height < H - 100 ? (H - r.height) / 2 : 84) : under ? 84 : h + gap + 16;
+      if (!beside && !under && scrollY + r.top - top < 0) top = H - h - gap - 10 - r.height;   // near the page top there is no room above: Kim goes below
+      if (!beside || r.top < 70 || r.bottom > H - 16) { scrollTo(0, Math.max(0, scrollY + r.top - top)); r = el.getBoundingClientRect(); } }
+    ring.style.cssText = `left:${r.left - pad}px;top:${r.top - pad}px;width:${r.width + pad * 2}px;height:${r.height + pad * 2}px`;
+    const vt = Math.max(r.top, 0), vb = Math.min(r.bottom, H), side = beside || (H - vb >= h + gap ? 'below' : vt >= h + gap ? 'above' : 'over');
+    og.className = 'og og-' + side;
+    const x = side === 'right' ? r.right + gap : side === 'left' ? r.left - gap - w : Math.max(16, Math.min(W - w - 16, r.left + r.width / 2 - w / 2));
+    const y = side === 'below' ? vb + gap : side === 'above' ? vt - gap - h : side === 'over' ? vb - h - 14 : (vt + vb) / 2 - h / 2;
+    og.style.left = Math.round(x) + 'px'; og.style.top = Math.round(Math.max(10, Math.min(H - h - 10, y))) + 'px'; }
 
   /* ================= local player profiles and My Account (this browser only) ================= */
   const P = { k: 'profiles', load() { try { return JSON.parse(LS.get(this.k) || '') || null; } catch (e) { return null; } },
@@ -520,6 +562,7 @@
     if (m && scr === REPORT[m]) { reportDress(m); kimHint(m); saveResult(m); const s = st(m); if (s && s.record && (s.echoSaved || !P.cur())) closeFlight(m); bumpSmall(document.querySelector('#app .cr-full-in')); }
     else checkpoint(m || S.mission);
     if (scr === 'room') roomFocus();
+    if (m && scr === OPS[m]) ogMaybe(m); else if (E.og) ogEnd();
     hud(); }
   const _render = render; render = function () { const bd = document.body; bd.dataset.scr = S.screen; bd.toggleAttribute('data-ws', !['room', 'title', 'missions'].includes(S.screen)); _render(); dress(); };   // theme markers first, so new elements never fade in from the old colours
   // Gameplay sidebar: the checklist, goal and status boxes become one "Mission Overview" panel. String in, string out,
