@@ -1,0 +1,1622 @@
+{
+ "storm|PRACTICE|0": {
+  "total": 97,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   34.13378761719154,
+   33.77286579102134,
+   20,
+   9
+  ],
+  "log": [
+   [
+    true,
+    "Phase 1 covered",
+    "Standard resolution + scan box 45% of the disk"
+   ],
+   [
+    true,
+    "All images stored",
+    "Standard resolution + Keep all images"
+   ],
+   [
+    false,
+    "Battery stressed",
+    "12:00–14:00: Take Images · 14:00–16:00: Take Images · 16:00–18:00: Take Images"
+   ],
+   [
+    true,
+    "Update delivered",
+    "Standard + Full power + new images jump the queue"
+   ]
+  ],
+  "choice": [
+   [
+    "std",
+    "wide"
+   ],
+   [
+    "std",
+    "keep"
+   ],
+   [
+    "normal",
+    "freq"
+   ],
+   [
+    "std",
+    "full"
+   ]
+  ],
+  "state": 1072869495,
+  "events": 1420534977,
+  "trace": 24,
+  "simCalls": 4
+ },
+ "storm|PRACTICE|1": {
+  "total": 90,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   35,
+   35,
+   9.723502304147472,
+   10
+  ],
+  "log": [
+   [
+    true,
+    "Phase 1 covered",
+    "High resolution + scan box 45% of the disk"
+   ],
+   [
+    true,
+    "All images stored",
+    "High resolution + Prioritize key images"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "12:00–14:00: Take Images · 14:00–16:00: Take Images · 16:00–18:00: Take Images"
+   ],
+   [
+    true,
+    "Update delivered",
+    "High-speed + Eco mode + new images jump the queue"
+   ]
+  ],
+  "choice": [
+   [
+    "high",
+    "focus"
+   ],
+   [
+    "high",
+    "prio"
+   ],
+   [
+    "save",
+    "occ"
+   ],
+   [
+    "fast",
+    "eco"
+   ]
+  ],
+  "state": -1904845667,
+  "events": 319468189,
+  "trace": 24,
+  "simCalls": 4
+ },
+ "storm|PRACTICE|2": {
+  "total": 97,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   35,
+   35,
+   19.072544734889124,
+   8.1875
+  ],
+  "log": [
+   [
+    true,
+    "Phase 1 covered",
+    "Standard resolution + scan box 45% of the disk"
+   ],
+   [
+    true,
+    "All images stored",
+    "High resolution + Keep all images"
+   ],
+   [
+    false,
+    "Power incident",
+    "12:00–14:00: Take Images · 14:00–16:00: Take Images · 16:00–18:00: Take Images"
+   ],
+   [
+    true,
+    "Update delivered",
+    "High-speed + Full power + new images jump the queue"
+   ]
+  ],
+  "choice": [
+   [
+    "std",
+    "focus"
+   ],
+   [
+    "high",
+    "keep"
+   ],
+   [
+    "normal",
+    "occ"
+   ],
+   [
+    "fast",
+    "full"
+   ]
+  ],
+  "state": 608041537,
+  "events": -368684375,
+  "trace": 24,
+  "simCalls": 4
+ },
+ "storm|ECHO-TEST-1|0": {
+  "total": 96,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   34.3875,
+   34.13229166666667,
+   19.075736325385723,
+   8.5
+  ],
+  "log": [
+   [
+    true,
+    "Phase 1 covered",
+    "Standard resolution + scan box 45% of the disk"
+   ],
+   [
+    true,
+    "All images stored",
+    "Standard resolution + Keep all images"
+   ],
+   [
+    false,
+    "Battery stressed",
+    "12:00–14:00: Take Images · 14:00–16:00: Take Images · 16:00–18:00: Take Images"
+   ],
+   [
+    true,
+    "Update delivered",
+    "Standard + Full power + new images jump the queue"
+   ]
+  ],
+  "choice": [
+   [
+    "std",
+    "wide"
+   ],
+   [
+    "std",
+    "keep"
+   ],
+   [
+    "normal",
+    "freq"
+   ],
+   [
+    "std",
+    "full"
+   ]
+  ],
+  "state": -221408552,
+  "events": 411700456,
+  "trace": 24,
+  "simCalls": 4
+ },
+ "storm|ECHO-TEST-1|1": {
+  "total": 89,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   35,
+   35,
+   9.2770737327189,
+   10
+  ],
+  "log": [
+   [
+    true,
+    "Phase 1 covered",
+    "High resolution + scan box 45% of the disk"
+   ],
+   [
+    true,
+    "All images stored",
+    "High resolution + Prioritize key images"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "12:00–14:00: Take Images · 14:00–16:00: Take Images · 16:00–18:00: Take Images"
+   ],
+   [
+    true,
+    "Update delivered",
+    "High-speed + Eco mode + new images jump the queue"
+   ]
+  ],
+  "choice": [
+   [
+    "high",
+    "focus"
+   ],
+   [
+    "high",
+    "prio"
+   ],
+   [
+    "save",
+    "occ"
+   ],
+   [
+    "fast",
+    "eco"
+   ]
+  ],
+  "state": 608846186,
+  "events": -1429676535,
+  "trace": 24,
+  "simCalls": 4
+ },
+ "storm|ECHO-TEST-1|2": {
+  "total": 96,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   35,
+   35,
+   18.8399559221437,
+   7.437499999999999
+  ],
+  "log": [
+   [
+    true,
+    "Phase 1 covered",
+    "Standard resolution + scan box 45% of the disk"
+   ],
+   [
+    true,
+    "All images stored",
+    "High resolution + Keep all images"
+   ],
+   [
+    false,
+    "Power incident",
+    "12:00–14:00: Take Images · 14:00–16:00: Take Images · 16:00–18:00: Take Images"
+   ],
+   [
+    true,
+    "Update delivered",
+    "High-speed + Full power + new images jump the queue"
+   ]
+  ],
+  "choice": [
+   [
+    "std",
+    "focus"
+   ],
+   [
+    "high",
+    "keep"
+   ],
+   [
+    "normal",
+    "occ"
+   ],
+   [
+    "fast",
+    "full"
+   ]
+  ],
+  "state": -1226492290,
+  "events": 600546853,
+  "trace": 24,
+  "simCalls": 4
+ },
+ "storm|ECHO-TEST-2|0": {
+  "total": 95,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   34.13378761719154,
+   33.77286579102134,
+   18.853175373859024,
+   8.177083333333332
+  ],
+  "log": [
+   [
+    true,
+    "Phase 1 covered",
+    "Standard resolution + scan box 45% of the disk"
+   ],
+   [
+    true,
+    "All images stored",
+    "Standard resolution + Keep all images"
+   ],
+   [
+    false,
+    "Power incident",
+    "12:00–14:00: Take Images · 14:00–16:00: Take Images · 16:00–18:00: Take Images"
+   ],
+   [
+    true,
+    "Update delivered",
+    "Standard + Full power + new images jump the queue"
+   ]
+  ],
+  "choice": [
+   [
+    "std",
+    "wide"
+   ],
+   [
+    "std",
+    "keep"
+   ],
+   [
+    "normal",
+    "freq"
+   ],
+   [
+    "std",
+    "full"
+   ]
+  ],
+  "state": 534385112,
+  "events": 492108458,
+  "trace": 24,
+  "simCalls": 4
+ },
+ "storm|ECHO-TEST-2|1": {
+  "total": 89,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   35,
+   35,
+   9.250192012288794,
+   10
+  ],
+  "log": [
+   [
+    true,
+    "Phase 1 covered",
+    "High resolution + scan box 45% of the disk"
+   ],
+   [
+    true,
+    "All images stored",
+    "High resolution + Prioritize key images"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "12:00–14:00: Take Images · 14:00–16:00: Take Images · 16:00–18:00: Take Images"
+   ],
+   [
+    true,
+    "Update delivered",
+    "High-speed + Eco mode + new images jump the queue"
+   ]
+  ],
+  "choice": [
+   [
+    "high",
+    "focus"
+   ],
+   [
+    "high",
+    "prio"
+   ],
+   [
+    "save",
+    "occ"
+   ],
+   [
+    "fast",
+    "eco"
+   ]
+  ],
+  "state": -270904000,
+  "events": -2080031395,
+  "trace": 24,
+  "simCalls": 4
+ },
+ "storm|ECHO-TEST-2|2": {
+  "total": 96,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   35,
+   35,
+   18.35550006794405,
+   7.791666666666667
+  ],
+  "log": [
+   [
+    true,
+    "Phase 1 covered",
+    "Standard resolution + scan box 45% of the disk"
+   ],
+   [
+    true,
+    "All images stored",
+    "High resolution + Keep all images"
+   ],
+   [
+    false,
+    "Power incident",
+    "12:00–14:00: Take Images · 14:00–16:00: Take Images · 16:00–18:00: Take Images"
+   ],
+   [
+    true,
+    "Update delivered",
+    "High-speed + Full power + new images jump the queue"
+   ]
+  ],
+  "choice": [
+   [
+    "std",
+    "focus"
+   ],
+   [
+    "high",
+    "keep"
+   ],
+   [
+    "normal",
+    "occ"
+   ],
+   [
+    "fast",
+    "full"
+   ]
+  ],
+  "state": 1225526088,
+  "events": -603236737,
+  "trace": 24,
+  "simCalls": 4
+ },
+ "fire|PRACTICE|0": {
+  "total": 67,
+  "outcome": "Partial Success",
+  "gates": {
+   "G1": false,
+   "G2": false,
+   "G3": false,
+   "G4": true
+  },
+  "parts": [
+   23.921370967741936,
+   18.374999999999996,
+   15.016192932542745,
+   9.5
+  ],
+  "log": [
+   [
+    true,
+    "Fire detected",
+    "Wide-area survey + Standard"
+   ],
+   [
+    true,
+    "Contact used",
+    "Alerts first + Full imagery"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "Normal operations + Image the pass"
+   ],
+   [
+    false,
+    "Update incomplete",
+    "Search wide area + Standard rate"
+   ]
+  ],
+  "choice": [
+   [
+    "wide",
+    "std"
+   ],
+   [
+    "alerts",
+    "full"
+   ],
+   [
+    "normal",
+    "image"
+   ],
+   [
+    "wide",
+    "std"
+   ]
+  ],
+  "state": -463939875,
+  "events": -984643095,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "fire|PRACTICE|1": {
+  "total": 81,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   26.0383064516129,
+   28.875,
+   16.573725894079654,
+   10
+  ],
+  "log": [
+   [
+    true,
+    "Fire detected",
+    "Wide-area survey + High detail"
+   ],
+   [
+    true,
+    "Contact used",
+    "First in, first out + Compress imagery"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "Power saving + Skip the pass"
+   ],
+   [
+    true,
+    "Responders updated",
+    "Search wide area + High-speed"
+   ]
+  ],
+  "choice": [
+   [
+    "wide",
+    "high"
+   ],
+   [
+    "fifo",
+    "compress"
+   ],
+   [
+    "save",
+    "skip"
+   ],
+   [
+    "wide",
+    "fast"
+   ]
+  ],
+  "state": 1272959032,
+  "events": 1809409661,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "fire|PRACTICE|2": {
+  "total": 84,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   25.473790322580644,
+   28.875,
+   20,
+   10
+  ],
+  "log": [
+   [
+    true,
+    "Fire detected",
+    "Wide-area survey + High detail"
+   ],
+   [
+    true,
+    "Contact used",
+    "First in, first out + Full imagery"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "Normal operations + Skip the pass"
+   ],
+   [
+    true,
+    "Responders updated",
+    "Search wide area + Standard rate"
+   ]
+  ],
+  "choice": [
+   [
+    "wide",
+    "high"
+   ],
+   [
+    "fifo",
+    "full"
+   ],
+   [
+    "normal",
+    "skip"
+   ],
+   [
+    "wide",
+    "std"
+   ]
+  ],
+  "state": 298377793,
+  "events": 1232314841,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "fire|ECHO-TEST-1|0": {
+  "total": 60,
+  "outcome": "Partial Success",
+  "gates": {
+   "G1": false,
+   "G2": false,
+   "G3": false,
+   "G4": true
+  },
+  "parts": [
+   23.921370967741936,
+   15.516666666666666,
+   10.873815664690188,
+   10
+  ],
+  "log": [
+   [
+    true,
+    "Fire detected",
+    "Wide-area survey + Standard"
+   ],
+   [
+    true,
+    "Contact used",
+    "Alerts first + Full imagery"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "Normal operations + Image the pass"
+   ],
+   [
+    false,
+    "Update incomplete",
+    "Search wide area + Standard rate"
+   ]
+  ],
+  "choice": [
+   [
+    "wide",
+    "std"
+   ],
+   [
+    "alerts",
+    "full"
+   ],
+   [
+    "normal",
+    "image"
+   ],
+   [
+    "wide",
+    "std"
+   ]
+  ],
+  "state": 1843651657,
+  "events": 1633498636,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "fire|ECHO-TEST-1|1": {
+  "total": 78,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   26.0383064516129,
+   28.875,
+   13.316981625410664,
+   10
+  ],
+  "log": [
+   [
+    true,
+    "Fire detected",
+    "Wide-area survey + High detail"
+   ],
+   [
+    true,
+    "Contact used",
+    "First in, first out + Compress imagery"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "Power saving + Skip the pass"
+   ],
+   [
+    true,
+    "Responders updated",
+    "Search wide area + High-speed"
+   ]
+  ],
+  "choice": [
+   [
+    "wide",
+    "high"
+   ],
+   [
+    "fifo",
+    "compress"
+   ],
+   [
+    "save",
+    "skip"
+   ],
+   [
+    "wide",
+    "fast"
+   ]
+  ],
+  "state": 1285293938,
+  "events": -995369797,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "fire|ECHO-TEST-1|2": {
+  "total": 83,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   25.473790322580644,
+   28.875,
+   18.353881587860723,
+   10
+  ],
+  "log": [
+   [
+    true,
+    "Fire detected",
+    "Wide-area survey + High detail"
+   ],
+   [
+    true,
+    "Contact used",
+    "First in, first out + Full imagery"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "Normal operations + Skip the pass"
+   ],
+   [
+    true,
+    "Responders updated",
+    "Search wide area + Standard rate"
+   ]
+  ],
+  "choice": [
+   [
+    "wide",
+    "high"
+   ],
+   [
+    "fifo",
+    "full"
+   ],
+   [
+    "normal",
+    "skip"
+   ],
+   [
+    "wide",
+    "std"
+   ]
+  ],
+  "state": -1209029211,
+  "events": 861451728,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "fire|ECHO-TEST-2|0": {
+  "total": 60,
+  "outcome": "Partial Success",
+  "gates": {
+   "G1": false,
+   "G2": false,
+   "G3": false,
+   "G4": true
+  },
+  "parts": [
+   23.921370967741936,
+   15.516666666666666,
+   10.873815664690188,
+   9.5
+  ],
+  "log": [
+   [
+    true,
+    "Fire detected",
+    "Wide-area survey + Standard"
+   ],
+   [
+    true,
+    "Contact used",
+    "Alerts first + Full imagery"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "Normal operations + Image the pass"
+   ],
+   [
+    false,
+    "Update incomplete",
+    "Search wide area + Standard rate"
+   ]
+  ],
+  "choice": [
+   [
+    "wide",
+    "std"
+   ],
+   [
+    "alerts",
+    "full"
+   ],
+   [
+    "normal",
+    "image"
+   ],
+   [
+    "wide",
+    "std"
+   ]
+  ],
+  "state": -978293501,
+  "events": 1636823164,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "fire|ECHO-TEST-2|1": {
+  "total": 81,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   26.0383064516129,
+   28.875,
+   16.573725894079654,
+   10
+  ],
+  "log": [
+   [
+    true,
+    "Fire detected",
+    "Wide-area survey + High detail"
+   ],
+   [
+    true,
+    "Contact used",
+    "First in, first out + Compress imagery"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "Power saving + Skip the pass"
+   ],
+   [
+    true,
+    "Responders updated",
+    "Search wide area + High-speed"
+   ]
+  ],
+  "choice": [
+   [
+    "wide",
+    "high"
+   ],
+   [
+    "fifo",
+    "compress"
+   ],
+   [
+    "save",
+    "skip"
+   ],
+   [
+    "wide",
+    "fast"
+   ]
+  ],
+  "state": 1272959032,
+  "events": -1973978398,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "fire|ECHO-TEST-2|2": {
+  "total": 84,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   25.473790322580644,
+   28.875,
+   20,
+   9.5
+  ],
+  "log": [
+   [
+    true,
+    "Fire detected",
+    "Wide-area survey + High detail"
+   ],
+   [
+    true,
+    "Contact used",
+    "First in, first out + Full imagery"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "Normal operations + Skip the pass"
+   ],
+   [
+    true,
+    "Responders updated",
+    "Search wide area + Standard rate"
+   ]
+  ],
+  "choice": [
+   [
+    "wide",
+    "high"
+   ],
+   [
+    "fifo",
+    "full"
+   ],
+   [
+    "normal",
+    "skip"
+   ],
+   [
+    "wide",
+    "std"
+   ]
+  ],
+  "state": 799513211,
+  "events": 1121229264,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "flood|PRACTICE|0": {
+  "total": 54,
+  "outcome": "Mission Failure",
+  "gates": {
+   "G1": false,
+   "G2": true,
+   "G3": false,
+   "G4": true
+  },
+  "parts": [
+   23.272200000000005,
+   14.590986666666673,
+   7.908560000000001,
+   8.678819444444445
+  ],
+  "log": [
+   [
+    true,
+    "3/3 zones mapped",
+    "Standard detail + Wide-area"
+   ],
+   [
+    false,
+    "Clouds won",
+    "Keep all image details + Keep every map"
+   ],
+   [
+    false,
+    "Safe mode 0.8 h",
+    "Normal operations + Full imaging"
+   ],
+   [
+    false,
+    "Town update missed",
+    "Ground contacts only + Full power"
+   ]
+  ],
+  "choice": [
+   [
+    "std",
+    "wide"
+   ],
+   [
+    "raw",
+    "keep"
+   ],
+   [
+    "normal",
+    "full"
+   ],
+   [
+    "ground",
+    "full"
+   ]
+  ],
+  "state": 1478611696,
+  "events": 479816035,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "flood|PRACTICE|1": {
+  "total": 98,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   33.168800000000005,
+   35,
+   20,
+   10
+  ],
+  "log": [
+   [
+    true,
+    "3/3 zones mapped",
+    "High detail + Wide-area"
+   ],
+   [
+    true,
+    "Maps through the clouds",
+    "Save flood maps only + Make room for the best maps"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "Power saving + Minimal imaging"
+   ],
+   [
+    true,
+    "Town update delivered",
+    "Ground + relay satellite + Eco mode"
+   ]
+  ],
+  "choice": [
+   [
+    "high",
+    "wide"
+   ],
+   [
+    "mask",
+    "prio"
+   ],
+   [
+    "save",
+    "minimal"
+   ],
+   [
+    "relay",
+    "eco"
+   ]
+  ],
+  "state": 445215378,
+  "events": 586136922,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "flood|PRACTICE|2": {
+  "total": 74,
+  "outcome": "Partial Success",
+  "gates": {
+   "G1": false,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   24.405500000000004,
+   28.83580000000001,
+   12.450031453778294,
+   8.6875
+  ],
+  "log": [
+   [
+    true,
+    "3/3 zones mapped",
+    "Standard detail + Wide-area"
+   ],
+   [
+    false,
+    "Clouds won",
+    "Save flood maps only + Keep every map"
+   ],
+   [
+    false,
+    "Safe mode 0.8 h",
+    "Normal operations + Minimal imaging"
+   ],
+   [
+    true,
+    "Town update delivered",
+    "Ground + relay satellite + Full power"
+   ]
+  ],
+  "choice": [
+   [
+    "std",
+    "wide"
+   ],
+   [
+    "mask",
+    "keep"
+   ],
+   [
+    "normal",
+    "minimal"
+   ],
+   [
+    "relay",
+    "full"
+   ]
+  ],
+  "state": 411817400,
+  "events": 1559591930,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "flood|ECHO-TEST-1|0": {
+  "total": 54,
+  "outcome": "Mission Failure",
+  "gates": {
+   "G1": false,
+   "G2": true,
+   "G3": false,
+   "G4": true
+  },
+  "parts": [
+   23.272200000000005,
+   14.590986666666673,
+   7.908560000000001,
+   8.678819444444445
+  ],
+  "log": [
+   [
+    true,
+    "3/3 zones mapped",
+    "Standard detail + Wide-area"
+   ],
+   [
+    false,
+    "Clouds won",
+    "Keep all image details + Keep every map"
+   ],
+   [
+    false,
+    "Safe mode 0.8 h",
+    "Normal operations + Full imaging"
+   ],
+   [
+    false,
+    "Town update missed",
+    "Ground contacts only + Full power"
+   ]
+  ],
+  "choice": [
+   [
+    "std",
+    "wide"
+   ],
+   [
+    "raw",
+    "keep"
+   ],
+   [
+    "normal",
+    "full"
+   ],
+   [
+    "ground",
+    "full"
+   ]
+  ],
+  "state": -874262105,
+  "events": -383369678,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "flood|ECHO-TEST-1|1": {
+  "total": 98,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   33.168800000000005,
+   35,
+   20,
+   10
+  ],
+  "log": [
+   [
+    true,
+    "3/3 zones mapped",
+    "High detail + Wide-area"
+   ],
+   [
+    true,
+    "Maps through the clouds",
+    "Save flood maps only + Make room for the best maps"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "Power saving + Minimal imaging"
+   ],
+   [
+    true,
+    "Town update delivered",
+    "Ground + relay satellite + Eco mode"
+   ]
+  ],
+  "choice": [
+   [
+    "high",
+    "wide"
+   ],
+   [
+    "mask",
+    "prio"
+   ],
+   [
+    "save",
+    "minimal"
+   ],
+   [
+    "relay",
+    "eco"
+   ]
+  ],
+  "state": 445215378,
+  "events": 652843093,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "flood|ECHO-TEST-1|2": {
+  "total": 74,
+  "outcome": "Partial Success",
+  "gates": {
+   "G1": false,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   24.405500000000004,
+   28.83580000000001,
+   12.450031453778294,
+   8.6875
+  ],
+  "log": [
+   [
+    true,
+    "3/3 zones mapped",
+    "Standard detail + Wide-area"
+   ],
+   [
+    false,
+    "Clouds won",
+    "Save flood maps only + Keep every map"
+   ],
+   [
+    false,
+    "Safe mode 0.8 h",
+    "Normal operations + Minimal imaging"
+   ],
+   [
+    true,
+    "Town update delivered",
+    "Ground + relay satellite + Full power"
+   ]
+  ],
+  "choice": [
+   [
+    "std",
+    "wide"
+   ],
+   [
+    "mask",
+    "keep"
+   ],
+   [
+    "normal",
+    "minimal"
+   ],
+   [
+    "relay",
+    "full"
+   ]
+  ],
+  "state": 411817400,
+  "events": 1559591930,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "flood|ECHO-TEST-2|0": {
+  "total": 53,
+  "outcome": "Mission Failure",
+  "gates": {
+   "G1": false,
+   "G2": true,
+   "G3": false,
+   "G4": true
+  },
+  "parts": [
+   23.272200000000005,
+   14.590986666666673,
+   7.908560000000001,
+   7.522569444444445
+  ],
+  "log": [
+   [
+    true,
+    "3/3 zones mapped",
+    "Standard detail + Wide-area"
+   ],
+   [
+    false,
+    "Clouds won",
+    "Keep all image details + Keep every map"
+   ],
+   [
+    false,
+    "Safe mode 1.3 h",
+    "Normal operations + Full imaging"
+   ],
+   [
+    false,
+    "Town update missed",
+    "Ground contacts only + Full power"
+   ]
+  ],
+  "choice": [
+   [
+    "std",
+    "wide"
+   ],
+   [
+    "raw",
+    "keep"
+   ],
+   [
+    "normal",
+    "full"
+   ],
+   [
+    "ground",
+    "full"
+   ]
+  ],
+  "state": -1913825198,
+  "events": 1109234651,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "flood|ECHO-TEST-2|1": {
+  "total": 98,
+  "outcome": "Mission Success",
+  "gates": {
+   "G1": true,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   33.168800000000005,
+   35,
+   20,
+   10
+  ],
+  "log": [
+   [
+    true,
+    "3/3 zones mapped",
+    "High detail + Wide-area"
+   ],
+   [
+    true,
+    "Maps through the clouds",
+    "Save flood maps only + Make room for the best maps"
+   ],
+   [
+    true,
+    "Anomaly managed",
+    "Power saving + Minimal imaging"
+   ],
+   [
+    true,
+    "Town update delivered",
+    "Ground + relay satellite + Eco mode"
+   ]
+  ],
+  "choice": [
+   [
+    "high",
+    "wide"
+   ],
+   [
+    "mask",
+    "prio"
+   ],
+   [
+    "save",
+    "minimal"
+   ],
+   [
+    "relay",
+    "eco"
+   ]
+  ],
+  "state": 445215378,
+  "events": 586136922,
+  "trace": 48,
+  "simCalls": 4
+ },
+ "flood|ECHO-TEST-2|2": {
+  "total": 73,
+  "outcome": "Partial Success",
+  "gates": {
+   "G1": false,
+   "G2": true,
+   "G3": true,
+   "G4": true
+  },
+  "parts": [
+   24.405500000000004,
+   28.83580000000001,
+   12.450031453778294,
+   7.539930555555555
+  ],
+  "log": [
+   [
+    true,
+    "3/3 zones mapped",
+    "Standard detail + Wide-area"
+   ],
+   [
+    false,
+    "Clouds won",
+    "Save flood maps only + Keep every map"
+   ],
+   [
+    false,
+    "Safe mode 1.3 h",
+    "Normal operations + Minimal imaging"
+   ],
+   [
+    true,
+    "Town update delivered",
+    "Ground + relay satellite + Full power"
+   ]
+  ],
+  "choice": [
+   [
+    "std",
+    "wide"
+   ],
+   [
+    "mask",
+    "keep"
+   ],
+   [
+    "normal",
+    "minimal"
+   ],
+   [
+    "relay",
+    "full"
+   ]
+  ],
+  "state": 1231876790,
+  "events": 874107069,
+  "trace": 48,
+  "simCalls": 4
+ }
+}

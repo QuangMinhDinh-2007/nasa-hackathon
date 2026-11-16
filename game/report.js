@@ -86,6 +86,7 @@ document.addEventListener('click', e => { const b = e.target.closest('[data-a="c
 V.report = () => {
   const o = S.ops, s = scoreCard(), chip = s.outcome === 'Mission Success' ? 'good' : s.outcome === 'Partial Success' ? 'warn' : 'bad';
   patchPanel('storm'); // side effect only: records the patch and grants XP, same as before
+  try { reportExtras('storm'); } catch (e) {} // side effect only: creates the mission record that Rewind & Redesign needs; its HTML is not shown
   const sc = s.sc, par = parScore('storm'), stars = sc.outcome === 'Mission Failure' ? 0 : sc.outcome !== 'Mission Success' ? 1 : sc.total >= par - 3 ? 3 : 2;
   const patch = { m: 'storm', code: S.scn.storm.code, stars, score: sc.total };
   const { best } = crBestChange('storm');
@@ -109,6 +110,6 @@ V.report = () => {
     <div class="glass cr-panel"><button class="cr-bd-btn" data-a="crBreakdown" data-m="storm">How was my score calculated? ▸</button></div>
    </div>
   </div>
-  <div class="acts-row" style="margin-top:12px"><button class="btn blue" data-a="retry">Try Again</button><button class="btn primary" data-a="nextMission">Next Mission →</button></div>
+  <div class="acts-row" style="margin-top:12px"><button class="btn good" data-a="improve" data-m="storm">Rewind &amp; Redesign</button><button class="btn blue" data-a="retry">Fly Again, Same Satellite</button><button class="btn primary" data-a="nextMission">All Missions</button></div>
   </div></div>`;
 };

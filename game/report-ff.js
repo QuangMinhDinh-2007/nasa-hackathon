@@ -21,6 +21,7 @@ function ffReportBody(m, nav2) {
     : [[`Delivered maps ≥ ${LC.requiredMaps} pts`, sc.gates.G1, `${fmt(x.delivered)} / ${LC.requiredMaps}`], ['All 3 zones mapped', sc.gates.G2, `${x.coveredZones} / 3`], ['Fresh town map delivered', sc.gates.G3, x.townStatus], ['Essential systems running', sc.gates.G4, x.health + '% health']];
   const CH_ = m === 'fire' ? CHF : LCH;
   patchPanel(m); // side effect only: records the patch and grants XP, same as before
+  try { reportExtras(m); } catch (e) {} // side effect only: creates the mission record that Rewind & Redesign needs; its HTML is not shown
   const par = parScore(m), stars = sc.outcome === 'Mission Failure' ? 0 : sc.outcome !== 'Mission Success' ? 1 : sc.total >= par - 3 ? 3 : 2;
   const patch = { m, code: S.scn[m].code, stars, score: sc.total };
   const { best } = crBestChange(m);
@@ -44,7 +45,7 @@ function ffReportBody(m, nav2) {
     <div class="glass cr-panel"><button class="cr-bd-btn" data-a="crBreakdown" data-m="${m}">How was my score calculated? ▸</button></div>
    </div>
   </div>
-  <div class="acts-row" style="margin-top:12px"><button class="btn blue" data-a="${m === 'fire' ? 'fretry' : 'lretry'}">Try Again</button><button class="btn primary" data-a="go" data-to="missions">Next Mission →</button></div>
+  <div class="acts-row" style="margin-top:12px"><button class="btn good" data-a="improve" data-m="${m}">Rewind &amp; Redesign</button><button class="btn blue" data-a="${m === 'fire' ? 'fretry' : 'lretry'}">Fly Again, Same Satellite</button><button class="btn primary" data-a="go" data-to="missions">All Missions</button></div>
   </div></div>`;
 }
 
