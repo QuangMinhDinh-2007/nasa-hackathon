@@ -110,11 +110,11 @@
       <div class="e-title-card"><div class="e-title-echo">${A.echo('cheer')}</div><div class="e-kicker">A space mission design game</div>
         <h1 class="e-logo-big"><i>PROJECT</i><b>ECHO</b></h1>
         <p>Design a satellite. Fly the mission. Help Earth.</p>
-        ${P.cur() ? `<div class="e-who"><span>Playing as <b>${esc(P.cur().name)}</b></span><button class="eb-link" data-e="acct">My Account</button></div>` : ''}
+        ${P.cur() ? `<div class="e-who"><span>Playing as <b>${esc(P.cur().name)}</b></span><button class="eb-link" data-e="acct">My Account</button></div>` : E.guest ? `<div class="e-who e-guest"><span><b>Guest — progress not saved</b></span><button class="eb-link" data-e="acct">My Account</button></div>` : ''}
         ${f ? `<button class="e-cont" data-e="contFlight" data-fid="${f.fid}"><span class="e-cont-k">Continue Mission</span><b>${MN[f.m]}</b><span>${progressOf(f)} · saved ${day(f.t)}</span><i aria-hidden="true">▸</i></button>` : ''}
         <div class="e-title-acts"><button class="eb ${f ? 'eb-ghost' : 'eb-sun eb-big'}" data-e="begin">${f ? 'Start New Mission' : 'Start Adventure <span aria-hidden="true">▸</span>'}</button></div>
         ${saveNotes()}</div></div>`; };
-  const saveNotes = () => { const n = Saves.notes.slice(); if (!LS.ok) n.push('This browser is not saving right now. Your progress lasts until you close this page.'); return n.length ? `<div class="e-savenote" role="status">${n.map(esc).join('<br>')}</div>` : ''; };
+  const saveNotes = () => { const n = Saves.notes.slice(); if (!LS.ok) n.push('This browser is not saving right now. Your progress lasts until you close this page.'); if (XPV.pending()) n.push('Earlier XP and patches are waiting in My Account.'); return n.length ? `<div class="e-savenote" role="status">${n.map(esc).join('<br>')}</div>` : ''; };
   V.signin = V.title; V.ready = V.title; V.dest = V.title;   // the old sign-in / welcome / destination pages are replaced by the title scene
 
   const _missions = V.missions;
@@ -256,12 +256,15 @@
       case 'acct': account(); break; case 'acctClose': elAcct.hidden = true; elAcct.innerHTML = ''; break;
       case 'acctNew': { const i = document.getElementById('acctName'), v = (i && i.value || '').trim().slice(0, 24); if (!v) { if (i) i.focus(); break; } P.create(v); account(); if (E.afterAcct) { const f = E.afterAcct; E.afterAcct = null; elAcct.hidden = true; elAcct.innerHTML = ''; f(); } break; }
       case 'acctUse': P.use(b.dataset.id); account(); render(); break;
+      case 'acctGuest': E.guest = true; XPV.apply(); elAcct.hidden = true; elAcct.innerHTML = ''; if (E.afterAcct) { const f = E.afterAcct; E.afterAcct = null; f(); } else render(); break;
+      case 'legacyGive': { const sel = document.getElementById('legacyTo'); if (sel && sel.value) { XPV.give(sel.value); toast('Earlier progress added to ' + ((P.data().list.find(p => p.id === sel.value) || {}).name || 'player') + '.'); } account(); render(); break; }
+      case 'legacyLeave': XPV.leave(); account(); render(); break;
       case 'acctDel': E.delAsk = b.dataset.id; account(); break; case 'acctDelNo': E.delAsk = null; account(); break;
       case 'acctDelYes': LS.del(Saves.key(E.delAsk)); P.remove(E.delAsk); E.delAsk = null; account(); render(); break;
       case 'deployNext': Sfx.confirm(); E.deployOk = true; window.endLaunch(); break;
       case 'talkNext': Sfx.click(); talkNext(); break; case 'talkSkip': Sfx.click(); talkEnd(); break;
       case 'comicNext': comicNext(); break; case 'comicSkip': Sfx.click(); comicEnd(); break;
-      case 'begin': Sfx.confirm(); if (!P.cur() && !E.fast) { E.afterAcct = () => b.click(); account(true); break; } if (P.flag('prologue') || LS.get('prologue')) go('missions'); else { P.flag('prologue', 1); comic(T.prologue, () => go('missions'), { title: 'Project ECHO' }); } break;
+      case 'begin': Sfx.confirm(); if (!P.cur() && !E.fast && !E.guest) { E.afterAcct = () => b.click(); account(true); break; } if (P.flag('prologue') || LS.get('prologue')) go('missions'); else { P.flag('prologue', 1); comic(T.prologue, () => go('missions'), { title: 'Project ECHO' }); } break;
       case 'replayIntro': elNote.hidden = true; comic(T.prologue, null, { title: 'Project ECHO' }); break;
       case 'replayBrief': elNote.hidden = true; comic(T.missions[b.dataset.m].brief, null, { m: b.dataset.m, title: T.episodes[b.dataset.m].title }); break;
       case 'toTitle': Sfx.click(); go('title'); break; case 'toMissions': Sfx.click(); go('missions'); break;
@@ -280,7 +283,7 @@
       case 'sound': E.sound = !E.sound; LS.set('sound', E.sound ? 'on' : 'off'); Sfx.confirm(); render(); hud(); break;
     } });
   elTalk.addEventListener('click', e => { if (e.target === elTalk) talkNext(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (E.q) return talkEnd(); if (E.cm) return comicEnd(); if (E.tour) return tourEnd(); if (!elAcct.hidden && P.cur()) { elAcct.hidden = true; elAcct.innerHTML = ''; return; } if (!elNote.hidden) { elNote.hidden = true; elNote.innerHTML = ''; } } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (E.q) return talkEnd(); if (E.cm) return comicEnd(); if (E.tour) return tourEnd(); if (!elAcct.hidden && (P.cur() || E.guest)) { elAcct.hidden = true; elAcct.innerHTML = ''; return; } if (!elNote.hidden) { elNote.hidden = true; elNote.innerHTML = ''; } } });
   document.addEventListener('mousemove', e => { const r = document.getElementById('roomStage'); if (!r || reduced()) return; r.style.setProperty('--px', ((e.clientX / innerWidth) - 0.5).toFixed(3)); r.style.setProperty('--py', ((e.clientY / innerHeight) - 0.5).toFixed(3)); });
 
   /* ================= five-step room tour ================= */
@@ -306,17 +309,39 @@
   /* ================= local player profiles and My Account (this browser only) ================= */
   const P = { k: 'profiles', load() { try { return JSON.parse(LS.get(this.k) || '') || null; } catch (e) { return null; } },
     data() { const d = this.load() || { cur: null, list: [] }; return d; }, save(d) { LS.set(this.k, JSON.stringify(d)); },
-    cur() { const d = this.data(); return d.list.find(p => p.id === d.cur) || null; },
-    create(name) { const d = this.data(), p = { id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, made: Date.now(), flags: {}, results: [] }; d.list.push(p); d.cur = p.id; this.save(d); return p; },
-    use(id) { const d = this.data(); if (d.list.some(p => p.id === id)) { d.cur = id; this.save(d); } },
-    remove(id) { const d = this.data(); d.list = d.list.filter(p => p.id !== id); if (d.cur === id) d.cur = d.list[0] ? d.list[0].id : null; this.save(d); },
-    flag(k, v) { const d = this.data(), p = d.list.find(x => x.id === d.cur); if (!p) return v === undefined ? !!E['f_' + k] : (E['f_' + k] = v);
+    cur() { if (E.guest) return null; const d = this.data(); return d.list.find(p => p.id === d.cur) || null; },
+    create(name) { const d = this.data(), p = { id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, made: Date.now(), flags: {}, results: [] }; d.list.push(p); d.cur = p.id; this.save(d); E.guest = false; XPV.apply(); return p; },
+    use(id) { const d = this.data(); if (d.list.some(p => p.id === id)) { d.cur = id; this.save(d); E.guest = false; XPV.apply(); } },
+    remove(id) { const d = this.data(); d.list = d.list.filter(p => p.id !== id); if (d.cur === id) d.cur = d.list[0] ? d.list[0].id : null; this.save(d); XPV.apply(); },
+    flag(k, v) { const d = this.data(), p = E.guest ? null : d.list.find(x => x.id === d.cur); if (!p) return v === undefined ? !!E['f_' + k] : (E['f_' + k] = v);
       p.flags = p.flags || {}; if (v === undefined) return !!p.flags[k]; p.flags[k] = v; this.save(d); },
-    add(r) { const d = this.data(), p = d.list.find(x => x.id === d.cur); if (!p) return false; p.results.unshift(r); p.results = p.results.slice(0, 200); this.save(d); return true; } };
+    add(r) { const d = this.data(), p = E.guest ? null : d.list.find(x => x.id === d.cur); if (!p) return false; p.results.unshift(r); p.results = p.results.slice(0, 200); this.save(d); return true; } };
   // saves one entry per finished flight, straight from the engine's score and the mission record
   function saveResult(m) { const s = st(m); if (!s || !s.M || !s.record || s.echoSaved) return; const sc = MX[m].eng.score(s.M), tid = (S.target || {})[m], t = tid && MD.targetDef(m, tid), tr = t ? MD.evaluateTarget(m, tid, s.M) : null;
     const me = P.cur(); if (me && E.fid[m] && me.results.some(r => r.fid === E.fid[m])) { s.echoSaved = true; return; }   // this flight is already in the list
     s.echoSaved = P.add({ fid: E.fid[m] || null, t: Date.now(), m, code: S.scn[m].code, score: sc.total, outcome: sc.outcome, goals: ['G1', 'G2', 'G3', 'G4'].filter(g => sc.gates[g]).length, bonus: t ? t.title : '', bonusMet: tr ? tr.status === 'Met' : null, attempt: s.attempt ? s.attempt.n : 1 }); }
+  /* ================= XP, rank and patches per player =================
+   * fun.js keeps its award rules (stars on the report once per flight, quick calls during playback). Its save now goes to the current
+   * player's profile; a guest's XP lives only in this page. XP saved before players existed stays in its old place, unassigned,
+   * until someone gives it to one player in My Account (once) or chooses to leave it unassigned. */
+  const XPV = { guest: null, blank: () => ({ xp: 0, patches: [], streak: 0 }),
+    clean(x) { const o = { xp: 0, patches: [], streak: 0 }; if (!x || typeof x !== 'object') return o;
+      if (Number.isFinite(x.xp) && x.xp >= 0) o.xp = Math.floor(x.xp); if (Number.isFinite(x.streak) && x.streak >= 0) o.streak = Math.floor(x.streak);
+      if (Array.isArray(x.patches)) o.patches = x.patches.filter(p => p && MS.includes(p.m) && typeof p.code === 'string' && Number.isFinite(p.score) && Number.isFinite(p.stars)).map(p => ({ m: p.m, code: p.code, stars: p.stars, score: p.score }));
+      return o; },
+    apply() { if (!window.XPSAVE) return; const me = P.cur();
+      if (!me) { this.guest = this.guest || this.blank(); return XPSAVE.use(this.guest, v => { this.guest = v; }); }
+      const id = me.id; XPSAVE.use(this.clean(me.xp), v => { const d = P.data(), p = d.list.find(x => x.id === id); if (p) { p.xp = XPV.clean(v); P.save(d); } }); },
+    of(p) { return p ? this.clean(p.xp) : (this.guest || this.blank()); },
+    legacy() { let raw = null; try { raw = localStorage.getItem(XPSAVE.key); } catch (e) {} if (!raw) return null; let x = null; try { x = JSON.parse(raw); } catch (e) {} const c = this.clean(x); return c.xp || c.patches.length ? c : null; },
+    pending() { const d = P.data(); return !d.legacy && d.list.length ? this.legacy() : null; },
+    give(id) { const L = this.pending(), d = P.data(), p = d.list.find(x => x.id === id); if (!L || !p) return;
+      const x = this.clean(p.xp); x.xp += L.xp; L.patches.forEach(q => { const o = x.patches.find(r => r.m === q.m && r.code === q.code); if (!o) x.patches.push(q); else if (q.score > o.score) Object.assign(o, q); });
+      p.xp = x; d.legacy = { to: id, t: Date.now(), xp: L.xp, patches: L.patches.length }; P.save(d); this.apply(); },
+    leave() { const d = P.data(); if (d.legacy) return; d.legacy = { to: null, t: Date.now() }; P.save(d); } };
+  const rankName = xp => (typeof rankOf === 'function' ? rankOf(xp)[1] : '');
+  if (typeof xpUi === 'function') { const _xpUi = xpUi; xpUi = function () { _xpUi(); const b = document.getElementById('xpBtn'); if (b && !P.cur()) b.textContent += ' · Guest'; }; }
+
   /* ================= Resume Mission: unfinished flights, saved per player at safe checkpoints =================
    * A flight is saved after the goal is locked in, after the satellite is taken to launch, after launch, and after each challenge
    * the player confirmed (its result is already computed by the original handler). A saved flight keeps only inputs: Mission Code,
@@ -397,15 +422,23 @@
       <div class="ac-fl">${L.map(f => `<div class="ac-fl-row"><div><b>${MN[f.m]}</b><span><code>${esc(f.code)}</code> · ${progressOf(f)}</span><small>Saved ${day(f.t)}</small></div>
         ${E.flDelAsk === f.fid ? `<span class="ac-fl-ask">Delete this mission? <button class="eb eb-sun" data-e="flDelYes">Yes, delete</button><button class="eb eb-ghost" data-e="flDelNo">Keep</button></span>`
           : `<button class="eb eb-sky" data-e="contFlight" data-fid="${f.fid}">Continue</button><button class="eb-link" data-e="flDel" data-fid="${f.fid}">Delete</button>`}</div>`).join('')}</div>`; }
+  const xpLine = x => `<div class="ac-xp"><b>★ ${x.xp} XP</b><span>${esc(rankName(x.xp))}</span><span>${x.patches.length} mission patch${x.patches.length === 1 ? '' : 'es'}</span></div>`;
+  // one-time choice for XP and patches saved before there were players: give them to one player, or leave them unassigned
+  function legacyBox(d) { const L = XPV.pending(); if (!L || !d.list.length) return '';
+    return `<div class="ac-legacy"><h3>Earlier progress</h3><p>This computer has <b>${L.xp} XP</b> and <b>${L.patches.length} patch${L.patches.length === 1 ? '' : 'es'}</b> from before players were added. It does not belong to anyone yet. You can give it to one player, once.</p>
+      <div class="ac-row"><label for="legacyTo" class="en-dim">Give to</label><select id="legacyTo">${d.list.map(p => `<option value="${p.id}" ${P.cur() && P.cur().id === p.id ? 'selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
+      <button class="eb eb-sun" data-e="legacyGive">Give to this player</button><button class="eb eb-ghost" data-e="legacyLeave">Leave unassigned</button></div></div>`; }
   function account(firstRun) { const d = P.data(), me = P.cur(), others = d.list.filter(p => !me || p.id !== me.id);
     const newForm = `<div class="ac-new"><label for="acctName">${me ? 'Add another player' : 'What should we call you?'}</label><div class="ac-row"><input id="acctName" maxlength="24" placeholder="Your first name or nickname" autocomplete="off"><button class="eb eb-sun" data-e="acctNew">${me ? 'Add player' : 'Create player'}</button></div><p class="en-dim">Saved only in this browser. No sign-in, nothing is sent anywhere.</p></div>`;
     const best = me ? ['storm', 'fire', 'flood'].map(m => { const r = me.results.filter(x => x.m === m); return `<div><span>${MN[m]}</span><b>${r.length ? Math.max(...r.map(x => x.score)) : '–'}</b><small>${r.length} flight${r.length === 1 ? '' : 's'}</small></div>`; }).join('') : '';
     const rows = me && me.results.length ? `<div class="ac-tab"><table><thead><tr><th>When</th><th>Mission</th><th>Mission Code</th><th>Score</th><th>Result</th><th>Goals</th><th>Bonus goal</th></tr></thead><tbody>${me.results.map(r => `<tr><td>${day(r.t)}</td><td>${MN[r.m]}</td><td><code>${esc(r.code)}</code></td><td><b>${r.score}</b></td><td>${esc(r.outcome)}</td><td>${r.goals} / 4</td><td>${r.bonus ? `${r.bonusMet ? '✓' : '✕'} ${esc(r.bonus)}` : '–'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="en-dim">No finished missions yet. Results appear here after each final report.</p>';
     const del = E.delAsk ? `<div class="ac-del" role="alert">Delete <b>${esc((d.list.find(p => p.id === E.delAsk) || {}).name || '')}</b> and all their saved results? <button class="eb eb-sun" data-e="acctDelYes">Yes, delete</button><button class="eb eb-ghost" data-e="acctDelNo">Keep</button></div>` : '';
-    elAcct.hidden = false; elAcct.innerHTML = `<div class="en-book ac" role="dialog" aria-label="My Account"><div class="en-head"><span class="en-ic">${ICON.user}</span><h2>${me ? esc(me.name) : 'Welcome, Designer!'}</h2>${firstRun ? '' : '<button class="eb-icon" data-e="acctClose" aria-label="Close My Account">✕</button>'}</div>
-      <div class="en-body">${me ? `<div class="ac-best">${best}</div>${unfinished()}<h3>Finished missions</h3>${rows}` : unfinished()}${del}
-      ${others.length ? `<h3>Other players on this computer</h3><div class="ac-players">${others.map(p => `<div><b>${esc(p.name)}</b><span>${p.results.length} flights</span><button class="eb eb-sky" data-e="acctUse" data-id="${p.id}">Switch</button><button class="eb-link" data-e="acctDel" data-id="${p.id}">Delete</button></div>`).join('')}</div>` : ''}
-      ${newForm}${me && !firstRun ? `<p><button class="eb-link" data-e="acctDel" data-id="${me.id}">Delete ${esc(me.name)}</button></p>` : ''}</div></div>`;
+    elAcct.hidden = false; elAcct.innerHTML = `<div class="en-book ac" role="dialog" aria-label="My Account"><div class="en-head"><span class="en-ic">${ICON.user}</span><h2>${me ? esc(me.name) : E.guest ? 'Guest' : 'Welcome, Designer!'}</h2>${firstRun ? '' : '<button class="eb-icon" data-e="acctClose" aria-label="Close My Account">✕</button>'}</div>
+      <div class="en-body">${E.guest ? `<p class="ac-guest" role="status"><b>Guest — progress not saved.</b> Your XP, patches and unfinished missions disappear when you refresh or close this page. Create a player to keep them.</p>` : ''}
+      ${me || E.guest ? xpLine(XPV.of(me)) : ''}${legacyBox(d)}
+      ${me ? `<div class="ac-best">${best}</div>${unfinished()}<h3>Finished missions</h3>${rows}` : unfinished()}${del}
+      ${others.length ? `<h3>Other players on this computer</h3><div class="ac-players">${others.map(p => `<div><b>${esc(p.name)}</b><span>${p.results.length} flights · ${XPV.of(p).xp} XP</span><button class="eb eb-sky" data-e="acctUse" data-id="${p.id}">Switch</button><button class="eb-link" data-e="acctDel" data-id="${p.id}">Delete</button></div>`).join('')}</div>` : ''}
+      ${newForm}${E.guest ? '' : `<p class="ac-guestbtn"><button class="eb ${me ? 'eb-ghost' : 'eb-sky'}" data-e="acctGuest">Play as guest</button> <span class="en-dim">Nothing is saved for a guest.</span></p>`}${me && !firstRun ? `<p><button class="eb-link" data-e="acctDel" data-id="${me.id}">Delete ${esc(me.name)}</button></p>` : ''}</div></div>`;
     const f = elAcct.querySelector(me ? '[data-e="acctClose"]' : '#acctName'); if (f) f.focus({ preventScroll: true }); }
   document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target && e.target.id === 'acctName') { e.preventDefault(); const b = elAcct.querySelector('[data-e="acctNew"]'); if (b) b.click(); } });
 
@@ -507,12 +540,13 @@
     const box = document.querySelector('#layer .modal-wrap > *'); if (box && !box.querySelector('.er-dir')) box.insertAdjacentHTML('afterbegin', `<div class="er-dir"><div class="et-face">${A.director()}</div><p><b>Flight Director</b>${ok ? T.ui.reviewOk : T.ui.reviewNo}</p></div>`); };
 
   /* ================= public handle + test hooks (used by tools/echo_parity.js and tools/echo_e2e.js) ================= */
-  window.ECHO = { state: E, stage, activeHot, talk, comic, notebook, facts, profiles: P, tour, account, voice: null, sfx: Sfx, saves: Saves, checkpoint, continueFlight,
+  window.ECHO = { xp: XPV, state: E, stage, activeHot, talk, comic, notebook, facts, profiles: P, tour, account, voice: null, sfx: Sfx, saves: Saves, checkpoint, continueFlight,
     test: { fast() { E.fast = true; talkEnd(); comicEnd(); },
       // skip any open story, then click the glowing hotspot (navigation only)
       advance() { if (E.q) return talkEnd(); if (E.cm) return comicEnd(); if (S.screen === 'room') { const h = document.querySelector('.rhot.is-go'); if (h) h.click(); } },
       toBuild(m) { S.mission = m; E.briefed[m] = true; E.designed[m] = false; E.launched[m] = false; go(BUILD[m]); } } };
 
+  XPV.apply();
   document.body.classList.add('echo');
   go('title');
 })();

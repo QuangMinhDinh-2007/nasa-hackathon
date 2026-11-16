@@ -77,7 +77,9 @@ function povMount() { const v = document.querySelector('.ops .view'), m = missio
 /* ---------------- 3. XP, ranks, stars, mission patches ---------------- */
 const LS = 'earthMissions.save.v1'; let SAVE = { xp: 0, patches: [], streak: 0 };
 try { SAVE = Object.assign(SAVE, JSON.parse(localStorage.getItem(LS) || '{}')); } catch (e) {}
-const saveNow = () => { try { localStorage.setItem(LS, JSON.stringify(SAVE)); } catch (e) {} };
+let xpSink = null;   // set by Project ECHO: XP and patches then belong to the current player instead of this one shared save
+const saveNow = () => { if (xpSink) return xpSink(SAVE); try { localStorage.setItem(LS, JSON.stringify(SAVE)); } catch (e) {} };
+window.XPSAVE = { key: LS, get: () => SAVE, use(v, sink) { SAVE = v; xpSink = sink; xpUi(); } };
 const RANKS = [[0, 'Cadet'], [100, 'Operator'], [250, 'Flight Controller'], [450, 'Flight Director'], [700, 'Mission Legend']];
 const rankOf = xp => RANKS.filter(r => xp >= r[0]).pop(), nextRank = xp => RANKS.find(r => r[0] > xp);
 document.body.insertAdjacentHTML('beforeend', '<button id="xpBtn" aria-label="Your rank, XP and mission patches"></button>');

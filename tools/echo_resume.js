@@ -213,6 +213,67 @@ window.addEventListener('load', () => setTimeout(async () => { try {
   ok('report works and the flight is finished', q('.cr') && Sv.list().length === 0 && ECHO.profiles.cur().results.length === 1);
   done(); } catch (e) { fail(e); } }, 400));`;
 
+
+/* ---- XP and patches per player, earlier shared XP, guests ---- */
+const fullFlight = `await A.start(m); await A.goal(m); await A.design(m, 0); await A.launch(m); for (let ci = 0; ci < 4; ci++) await A.ch(m, { ci, set: 0 }); await A.report(m);`;
+const XPCASE = LIB + `
+window.addEventListener('load', () => setTimeout(async () => { try {
+  ECHO.test.fast(); const P = ECHO.profiles, i = tget('seg', 0), btn = () => q('#xpBtn').textContent, LEG = JSON.stringify({ xp: 230, patches: [{ m: 'storm', code: 'OLD-1', stars: 2, score: 80 }, { m: 'flood', code: 'OLD-2', stars: 1, score: 50 }], streak: 1 });
+  const who = n => P.data().list.find(p => p.name === n);
+  if (i === 0) { localStorage.clear(); localStorage.setItem('earthMissions.save.v1', LEG); tset('seg', 1); location.reload(); return; }
+  if (i === 1) {
+    ok('before any player: earlier XP is not shown as anyone\\'s', !P.cur());
+    await A.profile(null, 'Ana'); ok('new player starts at 0 XP and no patches', SAVE.xp === 0 && SAVE.patches.length === 0 && /^★ 0 XP/.test(btn()), btn());
+    go('title'); await sleep(30); ok('title points to the earlier progress', q('.e-savenote') && /Earlier XP/.test(q('.e-savenote').textContent));
+    let m = 'storm'; ${fullFlight}
+    const a = SAVE.xp; ok('Ana earns XP and one patch from her flight', a > 0 && SAVE.patches.length === 1 && who('Ana').xp.xp === a, a);
+    ok('earlier shared save is left untouched', localStorage.getItem('earthMissions.save.v1') === LEG);
+    await A.profile(null, 'Ben'); ok('Ben starts at 0 even after Ana played', SAVE.xp === 0 && SAVE.patches.length === 0 && /^★ 0 XP/.test(btn()), btn());
+    ECHO.account(); await sleep(30); q('[data-e="acctUse"][data-id="' + who('Ana').id + '"]').click(); await sleep(30);
+    ok('switching to Ana shows her XP at once', SAVE.xp === a && btn().startsWith('★ ' + a + ' XP'), btn());
+    ok('My Account shows her XP and patches', q('.ac-xp') && q('.ac-xp').textContent.includes(a + ' XP') && /1 mission patch\\b/.test(q('.ac-xp').textContent));
+    ok('earlier progress offered once, with a choice of player', q('.ac-legacy') && qa('#legacyTo option').length === 2);
+    q('#legacyTo').value = who('Ben').id; q('[data-e="legacyGive"]').click(); await sleep(30);
+    ok('Ben receives the earlier XP and patches', who('Ben').xp.xp === 230 && who('Ben').xp.patches.length === 2);
+    ok('Ana is unchanged', who('Ana').xp.xp === a && SAVE.xp === a);
+    ok('the offer is gone after the choice', !q('.ac-legacy'));
+    tset('a', a); tset('seg', 2); location.reload(); return; }
+  if (i === 2) { const a = tget('a');
+    ok('after reload each player keeps their own XP', who('Ana').xp.xp === a && who('Ben').xp.xp === 230 && SAVE.xp === a);
+    ECHO.account(); await sleep(30); ok('the earlier-progress offer does not come back', !q('.ac-legacy'));
+    q('[data-e="acctUse"][data-id="' + who('Ben').id + '"]').click(); await sleep(30); ok('Ben now shows 230 XP', SAVE.xp === 230 && btn().startsWith('★ 230 XP'), btn());
+    // a second flight by Ben: XP adds to Ben only
+    let m = 'flood'; ${fullFlight}
+    ok('Ben\\'s flight adds only to Ben', who('Ben').xp.xp > 230 && who('Ana').xp.xp === a);
+    done(); } } catch (e) { fail(e); } }, 400));`;
+const LEAVE = LIB + `
+window.addEventListener('load', () => setTimeout(async () => { try {
+  ECHO.test.fast(); const P = ECHO.profiles, i = tget('seg', 0), LEG = JSON.stringify({ xp: 90, patches: [], streak: 0 });
+  if (i === 0) { localStorage.clear(); localStorage.setItem('earthMissions.save.v1', LEG); tset('seg', 1); location.reload(); return; }
+  if (i === 1) { await A.profile(null, 'Cy'); ECHO.account(); await sleep(30); ok('offer shown', q('.ac-legacy')); q('[data-e="legacyLeave"]').click(); await sleep(30);
+    ok('leave unassigned: nobody gets it', SAVE.xp === 0 && P.cur().xp == null || (P.cur().xp && P.cur().xp.xp === 0)); ok('offer closed', !q('.ac-legacy'));
+    tset('seg', 2); location.reload(); return; }
+  ok('after reload the offer stays closed', (ECHO.account(), !q('.ac-legacy'))); ok('earlier save still kept, unassigned', localStorage.getItem('earthMissions.save.v1') === LEG && SAVE.xp === 0);
+  done(); } catch (e) { fail(e); } }, 400));`;
+const GUESTCASE = LIB + `
+window.addEventListener('load', () => setTimeout(async () => { try {
+  const i = tget('seg', 0);
+  if (i === 0) { localStorage.clear(); tset('seg', 1); location.reload(); return; }
+  if (i === 1) { q('[data-e="begin"]').click(); await sleep(60); ok('first start offers Play as guest', q('#echoAcct:not([hidden]) [data-e="acctGuest"]'));
+    q('[data-e="acctGuest"]').click(); await sleep(60); ECHO.test.fast(); go('title'); await sleep(30);
+    ok('title marks the guest clearly', q('.e-guest') && /Guest — progress not saved/.test(q('.e-guest').textContent));
+    ok('XP button marks the guest', /Guest/.test(q('#xpBtn').textContent));
+    let m = 'fire'; await A.start(m); await A.goal(m); await A.design(m, 0); await A.launch(m); await A.ch(m, { ci: 0, set: 0 });
+    ok('guest flight can be continued in this page', ECHO.saves.list().length === 1);
+    for (let ci = 1; ci < 4; ci++) await A.ch(m, { ci, set: 0 }); await A.report(m);
+    ok('guest earns XP in this page', SAVE.xp > 0); ok('nothing written for the guest', !Object.keys(localStorage).some(k => /flights|profiles/.test(k) && (localStorage.getItem(k) || '').includes('"xp"')) && !(ECHO.profiles.data().list.length));
+    ECHO.account(); await sleep(30); ok('My Account warns the guest', q('.ac-guest') && /not saved/.test(q('.ac-guest').textContent));
+    q('[data-e="acctClose"]').click();
+    await A.start('storm'); await A.goal('storm'); tset('seg', 2); location.reload(); return; }
+  ok('after reload the guest progress is gone', SAVE.xp === 0 && ECHO.saves.list().length === 0 && !q('[data-e="contFlight"]'));
+  q('[data-e="begin"]').click(); await sleep(60); ok('a refreshed guest is asked again', q('#echoAcct:not([hidden])'));
+  done(); } catch (e) { fail(e); } }, 400));`;
+
 /* ---- run ---- */
 let pass = 0, failN = 0; const bad = [];
 const tally = (tag, res) => res.checks.forEach(c => { if (c[1]) pass++; else { failN++; bad.push(tag + ': ' + c[0] + (c[2] ? ' (' + c[2] + ')' : '')); } });
@@ -229,5 +290,6 @@ for (const [m, code, opt, make] of CASES) {
 }
 const p = runPage(PLAYERS, 3000000); tally('players', p); console.log(`players / limit / damaged saves: ${p.checks.length} checks`);
 const n = runPage(NOSTORE, 3000000, NOSTORE_HEAD); tally('storage off', n); console.log(`storage off: ${n.checks.length} checks`);
+for (const [name, page] of [['per-player XP', XPCASE], ['leave earlier XP unassigned', LEAVE], ['guest', GUESTCASE]]) { const r = runPage(page, 3000000); tally(name, r); console.log(`${name}: ${r.checks.length} checks`); }
 bad.forEach(x => console.log('FAIL ' + x));
 console.log(`${pass} resume checks passed, ${failN} failed`); process.exit(failN ? 1 : 0);

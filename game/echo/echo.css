@@ -369,3 +369,13 @@ body.echo #layer .rv-details .inner table{font-size:15px}
 .ac-fl-row>div{flex:1;min-width:200px;display:flex;flex-direction:column}.ac-fl-row>div span{font-size:15px;font-weight:700;color:var(--e-ink2)}.ac-fl-row>div small{font-size:14px;color:var(--e-ink2)}
 .ac-fl-ask{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-weight:700}
 .ac-limit{margin:6px 0 10px;padding:10px 12px;border-radius:12px;background:#ffe3dc;border:2px solid #d9402b;font-weight:700}
+/* per-player XP, guest marker, earlier progress */
+.ac-xp{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px;margin:0 0 12px;padding:10px 14px;border-radius:14px;background:#fff;border:2px solid var(--e-ink)}
+.ac-xp b{font-family:var(--e-display);font-size:24px;color:var(--e-deep)}.ac-xp span{font-size:16px;font-weight:700;color:var(--e-ink2)}
+.ac-guest,.e-title-card .e-guest{background:#fff1c9;border:2px solid var(--e-ink);border-radius:12px;padding:8px 12px}
+.ac-guest{margin:0 0 12px;font-size:16px;line-height:1.45}
+.ac-guestbtn{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
+.ac-legacy{margin:0 0 14px;padding:12px 14px;border-radius:14px;background:#e6f0ff;border:2px solid var(--e-ink)}
+.ac-legacy h3{margin-top:0}.ac-legacy p{font-size:16px;line-height:1.45;margin:4px 0 10px}
+.ac-legacy .ac-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ac-legacy select{font:inherit;font-size:16px;padding:8px 10px;border-radius:10px;border:2px solid var(--e-ink);background:#fff;color:var(--e-ink);min-height:44px}
