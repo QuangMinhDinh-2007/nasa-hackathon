@@ -19,10 +19,14 @@
   const ALERT = { storm: () => showAlert(), fire: () => showFAlert(), flood: () => showLAlert() };
   const START = { startMission: 'storm', fstart: 'fire', lstart: 'flood' };
   const mOfScreen = s => MS.find(m => BUILD[m] === s || OPS[m] === s || REPORT[m] === s);
-  const LS = { get: k => { try { return localStorage.getItem('echo.' + k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem('echo.' + k, v); } catch (e) {} } };
+  // browser storage with an in-page fallback: if localStorage is blocked or full, the game keeps working for this page session
+  const LS = { mem: {}, ok: (() => { try { localStorage.setItem('echo.__t', '1'); localStorage.removeItem('echo.__t'); return true; } catch (e) { return false; } })(),
+    get(k) { if (k in this.mem) return this.mem[k]; try { return localStorage.getItem('echo.' + k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem('echo.' + k, v); delete this.mem[k]; } catch (e) { this.mem[k] = v; this.ok = false; } },
+    del(k) { delete this.mem[k]; try { localStorage.removeItem('echo.' + k); } catch (e) {} } };
   const reduced = () => E.fast || (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-  const E = S.echo = { cur: null, briefed: {}, designed: {}, launched: {}, inCh: {}, seen: {}, run: { storm: 0, fire: 0, flood: 0 }, snap: {}, fast: false, sound: LS.get('sound') !== 'off', q: null, cm: null };
+  const E = S.echo = { cur: null, briefed: {}, designed: {}, launched: {}, inCh: {}, seen: {}, run: { storm: 0, fire: 0, flood: 0 }, snap: {}, fast: false, fid: {}, owner: {}, fseen: {}, rewoundM: {}, sound: LS.get('sound') !== 'off', q: null, cm: null };
 
   /* ================= sound: tiny generated button sounds (no audio files). Never touches game state. ================= */
   const Sfx = { ctx: null,
@@ -100,14 +104,17 @@
   /* ================= screens added by Project ECHO ================= */
   BGKEY.title = 'dest'; BGKEY.room = 'dest';
   const LOGO_E = `<span class="e-logo"><i>PROJECT</i><b>ECHO</b></span>`;
-  V.title = () => `<div class="screen e-title">
+  V.title = () => { const f = Saves.list()[0];
+    return `<div class="screen e-title">
       <div class="e-title-art">${A.scene('title')}</div>
       <div class="e-title-card"><div class="e-title-echo">${A.echo('cheer')}</div><div class="e-kicker">A space mission design game</div>
         <h1 class="e-logo-big"><i>PROJECT</i><b>ECHO</b></h1>
         <p>Design a satellite. Fly the mission. Help Earth.</p>
         ${P.cur() ? `<div class="e-who"><span>Playing as <b>${esc(P.cur().name)}</b></span><button class="eb-link" data-e="acct">My Account</button></div>` : ''}
-        <div class="e-title-acts"><button class="eb eb-sun eb-big" data-e="begin">Start Adventure <span aria-hidden="true">▸</span></button>
-        ${E.cur ? `<button class="eb eb-sky e-continue" data-e="resume" data-m="${E.cur}">Continue ${T.episodes[E.cur].tag}</button>` : ''}</div></div></div>`;
+        ${f ? `<button class="e-cont" data-e="contFlight" data-fid="${f.fid}"><span class="e-cont-k">Continue Mission</span><b>${MN[f.m]}</b><span>${progressOf(f)} · saved ${day(f.t)}</span><i aria-hidden="true">▸</i></button>` : ''}
+        <div class="e-title-acts"><button class="eb ${f ? 'eb-ghost' : 'eb-sun eb-big'}" data-e="begin">${f ? 'Start New Mission' : 'Start Adventure <span aria-hidden="true">▸</span>'}</button></div>
+        ${saveNotes()}</div></div>`; };
+  const saveNotes = () => { const n = Saves.notes.slice(); if (!LS.ok) n.push('This browser is not saving right now. Your progress lasts until you close this page.'); return n.length ? `<div class="e-savenote" role="status">${n.map(esc).join('<br>')}</div>` : ''; };
   V.signin = V.title; V.ready = V.title; V.dest = V.title;   // the old sign-in / welcome / destination pages are replaced by the title scene
 
   const _missions = V.missions;
@@ -116,11 +123,12 @@
     return `<div class="screen e-missions">
       <div class="e-top"><button class="eb eb-ghost" data-e="toTitle">‹ Title</button>${LOGO_E}<span style="flex:1"></span>${topBtns()}</div>
       <div class="e-mis-head"><div class="e-mis-echo">${A.echo('happy')}</div><div class="e-bubble">Three ways to help Earth. Pick one!</div></div>
-      <div class="mis-grid e-mis-grid">${MS.map(m => { const ep = T.episodes[m], best = bestOf(m);
+      <div class="mis-grid e-mis-grid">${MS.map(m => { const ep = T.episodes[m], best = bestOf(m), f = Saves.list().find(x => x.m === m);
         return `<div class="mis e-ep ep-${m}" data-m="${m}">${art[m]}
           <div class="body"><div class="e-ep-n">Mission ${ep.n}${m === 'storm' ? ' <span class="e-rec">★ ' + ep.level + '</span>' : ''}</div><h3>${ep.title}</h3><p>${ep.blurb}</p>
           ${best ? `<div class="e-best">Best so far: <b>${best}</b></div>` : ''}
-          <div class="e-ep-btns"><button class="eb eb-sun" data-a="${act[m]}" aria-label="Play ${ep.title}">${E.briefed[m] ? 'New game' : 'Play'} <span aria-hidden="true">▸</span></button>${E.briefed[m] ? `<button class="eb eb-sky" data-e="resume" data-m="${m}">Continue</button>` : ''}</div></div></div>`; }).join('')}</div></div>`; };
+          ${f ? `<button class="e-cont e-cont-sm" data-e="contFlight" data-fid="${f.fid}" aria-label="Continue ${ep.title}: ${progressOf(f)}"><span class="e-cont-k">Continue Mission</span><span>${progressOf(f)}</span><i aria-hidden="true">▸</i></button>` : ''}
+          <div class="e-ep-btns"><button class="eb ${f ? 'eb-ghost' : 'eb-sun'}" data-a="${act[m]}" aria-label="Start a new ${ep.title} mission">${f ? 'Start New Mission' : 'Play <span aria-hidden="true">▸</span>'}</button></div></div></div>`; }).join('')}</div></div>`; };
   const bestOf = m => { const r = S.last && S.last[m]; return r && r.result ? `${r.result.score} · ${r.result.outcome}` : ''; };
   const topBtns = () => `<button class="eb-icon" data-e="acct" aria-label="My Account" title="My Account">${ICON.user}</button><button class="eb-icon" data-e="note" aria-label="Engineering notebook" title="Engineering notebook">${ICON.book}</button><button class="eb-icon" data-e="sound" aria-label="Sound ${E.sound ? 'on' : 'off'}" aria-pressed="${E.sound}" title="Button sounds">${E.sound ? ICON.snd : ICON.mute}</button>`;
   const ICON = { user: '<svg viewBox="0 0 48 48"><circle cx="24" cy="17" r="9" fill="#ffb3c7" stroke="#4a3b63" stroke-width="3"/><path d="M8 42q2-14 16-14t16 14z" fill="#7fe0c2" stroke="#4a3b63" stroke-width="3" stroke-linejoin="round"/></svg>',
@@ -154,7 +162,7 @@
   function roomFocus() { const h = document.querySelector('.rhot.is-go'), w = document.querySelector('.e-room'); if (h && w && w.scrollWidth > w.clientWidth + 4) w.scrollLeft = h.offsetLeft + h.offsetWidth / 2 - w.clientWidth / 2; }
   // plays the story beat that belongs to the current step, once per attempt. Skipping it changes nothing.
   function enterRoom(after) { const m = S.mission, g = stage(m), M = T.missions[m], key = `${m}:${g}:${E.run[m]}`, done = () => { if (after) after(); };
-    if (E.seen[key]) return done(); E.seen[key] = 1;
+    if (E.seen[key]) return done(); E.seen[key] = 1; if (E.fseen[m] && !E.fseen[m].includes(g)) { E.fseen[m].push(g); checkpoint(m); }
     if (g === 'goal') return talk([{ who: 'echo', say: M.goalHint, id: `${m}.goal` }], () => tour(false, done));
     if (g === 'design') return talk([{ who: 'echo', say: 'Goal locked in! ' + M.designHint, mood: 'cheer', id: `${m}.design` }], done);
     if (g === 'review') return talk([{ who: 'echo', say: M.reviewHint, id: `${m}.review` }], done);
@@ -213,7 +221,11 @@
     E.skipLaunch = false; E.deployOk = false; E.launched[m] = true; E.inCh[m] = null; _endLaunch(); };
   S.howSeen = true;   // the old pop-up tutorial is replaced by ECHO's one-line hints (still in the notebook)
 
-  function newAttempt(m, rewound) { E.run[m]++; E.inCh[m] = null; E.rewound = !!rewound; }
+  function newAttempt(m, rewound) { E.run[m]++; E.inCh[m] = null; E.rewound = !!rewound;
+    E.fid[m] = 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); E.owner[m] = Saves.who(); E.fseen[m] = []; }
+  // At most five unfinished missions per player: a new one starts only after one is finished or deleted. Runs before every other handler.
+  window.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-a]'); if (!b || !START[b.dataset.a]) return;
+    if (Saves.list().length >= MAXF) { e.stopPropagation(); e.preventDefault(); Sfx.nope(); E.flLimit = true; account(); } }, true);
   // capture phase: runs before the original handlers
   document.addEventListener('click', e => { const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a;
     if (START[a]) { e.stopPropagation(); const m = START[a]; S.mission = m; E.cur = m; E.briefed[m] = false; E.designed[m] = false; E.launched[m] = false; newAttempt(m); Sfx.confirm();
@@ -245,7 +257,7 @@
       case 'acctNew': { const i = document.getElementById('acctName'), v = (i && i.value || '').trim().slice(0, 24); if (!v) { if (i) i.focus(); break; } P.create(v); account(); if (E.afterAcct) { const f = E.afterAcct; E.afterAcct = null; elAcct.hidden = true; elAcct.innerHTML = ''; f(); } break; }
       case 'acctUse': P.use(b.dataset.id); account(); render(); break;
       case 'acctDel': E.delAsk = b.dataset.id; account(); break; case 'acctDelNo': E.delAsk = null; account(); break;
-      case 'acctDelYes': P.remove(E.delAsk); E.delAsk = null; account(); render(); break;
+      case 'acctDelYes': LS.del(Saves.key(E.delAsk)); P.remove(E.delAsk); E.delAsk = null; account(); render(); break;
       case 'deployNext': Sfx.confirm(); E.deployOk = true; window.endLaunch(); break;
       case 'talkNext': Sfx.click(); talkNext(); break; case 'talkSkip': Sfx.click(); talkEnd(); break;
       case 'comicNext': comicNext(); break; case 'comicSkip': Sfx.click(); comicEnd(); break;
@@ -254,6 +266,9 @@
       case 'replayBrief': elNote.hidden = true; comic(T.missions[b.dataset.m].brief, null, { m: b.dataset.m, title: T.episodes[b.dataset.m].title }); break;
       case 'toTitle': Sfx.click(); go('title'); break; case 'toMissions': Sfx.click(); go('missions'); break;
       case 'toRoom': Sfx.click(); $('#layer').innerHTML = ''; toRoom(); break;
+      case 'contFlight': Sfx.confirm(); continueFlight(b.dataset.fid); break;
+      case 'flDel': E.flDelAsk = b.dataset.fid; account(); break; case 'flDelNo': E.flDelAsk = null; account(); break;
+      case 'flDelYes': { const fid = E.flDelAsk; E.flDelAsk = null; Saves.drop(fid); delete lastSig[fid]; MS.forEach(m => { if (E.fid[m] === fid) E.closed = fid; }); account(); if (['title', 'missions'].includes(S.screen)) render(); break; }
       case 'resume': Sfx.confirm(); S.mission = b.dataset.m; E.cur = b.dataset.m; toRoom(); break;
       case 'hot': hotClick(b.dataset.hot); break;
       case 'hint': { const m = S.mission, g = stage(m), M = T.missions[m]; Sfx.chirp();
@@ -300,16 +315,95 @@
     add(r) { const d = this.data(), p = d.list.find(x => x.id === d.cur); if (!p) return false; p.results.unshift(r); p.results = p.results.slice(0, 200); this.save(d); return true; } };
   // saves one entry per finished flight, straight from the engine's score and the mission record
   function saveResult(m) { const s = st(m); if (!s || !s.M || !s.record || s.echoSaved) return; const sc = MX[m].eng.score(s.M), tid = (S.target || {})[m], t = tid && MD.targetDef(m, tid), tr = t ? MD.evaluateTarget(m, tid, s.M) : null;
-    s.echoSaved = P.add({ t: Date.now(), m, code: S.scn[m].code, score: sc.total, outcome: sc.outcome, goals: ['G1', 'G2', 'G3', 'G4'].filter(g => sc.gates[g]).length, bonus: t ? t.title : '', bonusMet: tr ? tr.status === 'Met' : null, attempt: s.attempt ? s.attempt.n : 1 }); }
+    const me = P.cur(); if (me && E.fid[m] && me.results.some(r => r.fid === E.fid[m])) { s.echoSaved = true; return; }   // this flight is already in the list
+    s.echoSaved = P.add({ fid: E.fid[m] || null, t: Date.now(), m, code: S.scn[m].code, score: sc.total, outcome: sc.outcome, goals: ['G1', 'G2', 'G3', 'G4'].filter(g => sc.gates[g]).length, bonus: t ? t.title : '', bonusMet: tr ? tr.status === 'Met' : null, attempt: s.attempt ? s.attempt.n : 1 }); }
+  /* ================= Resume Mission: unfinished flights, saved per player at safe checkpoints =================
+   * A flight is saved after the goal is locked in, after the satellite is taken to launch, after launch, and after each challenge
+   * the player confirmed (its result is already computed by the original handler). A saved flight keeps only inputs: Mission Code,
+   * goal, orbit, design, the confirmed decisions and controls of finished challenges, and the Rewind context. Restoring rebuilds the
+   * mission state by sending those same decisions through the same engine calls, one challenge at a time (as "Fly my earlier
+   * decisions" does). Nothing is played back, so no quick call, XP or result is awarded twice. Unconfirmed choices are not saved. */
+  const SAVE_V = 1, MAXF = 5, GUEST = { list: [] };
+  const clone = o => o == null ? o : JSON.parse(JSON.stringify(o));
+  const RESETS = { storm: () => resetOps(), fire: () => resetF(), flood: () => resetL() };
+  const Saves = { notes: [],
+    who() { const p = P.cur(); return p ? p.id : 'guest'; },
+    key: pid => 'flights.v' + SAVE_V + '.' + pid,
+    valid(f) { const arr = a => Array.isArray(a) && a.length <= 4;
+      return !!f && f.v === SAVE_V && typeof f.fid === 'string' && MS.includes(f.m) && typeof f.seed === 'string' && typeof f.t === 'number' && ['goal', 'design', 'flight'].includes(f.stage) &&
+        f.design && typeof f.design === 'object' && (f.stage !== 'flight' || (Number.isInteger(f.done) && f.done >= 0 && f.done <= 4 && arr(f.choice) && f.choice.length >= f.done && f.choice.every(Array.isArray) && arr(f.ext) && f.attempt && typeof f.attempt.n === 'number')); },
+    load(pid) { pid = pid || this.who(); if (pid === 'guest') return GUEST.list;
+      const raw = LS.get(this.key(pid)); if (!raw) return [];
+      let d = null; try { d = JSON.parse(raw); } catch (e) {}
+      if (!d || d.v !== SAVE_V || !Array.isArray(d.list)) { LS.set('flights.broken.' + pid + '.' + Date.now(), raw); LS.del(this.key(pid)); this.note('Your unfinished missions could not be opened, so they were set aside. Finished results are safe.'); return []; }
+      const good = d.list.filter(f => { try { return this.valid(f); } catch (e) { return false; } });
+      if (good.length < d.list.length) { LS.set('flights.broken.' + pid + '.' + Date.now(), JSON.stringify(d.list.filter(f => !good.includes(f)))); this.write(pid, good); this.note('One unfinished mission could not be opened and was set aside.'); }
+      return good; },
+    write(pid, list) { pid = pid || this.who(); if (pid === 'guest') { GUEST.list = list; return; } LS.set(this.key(pid), JSON.stringify({ v: SAVE_V, list })); },
+    list(pid) { return this.load(pid).slice().sort((a, b) => b.t - a.t); },
+    get(fid, pid) { return this.load(pid).find(f => f.fid === fid) || null; },
+    put(f, pid) { const l = this.load(pid).filter(x => x.fid !== f.fid); l.push(f); this.write(pid, l); },
+    drop(fid, pid) { const l = this.load(pid), n = l.filter(x => x.fid !== fid); if (n.length !== l.length) this.write(pid, n); },
+    note(t) { if (!this.notes.includes(t)) this.notes.push(t); } };
+  // snapshot of the live flight of mission m at a safe point, or null while nothing is worth saving / a challenge is running
+  function snapshot(m) { if (!E.fid[m] || !E.briefed[m] || !S.target[m]) return null; const X = MX[m], s = st(m), launched = !!E.launched[m] && !!s;
+    const f = { v: SAVE_V, fid: E.fid[m], m, t: 0, seed: S.scn[m].seed, code: S.scn[m].code, mode: S.scnMode[m], target: S.target[m], arch: m === 'fire' ? archOf('fire') : null,
+      design: clone(X.design()), stage: launched ? 'flight' : E.designed[m] ? 'design' : 'goal', rewound: !!E.rewound, seen: (E.fseen[m] || []).slice(),
+      redo: S.redo && S.redo[m] ? clone(Object.assign({}, S.redo[m], { carry: undefined })) : null };
+    if (launched) { if (s.phase === 'playing' || !s.attempt) return null; const done = s.phase === 'result' ? s.ci + 1 : s.ci;
+      if (s.log.filter(Boolean).length < done) return null;
+      Object.assign(f, { done, choice: s.choice.slice(0, done).map(c => c.slice()), ext: (s.M.ext || []).slice(0, done).map(x => clone(x == null ? null : x)), attempt: clone(s.attempt) }); }
+    return f; }
+  const sig = f => JSON.stringify(Object.assign({}, f, { t: 0 }));
+  const lastSig = {};
+  function checkpoint(m) { m = m || S.mission; if (E.restoring || !m || !E.fid[m] || E.owner[m] !== Saves.who() || E.closed === E.fid[m]) return;
+    let f; try { f = snapshot(m); } catch (e) { f = null; } if (!f) return;
+    const k = sig(f); if (lastSig[f.fid] === k) return;
+    const old = Saves.get(f.fid); if (old && sig(old) === k) { lastSig[f.fid] = k; return; }
+    f.t = Date.now(); Saves.put(f); lastSig[f.fid] = k; }
+  // the final report has been recorded: this flight is finished and leaves the unfinished list
+  function closeFlight(m) { const fid = E.fid[m]; if (!fid || E.owner[m] !== Saves.who()) return; Saves.drop(fid); E.closed = fid; delete lastSig[fid]; }
+  // rebuild a saved flight. Outside events come from the Mission Code; completed challenges are re-computed by the engine from the saved
+  // decisions (no playback, no rewards); the player continues at the start of the next challenge.
+  function restore(f) { E.restoring = true; try { restoreIn(f); } finally { E.restoring = false; } const m = f.m; lastSig[f.fid] = ''; checkpoint(m); $('#layer').innerHTML = ''; talkEnd(); comicEnd(); toRoom(); }
+  function restoreIn(f) { const m = f.m, X = MX[m];
+    S.mission = m; E.cur = m;
+    S.scn[m] = Scenario.generate(m, f.seed); S.scnMode[m] = f.mode || S.scnMode[m]; if (S.htp) delete S.htp[m];
+    S.target[m] = f.target; if (m === 'fire' && f.arch) S.arch.fire = f.arch;
+    if (m === 'fire' && archOf('fire') !== MD.DEFAULT_ARCH.fire) S.scn.fire = WFEngine.scenarioView(S.scn.fire, archOf('fire'));
+    Object.assign(X.design(), clone(f.design));
+    if (f.redo) S.redo[m] = clone(f.redo); else delete S.redo[m]; if (S.mdNote) S.mdNote[m] = null;
+    E.run[m]++; E.rewound = !!f.rewound; E.inCh[m] = null; E.fid[m] = f.fid; E.owner[m] = Saves.who(); E.fseen[m] = (f.seen || []).slice(); E.closed = null;
+    E.briefed[m] = true; E.designed[m] = f.stage !== 'goal'; E.launched[m] = f.stage === 'flight';
+    if (f.stage === 'flight') { if (S.redo[m]) S.redo[m].n = f.attempt.n - 1;     // the reset below counts the attempt again
+      RESETS[m](); const s = X.st(); s.attempt = clone(f.attempt); const k = f.done;
+      s.M.ext = s.M.ext || []; for (let i = 0; i < k; i++) { s.choice[i] = f.choice[i].slice(); if (f.ext[i] != null) s.M.ext[i] = clone(f.ext[i]); }
+      if (m === 'storm') s.ix = s.M.ext; else s.task = s.M.ext;
+      for (let ci = 0; ci < k; ci++) { s.ci = ci; X.sim(); if (m === 'storm' && typeof ixAfter === 'function') { s.ci = ci; ixAfter(ci); } }   // Storm words its log at the end of playback; same step, text only
+      if (k < 4) { s.ci = k; s.phase = 'alert'; } else { s.ci = 3; s.phase = 'result'; } s.delta = {}; }
+    E.fseen[m].forEach(g => { E.seen[`${m}:${g}:${E.run[m]}`] = 1; });
+  }
+  function continueFlight(fid) { const f = Saves.get(fid); if (!f) { toast('That mission is no longer saved.'); return render(); }
+    elAcct.hidden = true; elAcct.innerHTML = '';
+    if (E.fid[f.m] === fid && E.owner[f.m] === Saves.who() && E.closed !== fid && E.briefed[f.m]) { S.mission = f.m; E.cur = f.m; return toRoom(); }   // already open in this page
+    restore(f); }
+  const progressOf = f => f.stage === 'goal' ? 'Goal chosen · build next' : f.stage === 'design' ? 'Satellite built · launch next' : f.done >= 4 ? 'All 4 challenges done · report next' : f.done === 0 ? 'In orbit · Challenge 1 next' : `Challenge ${f.done + 1} of 4 next`;
+
   const elAcct = document.createElement('div'); elAcct.id = 'echoAcct'; elAcct.hidden = true; host.appendChild(elAcct);
   const MN = { storm: 'Storm Watch', fire: 'Wildfire Watch', flood: 'Flood Watch' }, day = t => new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  function unfinished() { const L = Saves.list(), lim = E.flLimit; E.flLimit = false; if (!L.length) return '';
+    return `<h3>Unfinished missions <small class="en-dim">(${L.length} of ${MAXF})</small></h3>
+      ${lim ? `<p class="ac-limit" role="alert">You already have ${MAXF} unfinished missions. Finish one or delete one, then start a new mission.</p>` : ''}
+      <div class="ac-fl">${L.map(f => `<div class="ac-fl-row"><div><b>${MN[f.m]}</b><span><code>${esc(f.code)}</code> · ${progressOf(f)}</span><small>Saved ${day(f.t)}</small></div>
+        ${E.flDelAsk === f.fid ? `<span class="ac-fl-ask">Delete this mission? <button class="eb eb-sun" data-e="flDelYes">Yes, delete</button><button class="eb eb-ghost" data-e="flDelNo">Keep</button></span>`
+          : `<button class="eb eb-sky" data-e="contFlight" data-fid="${f.fid}">Continue</button><button class="eb-link" data-e="flDel" data-fid="${f.fid}">Delete</button>`}</div>`).join('')}</div>`; }
   function account(firstRun) { const d = P.data(), me = P.cur(), others = d.list.filter(p => !me || p.id !== me.id);
     const newForm = `<div class="ac-new"><label for="acctName">${me ? 'Add another player' : 'What should we call you?'}</label><div class="ac-row"><input id="acctName" maxlength="24" placeholder="Your first name or nickname" autocomplete="off"><button class="eb eb-sun" data-e="acctNew">${me ? 'Add player' : 'Create player'}</button></div><p class="en-dim">Saved only in this browser. No sign-in, nothing is sent anywhere.</p></div>`;
     const best = me ? ['storm', 'fire', 'flood'].map(m => { const r = me.results.filter(x => x.m === m); return `<div><span>${MN[m]}</span><b>${r.length ? Math.max(...r.map(x => x.score)) : '–'}</b><small>${r.length} flight${r.length === 1 ? '' : 's'}</small></div>`; }).join('') : '';
     const rows = me && me.results.length ? `<div class="ac-tab"><table><thead><tr><th>When</th><th>Mission</th><th>Mission Code</th><th>Score</th><th>Result</th><th>Goals</th><th>Bonus goal</th></tr></thead><tbody>${me.results.map(r => `<tr><td>${day(r.t)}</td><td>${MN[r.m]}</td><td><code>${esc(r.code)}</code></td><td><b>${r.score}</b></td><td>${esc(r.outcome)}</td><td>${r.goals} / 4</td><td>${r.bonus ? `${r.bonusMet ? '✓' : '✕'} ${esc(r.bonus)}` : '–'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="en-dim">No finished missions yet. Results appear here after each final report.</p>';
     const del = E.delAsk ? `<div class="ac-del" role="alert">Delete <b>${esc((d.list.find(p => p.id === E.delAsk) || {}).name || '')}</b> and all their saved results? <button class="eb eb-sun" data-e="acctDelYes">Yes, delete</button><button class="eb eb-ghost" data-e="acctDelNo">Keep</button></div>` : '';
     elAcct.hidden = false; elAcct.innerHTML = `<div class="en-book ac" role="dialog" aria-label="My Account"><div class="en-head"><span class="en-ic">${ICON.user}</span><h2>${me ? esc(me.name) : 'Welcome, Designer!'}</h2>${firstRun ? '' : '<button class="eb-icon" data-e="acctClose" aria-label="Close My Account">✕</button>'}</div>
-      <div class="en-body">${me ? `<div class="ac-best">${best}</div><h3>Saved missions</h3>${rows}` : ''}${del}
+      <div class="en-body">${me ? `<div class="ac-best">${best}</div>${unfinished()}<h3>Finished missions</h3>${rows}` : unfinished()}${del}
       ${others.length ? `<h3>Other players on this computer</h3><div class="ac-players">${others.map(p => `<div><b>${esc(p.name)}</b><span>${p.results.length} flights</span><button class="eb eb-sky" data-e="acctUse" data-id="${p.id}">Switch</button><button class="eb-link" data-e="acctDel" data-id="${p.id}">Delete</button></div>`).join('')}</div>` : ''}
       ${newForm}${me && !firstRun ? `<p><button class="eb-link" data-e="acctDel" data-id="${me.id}">Delete ${esc(me.name)}</button></p>` : ''}</div></div>`;
     const f = elAcct.querySelector(me ? '[data-e="acctClose"]' : '#acctName'); if (f) f.focus({ preventScroll: true }); }
@@ -384,7 +478,8 @@
       const g = document.querySelector('#app [data-a="briefGo"]'); if (g) g.textContent = 'Lock in this goal ▸';
       const h = document.querySelector('#app .brief h1'); if (h && !document.querySelector('.e-brief-art')) h.insertAdjacentHTML('beforebegin', `<div class="e-brief-art" aria-hidden="true">${A.scene({ storm: 'storm1', fire: 'fire1', flood: 'flood1' }[S.mission] || 'storm1', S.mission)}</div>`); }
     if (m && scr === BUILD[m]) document.querySelectorAll('#app [data-a="mrr"]').forEach(x => { x.textContent = 'Done! Take it to launch ▸'; });
-    if (m && scr === REPORT[m]) { reportDress(m); saveResult(m); bumpSmall(document.querySelector('#app .cr-full-in')); }
+    if (m && scr === REPORT[m]) { reportDress(m); saveResult(m); const s = st(m); if (s && s.record && (s.echoSaved || !P.cur())) closeFlight(m); bumpSmall(document.querySelector('#app .cr-full-in')); }
+    else checkpoint(m || S.mission);
     if (scr === 'room') roomFocus();
     hud(); }
   const _render = render; render = function () { const bd = document.body; bd.dataset.scr = S.screen; bd.toggleAttribute('data-ws', !['room', 'title', 'missions'].includes(S.screen)); _render(); dress(); };   // theme markers first, so new elements never fade in from the old colours
@@ -412,7 +507,7 @@
     const box = document.querySelector('#layer .modal-wrap > *'); if (box && !box.querySelector('.er-dir')) box.insertAdjacentHTML('afterbegin', `<div class="er-dir"><div class="et-face">${A.director()}</div><p><b>Flight Director</b>${ok ? T.ui.reviewOk : T.ui.reviewNo}</p></div>`); };
 
   /* ================= public handle + test hooks (used by tools/echo_parity.js and tools/echo_e2e.js) ================= */
-  window.ECHO = { state: E, stage, activeHot, talk, comic, notebook, facts, profiles: P, tour, account, voice: null, sfx: Sfx,
+  window.ECHO = { state: E, stage, activeHot, talk, comic, notebook, facts, profiles: P, tour, account, voice: null, sfx: Sfx, saves: Saves, checkpoint, continueFlight,
     test: { fast() { E.fast = true; talkEnd(); comicEnd(); },
       // skip any open story, then click the glowing hotspot (navigation only)
       advance() { if (E.q) return talkEnd(); if (E.cm) return comicEnd(); if (S.screen === 'room') { const h = document.querySelector('.rhot.is-go'); if (h) h.click(); } },

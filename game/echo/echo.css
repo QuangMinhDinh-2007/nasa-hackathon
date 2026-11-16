@@ -355,3 +355,17 @@ body.echo .cr-right{justify-content:flex-start}
 /* engineering details: readable line spacing for the raised text */
 body.echo .cr-full-in,body.echo #layer .rv-details .inner{line-height:1.5}
 body.echo #layer .rv-details .inner table{font-size:15px}
+/* Resume Mission: Continue card (title + mission cards), unfinished list in My Account */
+.e-cont{display:grid;grid-template-columns:1fr auto;align-items:center;gap:2px 14px;width:100%;max-width:440px;margin:0 auto 14px;padding:12px 18px;text-align:left;font:inherit;color:var(--e-ink);background:#d9f6ea;border:3px solid var(--e-ink);border-radius:18px;box-shadow:0 5px 0 var(--e-ink);cursor:pointer}
+.e-cont:hover{background:#c6f0de}.e-cont:active{transform:translateY(3px);box-shadow:0 2px 0 var(--e-ink)}
+.e-cont:focus-visible{outline:4px solid #2459b8;outline-offset:3px}
+.e-cont>*{grid-column:1}.e-cont>i{grid-column:2;grid-row:1/span 3;font-style:normal;font-size:28px;font-weight:800;color:#147552}
+.e-cont-k{font-family:var(--e-display);font-size:24px;line-height:1.1;color:#147552}
+.e-cont b{font-size:18px}.e-cont span:not(.e-cont-k){font-size:16px;font-weight:700;color:var(--e-ink2)}
+.e-cont-sm{max-width:none;margin:0 0 10px;padding:10px 14px}.e-cont-sm .e-cont-k{font-size:20px}
+.e-savenote{margin:14px auto 0;max-width:440px;padding:10px 14px;border-radius:12px;background:#fff1c9;border:2px solid var(--e-ink);font-size:15px;font-weight:700;line-height:1.4;text-align:left}
+.ac-fl{display:grid;gap:8px;margin-bottom:6px}
+.ac-fl-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:#fff;border:2px solid var(--e-ink);border-radius:12px;padding:8px 12px}
+.ac-fl-row>div{flex:1;min-width:200px;display:flex;flex-direction:column}.ac-fl-row>div span{font-size:15px;font-weight:700;color:var(--e-ink2)}.ac-fl-row>div small{font-size:14px;color:var(--e-ink2)}
+.ac-fl-ask{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-weight:700}
+.ac-limit{margin:6px 0 10px;padding:10px 12px;border-radius:12px;background:#ffe3dc;border:2px solid #d9402b;font-weight:700}
