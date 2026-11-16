@@ -27,33 +27,40 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .ixbox:focus-visible{outline:3px solid #fff;outline-offset:2px}
 .ixbox.drag{cursor:grabbing}
 .ixbox.fixed{cursor:default;border-style:dashed;box-shadow:none;opacity:.55;pointer-events:none}
-.ixbox .hd{position:absolute;right:-9px;bottom:-9px;width:18px;height:18px;border-radius:50%;background:#ffcc66;border:2px solid #111;cursor:nwse-resize}
-.ixbox .lb{position:absolute;left:6px;top:4px;font-size:12px;font-weight:600;color:#ffcc66;white-space:nowrap}
-.ix h3{font-size:22px;margin:0}.ix .sub{color:var(--muted);font-size:13px;margin:4px 0 14px}
+.ixbox .hd{position:absolute;right:-15px;bottom:-15px;width:30px;height:30px;border-radius:50%;background:#ffcc66;border:3px solid #111;cursor:nwse-resize}
+.ixbox .lb{position:absolute;left:8px;top:6px;font-size:14px;font-weight:600;color:#ffcc66;white-space:nowrap}
+.ix h3{font-size:clamp(26px,2.4vw,30px);margin:0}.ix .sub{color:var(--muted);font-size:15px;margin:6px 0 14px}
 .ixrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.ixstat{flex:1;min-width:120px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#0004}
-.ixstat span{display:block;font-size:12px;color:var(--muted)}.ixstat b{font-size:17px}
+.ixstat{flex:1;min-width:130px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#0004}
+.ixstat span{display:block;font-size:14px;color:var(--muted)}.ixstat b{font-size:19px}
 .ixstat.warn b{color:#ffcc66}.ixstat.bad b{color:#ff7a7a}.ixstat.good b{color:#5fe0a0}
-.ixprev{margin-top:12px;padding:10px 12px;border-radius:12px;background:#3d8bff14;border:1px solid #3d8bff44;font-size:12.5px}
+.ixprev{margin-top:12px;padding:12px 14px;border-radius:12px;background:#3d8bff14;border:1px solid #3d8bff44;font-size:15px}
+.ixprev[hidden]{display:none}
 .ixprev b{color:#fff}
 .sg2{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.sg2 button{padding:7px 11px;font-size:12px;color:var(--muted);background:#0004;border-right:1px solid var(--line)}
+.sg2 button{padding:12px 16px;font-size:15px;color:var(--muted);background:#0004;border-right:1px solid var(--line)}
 .sg2 button:last-child{border-right:0}.sg2 button.on{background:#fff;color:#000;font-weight:600}
 .sg2 button.on.drop{background:#ff7a7a}.sg2 button.on.first{background:#5fe0a0}
-.pk{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:7px 10px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;background:#0003;font-size:12.5px}
+.pk{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;background:#0003;font-size:14.5px}
 .pk .id{font-weight:700;width:34px}.pk .meta{color:var(--muted)}.pk .meta b{color:#fff;font-weight:600}
 .pk.late .meta b.eta{color:#ff7a7a}.pk.ok .meta b.eta{color:#5fe0a0}
-.pklist{max-height:250px;overflow:auto;margin-bottom:10px}
+.pklist{max-height:280px;overflow:auto;margin-bottom:10px}
 .slots{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-.slot{padding:10px 6px;border-radius:12px;border:1px solid var(--line);background:#0004;text-align:center}
-.slot small{display:block;color:var(--muted);font-size:12px}.slot b{display:block;font-size:13px;margin:4px 0}
+.slot{padding:12px 6px;border-radius:12px;border:1px solid var(--line);background:#0004;text-align:center}
+.slot small{display:block;color:var(--muted);font-size:13px}.slot b{display:block;font-size:15px;margin:4px 0}
 .slot.full{border-color:#7fb6ff;background:#3d8bff22}.slot.one{border-color:#5fe0a0;background:#5fe0a01a}.slot.eco{border-color:#ffcc66;background:#ffcc661a}.slot.rest{opacity:.75}
 .slot .bat{height:46px;display:flex;align-items:flex-end;justify-content:center;margin-top:6px}
 .slot .bat i{display:block;width:60%;border-radius:4px 4px 0 0;background:#5fe0a0;transition:height .25s}
 .slot .bat i.low{background:#ff7a7a}.slot .bat i.mid{background:#ffcc66}
-.ixset{display:flex;gap:18px;flex-wrap:wrap;margin-top:12px}.ixset .lab{font-size:12px;color:var(--muted);margin-bottom:4px}
-.mini{padding:6px 10px;border-radius:9px;border:1px solid var(--line);font-size:12px;color:#fff;background:#0004}
+.ixset{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-top:12px}.ixset .lab{font-size:14px;color:var(--muted);margin-bottom:6px}
+.ixrun{margin-left:auto;height:50px;padding:0 26px;font-size:clamp(15px,1.1vw,17px)}
+.mini{padding:8px 12px;border-radius:9px;border:1px solid var(--line);font-size:13px;color:#fff;background:#0004}
 .mini:hover{background:#ffffff14}
+input[type="range"]{-webkit-appearance:none;appearance:none;width:160px;height:28px;background:transparent;vertical-align:middle}
+input[type="range"]::-webkit-slider-runnable-track{height:10px;border-radius:6px;background:#ffffff26}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#ffcc66;border:2px solid #111;margin-top:-9px;cursor:pointer}
+input[type="range"]::-moz-range-track{height:10px;border-radius:6px;background:#ffffff26}
+input[type="range"]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:#ffcc66;border:2px solid #111;cursor:pointer}
 #musicBtn{position:fixed;right:16px;bottom:16px;z-index:50;padding:8px 12px;border-radius:999px;border:1px solid #ffffff33;background:#000a;color:#fff;font-size:12px}
 @media (prefers-reduced-motion: reduce){.slot .bat i{transition:none}}
 </style>`);
@@ -97,33 +104,34 @@ function ixPreview() { const o = S.ops, M = o.M, c = structuredClone(M); c.trace
   c.scn = { anomalySolar: M.scn ? M.scn.anomalySolar : M.C.anomalySolarFactor, link: [], eclipseHour: null, trackDev: 0 };   // the plan: announced fault, storm on the forecast line, no surprises
   const snap = ENG.runChallenge(c, o.ci, o.choice[o.ci]); return { c, snap, d: ENG.derive(c), tr: c.trace }; }
 function seenHours(M, box, dev) { const c = { C: M.C, scn: { trackDev: dev } }; let s = 0; for (let h = 0; h < 6; h++) s += ENG.boxScan(c, box, h).seen; return s; }
-function setToggles(ci, groups) { const o = S.ops, ch = chx('storm', ci), c = o.choice[ci];
-  return `<div class="ixset">${groups.map(gi => `<div><div class="lab">${ch.groups[gi].lab}</div><div class="sg2">${ch.groups[gi].opts.map(op => `<button class="${c[gi] === op[0] ? 'on' : ''}" data-a="opt" data-g="${gi}" data-v="${op[0]}" title="${esc(op[2])}" aria-pressed="${c[gi] === op[0]}">${op[1]}</button>`).join('')}</div></div>`).join('')}</div>`; }
+function setToggles(ci, groups, trailer) { const o = S.ops, ch = chx('storm', ci), c = o.choice[ci];
+  return `<div class="ixset">${groups.map(gi => `<div><div class="lab">${ch.groups[gi].lab}</div><div class="sg2">${ch.groups[gi].opts.map(op => `<button class="${c[gi] === op[0] ? 'on' : ''}" data-a="opt" data-g="${gi}" data-v="${op[0]}" title="${esc(op[2])}" aria-pressed="${c[gi] === op[0]}">${op[1]}</button>`).join('')}</div></div>`).join('')}${trailer || ''}</div>`; }
+function ixRunBtn(label) { return `<button class="btn blue ixrun" data-a="run">${label || 'Confirm & run 6 hours →'}</button>`; }
 function stat(l, v, cls) { return `<div class="ixstat ${cls || ''}"><span>${l}</span><b>${v}</b></div>`; }
-function prevLine(p, extra) { const d = p.d, s = p.snap; const miss = s.missed ? ` · <b style="color:#ff7a7a">${s.missed} image${s.missed > 1 ? 's' : ''} skipped</b> (${Object.keys(p.c.missedReasons).join(', ')})` : '';
-  return `<div class="ixprev" id="ixPrev">If nothing unexpected happens, at ${hhmm(d.t)}: <b>${s.captured.length}</b> images taken · <b>${fmt(d.deliveredScience)}</b> / 12 pts delivered · battery <b>${Math.round(d.batteryPct)}%</b> · storage <b>${Math.round(d.storagePct)}%</b>${miss}${extra || ''}</div>`; }
-function foot() { return `${predChips()}<div class="dfoot"><div class="pred">The forecast above comes from running the real simulation ahead. It cannot see surprises.</div><button class="btn blue" data-a="run">Confirm & run 6 hours</button></div>`; }
+function prevLine(p, extra) { const d = p.d, s = p.snap; const miss = s.missed ? `<div class="ixprev" id="ixPrev" role="alert"><b style="color:#ff7a7a">${s.missed} image${s.missed > 1 ? 's' : ''} skipped</b> (${Object.keys(p.c.missedReasons).join(', ')})</div>` : '<div class="ixprev" id="ixPrev" hidden></div>';
+  return extra ? `${miss}<div class="ixprev" id="ixPrevX">${extra.replace(/^ · /, '')}</div>` : miss; }
+function foot(inline) { return inline ? '' : `${predChips()}<div class="dfoot" style="justify-content:flex-end"><button class="btn blue" data-a="run">Confirm & run 6 hours</button></div>`; }
 
 function ixPanel() { const o = S.ops, M = o.M, ci = o.ci, x = ixGet(), p = ixPreview(); let h = '';
   if (ci === 0) { const b = x.box, sc = ENG.boxScan({ C: M.C, scn: { trackDev: 0 } }, b, 0), gb = M.P.instrument.sizeGB * M.C.res[o.choice[0][0]].size * sc.size, seen = seenHours(M, b, 0);
-    h = `<h3>Aim the camera</h3><p class="sub">Drag the yellow box on the map. Pull its corner to resize. The storm will move along the dashed line, but it can drift anywhere inside the shaded cone.</p>
+    h = `<h3>Aim the camera</h3>
     <div class="ixrow">${stat('Storm in view (forecast)', seen.toFixed(1) + ' of 6 h', seen >= 5.5 ? 'good' : seen >= 4 ? 'warn' : 'bad')}${stat('Image detail', Math.round(sc.detail * 100) + '%')}${stat('Each image', gb.toFixed(2) + ' GB')}${stat('Area scanned', Math.round(sc.cover) + '% of the disk')}</div>
-    <div class="ixset"><div><div class="lab">Box size</div><input type="range" id="ixW" min="50" max="100" value="${Math.round(b.w * 100)}" aria-label="Scan box size"> <button class="mini" data-a="ixWhole">Whole disk</button></div></div>${setToggles(0, [0])}${prevLine(p)}`; }
+    <div class="ixset"><div><div class="lab">Box size (drag to resize)</div><input type="range" id="ixW" min="50" max="100" value="${Math.round(b.w * 100)}" aria-label="Scan box size"> <button class="mini" data-a="ixWhole">Whole disk</button></div></div>${setToggles(0, [0], ixRunBtn())}${prevLine(p)}`; }
   if (ci === 1) { const ob = onboard(M), st = id => x.drop.includes(id) ? 'drop' : x.first.includes(id) ? 'first' : 'keep'; const free = M.P.storage.capGB - ob.filter(r => !x.drop.includes(r.id)).reduce((a, r) => a + r.sizeGB, 0);
-    h = `<h3>Sort the data on board</h3><p class="sub">${ob.length ? `${ob.length} image${ob.length > 1 ? 's are' : ' is'} still waiting to be sent. Older images are worth less when they arrive. Decide what goes first and what is not worth the space.` : 'Nothing is waiting: your downlink kept up during the first six hours. Only the settings below are left to decide.'}</p>
+    h = `<h3>Sort the data on board</h3><p class="sub">${ob.length ? 'Choose what each waiting image does.' : 'Nothing is waiting: only the settings below are left to decide.'}</p>
     ${ob.length ? `<div class="pklist">${ob.map(r => `<div class="pk"><div class="id">#${r.id}</div><div class="meta">taken <b>${hhmm(r.t)}</b> · <b>${r.pts.toFixed(2)}</b> pts · <b>${r.sizeGB.toFixed(2)}</b> GB</div><div class="sg2">${[['first', 'Send first'], ['keep', 'Keep'], ['drop', 'Discard']].map(k => `<button class="${st(r.id) === k[0] ? 'on ' + k[0] : ''}" data-a="ixPk" data-id="${r.id}" data-v="${k[0]}" aria-pressed="${st(r.id) === k[0]}">${k[1]}</button>`).join('')}</div></div>`).join('')}</div>
-    <div class="ixrow">${stat('Free storage now', free.toFixed(2) + ' GB of ' + M.P.storage.capGB)}${stat('Send first', x.first.length)}${stat('Discarded', x.drop.length, x.drop.length ? 'warn' : '')}</div>` : ''}${setToggles(1, [0, 1])}${prevLine(p)}`; }
+    <div class="ixrow">${stat('Free storage now', free.toFixed(2) + ' GB of ' + M.P.storage.capGB)}${stat('Send first', x.first.length)}${stat('Discarded', x.drop.length, x.drop.length ? 'warn' : '')}</div>` : ''}${setToggles(1, [0, 1], ixRunBtn())}${prevLine(p)}`; }
   if (ci === 2) { const solar = Math.round((M.scn ? M.scn.anomalySolar : M.C.anomalySolarFactor) * 100), low = Math.min(...p.tr.map(f => f.batteryPct));
     h = `<h3>Plan the next six hours</h3><p class="sub">The solar array is damaged: only ${solar}% power until 18:00. Click each hour to choose what the satellite does. The bars show the battery at the end of each hour.</p>
     <div class="slots">${x.sched.map((m, i) => { const b = p.tr[i] ? p.tr[i].batteryPct : 0; return `<button class="slot ${m}" data-a="ixSlot" data-i="${i}" title="${MODES[m][1]}" aria-label="${12 + i}:00, ${MODES[m][0]}: ${MODES[m][1]}. Battery after: ${Math.round(b)} percent. Click to change."><small>${12 + i}:00</small><b>${MODES[m][0]}</b><div class="bat"><i class="${b < 15 ? 'low' : b < 40 ? 'mid' : ''}" style="height:${Math.max(4, b * 0.46)}px"></i></div><small>${Math.round(b)}%</small></button>`; }).join('')}</div>
     <div class="ixset"><div><div class="lab">Quick plans</div><button class="mini" data-a="ixPlan" data-v="full">All Full</button> <button class="mini" data-a="ixPlan" data-v="eco">All Eco</button> <button class="mini" data-a="ixPlan" data-v="alt">Image every other hour</button></div></div>
     ${prevLine(p, low < 12 ? ' · <b style="color:#ff7a7a">battery reaches its 10% reserve</b>' : '')}`; }
   if (ci === 3) { const recs = id => p.c.records.find(r => r.id === id), cr = p.d.critical;
-    h = `<h3>Emergency downlink</h3><p class="sub">Forecasters need a fresh storm image before 24:00. ${x.order.length ? 'Use the arrows to choose which stored image is sent first.' : 'Nothing is waiting on board, so new images go straight down.'}</p>
+    h = `<h3>Emergency downlink</h3><p class="sub">Forecasters need a fresh storm image before 24:00.</p>
     ${x.order.length ? `<div class="pklist">${x.order.map((id, i) => { const r = recs(id), ok = r.status === 'delivered'; return `<div class="pk ${ok ? 'ok' : 'late'}"><div class="id">#${id}</div><div class="meta">taken <b>${hhmm(r.t)}</b> · <b>${r.pts.toFixed(2)}</b> pts · ${ok ? `arrives <b class="eta">${hhmm(r.deliveredAt)}</b> · worth <b>${Math.round(ENG.timelinessFactor(r.deliveredAt - r.t, M.C) * 100)}%</b>` : '<b class="eta">will not arrive by 24:00</b>'}</div><div><button class="mini" data-a="ixMove" data-i="${i}" data-d="-1" aria-label="Move image ${id} up" ${i ? '' : 'disabled'}>▲</button> <button class="mini" data-a="ixMove" data-i="${i}" data-d="1" aria-label="Move image ${id} down" ${i < x.order.length - 1 ? '' : 'disabled'}>▼</button></div></div>`; }).join('')}</div>` : ''}
-    <div class="ixset"><div><div class="lab">New storm images</div><div class="sg2"><button class="${x.newFirst ? 'on' : ''}" data-a="ixNew" data-v="1" aria-pressed="${x.newFirst}">Jump the queue</button><button class="${x.newFirst ? '' : 'on'}" data-a="ixNew" data-v="0" aria-pressed="${!x.newFirst}">Wait their turn</button></div></div></div>${setToggles(3, [0, 1])}
+    <div class="ixset"><div><div class="lab">New storm images</div><div class="sg2"><button class="${x.newFirst ? 'on' : ''}" data-a="ixNew" data-v="1" aria-pressed="${x.newFirst}">Jump the queue</button><button class="${x.newFirst ? '' : 'on'}" data-a="ixNew" data-v="0" aria-pressed="${!x.newFirst}">Wait their turn</button></div></div></div>${setToggles(3, [0, 1], ixRunBtn())}
     ${prevLine(p, ` · critical update <b style="color:${cr ? '#5fe0a0' : '#ff7a7a'}">${cr ? 'arrives ' + hhmm(p.d.criticalRec.deliveredAt) : 'MISSED'}</b>`)}`; }
-  return `<div class="glass decision ix" id="ixPanel">${h}${foot()}</div>`; }
+  return `<div class="glass decision ix" id="ixPanel">${h}${foot(true)}</div>`; }
 
 function trackSvg(M, dev, upto, box) { const C = M.C, X = C.ix, P = k => ENG.trackPoint(C, k, 0), pt = a => (a[0] * 100).toFixed(2) + ',' + (a[1] * 100).toFixed(2);
   const up = [], dn = []; for (let k = 0; k <= 5; k++) { up.push(pt(ENG.trackPoint(C, k, 1.6))); dn.unshift(pt(ENG.trackPoint(C, k, -1.6))); }

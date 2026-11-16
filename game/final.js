@@ -119,10 +119,10 @@ document.addEventListener('click', e => { if (e.target.id === 'helpBtn') return 
 document.head.insertAdjacentHTML('beforeend', `<style>
 .tk{position:absolute;z-index:4;border:2px dashed #ffffff55;border-radius:10px;background:transparent;color:#fff;text-align:left;padding:0}
 button.tk{cursor:pointer}button.tk:hover{background:#ffffff10}.tk.on{border:2px solid #ffcc66;background:#ffcc6612}
-.tk span{position:absolute;left:8px;bottom:6px;font-size:12px;font-weight:600;padding:2px 7px;border-radius:6px;background:#000a}.tk.on span{background:#ffcc66;color:#111}
-.tkstrip{margin:0 0 14px;padding:4px 2px;font-size:13px}
-.tkstrip b{color:#fff}.tkstrip .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}.tkstrip .row>span{min-width:110px;color:var(--muted);font-size:12px}
-.vzone .tkz{position:absolute;left:12px;top:66px;font-size:12px;font-weight:700;padding:2px 7px;border-radius:6px;background:#ffcc66;color:#111;margin-right:4px}
+.tk span{position:absolute;left:8px;bottom:6px;font-size:14px;font-weight:600;padding:3px 9px;border-radius:6px;background:#000a}.tk.on span{background:#ffcc66;color:#111}
+.tkstrip{margin:0 0 14px;padding:4px 2px;font-size:15px}
+.tkstrip b{color:#fff}.tkstrip .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}.tkstrip .row>span{min-width:110px;color:var(--muted);font-size:14px}
+.vzone .tkz{position:absolute;left:12px;top:66px;font-size:14px;font-weight:700;padding:3px 9px;border-radius:6px;background:#ffcc66;color:#111;margin-right:4px}
 .vzone .tkz+.tkz{top:88px}
 </style>`);
 fpAttr = function () { return ''; };
@@ -139,13 +139,13 @@ function taskMount() { const view = document.querySelector('.view'); if (!view) 
       return choose ? `<button class="tk ${on ? 'on' : ''}" data-a="tkReg" data-r="${k}" style="${st}" aria-pressed="${on}" aria-label="Region ${r.n}. ${on ? 'Targeted' : 'Not targeted'}."><span>${on ? '✓ Targeted' : '+ Add target'}</span></button>` : on ? `<div class="tk on" style="${st};pointer-events:none"></div>` : ''; }).join(''));
     const n = view.querySelector('.note[style*="right"]'); if (n && choose) n.textContent = 'Click a region to target it or drop it';
     if (choose && !document.getElementById('tkStrip')) { const opts = document.querySelector('.decision .opts'); if (opts) { if (o.ci === 0 || o.ci === 3) hideOg(0);
-      opts.insertAdjacentHTML('beforebegin', `<div class="tkstrip" id="tkStrip"><b>Task the camera for the ${pT(o.ci)} pass.</b> Click regions on the map. Targets: <b>${t.regions.join(', ')}</b> · detection sensitivity <b>${Math.round(FDET(t.regions.length) * 100)}%</b>.<br><span class="muted" style="font-size:12px">Fewer regions give a sharper look at each one. A fire in a region you leave out is not seen on this pass.</span></div>`); } } }
+      opts.insertAdjacentHTML('beforebegin', `<div class="tkstrip" id="tkStrip"><b>Target regions, ${pT(o.ci)} pass:</b> <b>${t.regions.join(', ')}</b> · detection sensitivity <b>${Math.round(FDET(t.regions.length) * 100)}%</b></div>`); } } }
   if (S.screen === 'lops' && S.l && S.l.M) { const o = S.l, choose = o.phase === 'choose', C = o.M.C; view.querySelectorAll('.tkz').forEach(e => e.remove()); { const sb = view.querySelector('.scanbox'); if (sb) sb.remove(); const n = view.querySelector('.note[style*="right"]'); if (n) n.textContent = 'Yellow tags = where each pass is aimed'; }
     const t = choose ? floodTask() : (o.task || [])[o.ci]; if (!t) return; const zs = [...view.querySelectorAll('.vzone')];
     t.zones.forEach((z, k) => FL.ZONES.forEach((q, i) => { if ((z === 'ALL' || z === q) && zs[i]) zs[i].insertAdjacentHTML('beforeend', `<span class="tkz" style="left:${12 + k * 58}px;top:66px">Pass ${k + 1}</span>`); }));
     if (choose && !document.getElementById('tkStrip')) { const opts = document.querySelector('.decision .opts'); if (opts) { if (o.ci === 0) hideOg(1);
       const seg = k => (o.ci === 3 && k === 0) ? '<b>Town</b> <span class="muted" style="font-size:12px">(emergency request, fixed)</span>' : `<div class="sg2">${FL.ZONES.concat(['ALL']).map(z => `<button class="${t.zones[k] === z ? 'on' : ''}" data-a="tkZone" data-k="${k}" data-z="${z}" aria-pressed="${t.zones[k] === z}">${z === 'ALL' ? 'All three' : FL.ZNAME[z]}</button>`).join('')}</div>`;
-      opts.insertAdjacentHTML('beforebegin', `<div class="tkstrip" id="tkStrip"><b>Aim each pass.</b> One zone gives full detail. All three at once gives ${Math.round(C.footprint.wide * 100)}% detail in each.${[0, 1].map(k => `<div class="row"><span>Pass ${k + 1} · ${lt(C.passes[o.ci * 2 + k].h)}</span>${seg(k)}</div>`).join('')}</div>`); } } } }
+      opts.insertAdjacentHTML('beforebegin', `<div class="tkstrip" id="tkStrip"><b>Aim each pass</b> <span class="muted" style="font-size:14px">(all three = ${Math.round(C.footprint.wide * 100)}% detail each)</span>${[0, 1].map(k => `<div class="row"><span>Pass ${k + 1} · ${lt(C.passes[o.ci * 2 + k].h)}</span>${seg(k)}</div>`).join('')}</div>`); } } } }
 softView = (f => function () { f(); taskMount(); })(softView);
 const ____render = render; render = function () { ____render(); taskMount(); };
 document.addEventListener('click', e => { const b = e.target.closest('[data-a="tkReg"],[data-a="tkZone"]'); if (!b) return;

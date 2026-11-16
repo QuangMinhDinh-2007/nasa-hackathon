@@ -47,7 +47,7 @@ input{font:inherit;color:inherit}
 
 /* ---------- glass ---------- */
 .glass{background:var(--glass);border:1px solid var(--line);border-radius:var(--r);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 22px;border-radius:999px;font-weight:600;font-size:13px;transition:.2s}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 24px;border-radius:999px;font-weight:600;font-size:clamp(15px,1.1vw,17px);transition:.2s}
 .btn.primary{background:#fff;color:#000}
 .btn.primary:hover{background:#dfeaff;transform:translateY(-1px)}
 .btn.blue{background:var(--blue2);color:#fff;box-shadow:0 8px 30px -8px #2f7dffaa}
@@ -163,7 +163,7 @@ input{font:inherit;color:inherit}
 .seg button.on.adv{background:var(--blue);color:#fff}
 .ready{padding:16px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.3)}
 .meter{margin-top:12px}
-.meter .row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}
+.meter .row{display:flex;justify-content:space-between;font-size:14px;margin-bottom:7px}
 .meter .row span:last-child{font-weight:600}
 .bar{height:6px;border-radius:999px;background:#ffffff1c;overflow:hidden}
 .bar i{display:block;height:100%;border-radius:inherit;background:var(--good);transition:width .7s cubic-bezier(.2,.8,.2,1),background .4s}
@@ -220,17 +220,17 @@ input{font:inherit;color:inherit}
 .decision{margin-top:18px;padding:22px}
 .dhead{display:flex;gap:14px;align-items:flex-start;margin-bottom:16px}
 .dhead .ic{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#ff7a6b22;border:1px solid #ff7a6b55;color:var(--bad);flex:none}
-.dhead h3{font-family:Anton,sans-serif;font-weight:400;font-size:28px;text-transform:uppercase;line-height:1.05}
-.dhead p{color:var(--muted);font-size:13px}
+.dhead h3{font-family:Anton,sans-serif;font-weight:400;font-size:clamp(26px,2.4vw,30px);text-transform:uppercase;line-height:1.05}
+.dhead p{color:var(--muted);font-size:15px}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.og .lab{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:8px}
+.og .lab{font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:10px}
 .opt{width:100%;display:flex;gap:12px;align-items:center;text-align:left;padding:11px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.25);margin-bottom:8px;transition:.2s}
 .opt:hover{border-color:var(--line2)}
 .opt .rd{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line2);flex:none;transition:.2s}
 .opt.on{border-color:var(--blue);background:#2f7dff1f}
 .opt.on .rd{border:5px solid var(--blue);background:#fff}
-.opt b{display:block;font-size:13px;font-weight:600}
-.opt span{font-size:12px;color:var(--muted)}
+.opt b{display:block;font-size:clamp(16px,1.2vw,18px);font-weight:600}
+.opt span{font-size:15px;color:var(--muted)}
 .dfoot{display:flex;gap:14px;align-items:center;margin-top:10px}
 .pred{flex:1;font-size:12px;color:var(--muted);padding:11px 14px;border-radius:12px;background:#ffffff0c;border:1px solid #ffffff10}
 .pred b{color:#fff}
@@ -242,12 +242,12 @@ input{font:inherit;color:inherit}
 .lesson{font-size:12px;color:var(--muted);flex:1}
 .side{display:flex;flex-direction:column;gap:14px}
 .dash{padding:18px}
-.dash h4{font-size:13px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.dash h4{font-size:15px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;gap:8px}
 .dash h4 i{width:6px;height:6px;border-radius:50%;background:var(--blue);box-shadow:0 0 10px var(--blue)}
 .dash .meter .row span:first-child{color:var(--muted)}
 .d{font-size:12px;font-weight:600;margin-left:4px}
 .d.up{color:var(--good)}.d.down{color:var(--bad)}.d.zero{color:var(--dim)}
-.kv{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0}
+.kv{display:flex;justify-content:space-between;font-size:14.5px;padding:6px 0}
 .kv span{color:var(--muted)}.kv b{font-weight:600}
 .mini-globe{width:100%;aspect-ratio:1.6;border-radius:16px;overflow:hidden;position:relative;background:#000}
 .mini-globe img{position:absolute;width:62%;left:50%;top:50%;transform:translate(-50%,-50%);filter:drop-shadow(0 0 24px #3b82f677)}
@@ -518,11 +518,6 @@ function dash(){const o=S.ops,d=o.delta,x=live(D());
    ${meter('Battery',x.batteryPct,100,v=>`<b>${Math.round(v)}%</b>`,x.batteryPct<30?'bad':x.batteryPct<70?'warn':'',dlt(d.batt,'%'))}
    ${meter('Storage used',x.storagePct,100,v=>`<b>${Math.round(v)}%</b>`,x.storagePct>85?'bad':x.storagePct>60?'warn':'blue',dlt(d.st,'%'))}
    ${meter('Health',x.health,100,v=>`<b>${v}%</b>`,x.health<80?'warn':'',dlt(d.health,'%'))}</div>
-  <div class="glass dash">
-   <div class="kv"><span>Mission time</span><b>${String(Math.round(x.t)).padStart(2,'0')}:00 / 24:00</b></div>
-   <div class="kv"><span>Time left</span><b>${24-Math.round(x.t)} h</b></div>
-   <div class="kv"><span>Critical update</span><b style="color:${x.criticalStatus==='Delivered'?'var(--good)':x.criticalStatus==='Missed'?'var(--bad)':x.criticalStatus==='Pending'?'var(--warn)':'#fff'}">${x.criticalStatus}</b></div>
-   <div class="muted" style="font-size:12px;margin-top:8px">Useful data = science points delivered to Earth, worth less the older they are when they arrive.</div></div>
  </div>`;}
 V.ops=()=>{const o=S.ops,ch=chx('storm',o.ci),r=scanRect(),c=o.choice[o.ci];
  let body;
@@ -533,7 +528,7 @@ V.ops=()=>{const o=S.ops,ch=chx('storm',o.ci),r=scanRect(),c=o.choice[o.ci];
  } else {
   body=`<div class="glass decision"><div class="dhead"><div class="ic">!</div><div><h3>${ch.title}</h3><p>${ch.sub}</p></div></div>
    <div class="opts">${ch.groups.map((g,gi)=>`<div class="og"><div class="lab">${g.lab}</div>${g.opts.map(op=>`<button class="opt ${c[gi]===op[0]?'on':''}" data-a="opt" data-g="${gi}" data-v="${op[0]}"><div class="rd"></div><div><b>${op[1]}</b><span>${op[2]}</span></div></button>`).join('')}</div>`).join('')}</div>
-   ${predChips()}<div class="dfoot"><div class="pred"><b>Prediction:</b> ${predict()} <span style="opacity:.6">(estimates)</span></div><button class="btn blue" data-a="run">Confirm & run 6 hours</button></div></div>`;
+   ${predChips()}<div class="dfoot" style="justify-content:flex-end"><button class="btn blue" data-a="run">Confirm & run 6 hours</button></div></div>`;
  }
  if(o.phase==='playing')body=journeyPanel();
  return `<div class="screen">${nav(2)}<div class="ops"><div>
@@ -713,12 +708,11 @@ function fDash(){const o=S.f,d=o.delta,x=live(fD()),M=o.M;
    ${meter('Storage used',x.storagePct,100,v=>`<b>${Math.round(v)}%</b>`,x.storagePct>85?'bad':x.storagePct>60?'warn':'blue',dlt(d.st,'%'))}
    ${meter('Health',x.health,100,v=>`<b>${v}%</b>`,x.health<80?'warn':'',dlt(d.health,'%'))}</div>
   <div class="glass dash">
-   <div class="kv"><span>Mission time</span><b>${fmtH(x.t)} / 24:00</b></div>
    <div class="kv"><span>Next pass · contact</span><b>${x.nextPass} · ${x.nextContact}</b></div>
    <div class="kv"><span>New-hotspot alert</span><b style="color:${col(x.critStatus)}">${x.critStatus}</b></div>
    <div class="kv"><span>Final update</span><b style="color:${col(x.finalStatus)}">${x.finalStatus}</b></div>
    <div class="kv"><span>Alerts sent</span><b>${x.alertsDelivered} / ${x.alertsTotal}</b></div>
-   <div class="muted" style="font-size:12px;margin-top:8px">${M.safe?'<b style="color:var(--bad)">SAFE MODE</b> · ':''}Useful data = science points delivered to Earth, worth less the older they are when they arrive.</div></div>
+   ${M.safe?'<div class="muted" style="font-size:14px;margin-top:8px;color:var(--bad)"><b>SAFE MODE</b></div>':''}</div>
  </div>`;}
 V.fbuild=()=>{const t=fTotals();const okKg=t.kg<=WC.limits.kg,okC=t.cr<=WC.limits.credits,ok=okKg&&okC;
  return `<div class="screen">${nav(0,'Wildfire Watch','Earth · Mission 2')}<div class="build">
@@ -744,7 +738,7 @@ V.fops=()=>{const o=S.f,ch=chx('fire',o.ci),r=fScan(),c=o.choice[o.ci];let body;
  } else {
   body=`<div class="glass decision"><div class="dhead"><div class="ic">!</div><div><h3>${ch.title}</h3><p>${ch.sub}</p></div></div>
    <div class="opts">${ch.groups.map((g,gi)=>`<div class="og"><div class="lab">${g.lab}</div>${g.opts.map(op=>`<button class="opt ${c[gi]===op[0]?'on':''}" data-a="fopt" data-g="${gi}" data-v="${op[0]}"><div class="rd"></div><div><b>${op[1]}</b><span>${op[2]}</span></div></button>`).join('')}</div>`).join('')}</div>
-   ${predChips()}<div class="dfoot"><div class="pred"><b>Prediction:</b> ${fPredict()} <span style="opacity:.6">(estimates)</span></div><button class="btn blue" data-a="frun">Confirm & run 6 hours</button></div></div>`;
+   ${predChips()}<div class="dfoot" style="justify-content:flex-end"><button class="btn blue" data-a="frun">Confirm & run 6 hours</button></div></div>`;
  }
  if(o.phase==='playing')body=journeyPanel();
  return `<div class="screen">${nav(2,'Wildfire Watch','Earth · Mission 2')}<div class="ops"><div>
@@ -887,11 +881,9 @@ function lDash(){const o=S.l,d=o.delta,x=live(lD());
    ${meter('Storage used',x.storagePct,100,v=>`<b>${Math.round(v)}%</b>`,x.storagePct>85?'bad':x.storagePct>60?'warn':'blue',dlt(d.st,'%'))}
    ${meter('Health',x.health,100,v=>`<b>${v}%</b>`,x.health<80?'warn':'',dlt(d.health,'%'))}</div>
   <div class="glass dash">
-   <div class="kv"><span>Mission time</span><b>${String(Math.floor(x.t)).padStart(2,'0')}:${String(Math.round((x.t%1)*60)).padStart(2,'0')} / 24:00 (${lt(x.t)})</b></div>
    <div class="kv"><span>Next pass · contact</span><b>${x.nextPass} · ${x.nextContact}</b></div>
    <div class="kv"><span>Town update</span><b style="color:${col(x.townStatus)}">${x.townStatus}</b></div>
-   ${x.safe?'<div class="kv"><span>Status</span><b style="color:var(--bad)">SAFE MODE</b></div>':''}
-   <div class="muted" style="font-size:12px;margin-top:8px">Map points count map value, not GB. Real satellites revisit a spot every few days; this game compresses it to 8 passes in 24 h.</div></div>
+   ${x.safe?'<div class="kv"><span>Status</span><b style="color:var(--bad)">SAFE MODE</b></div>':''}</div>
  </div>`;}
 V.lbuild=()=>{const t=lTotals();const okKg=t.kg<=LC.limits.kg,okM=t.m<=LC.limits.costM,ok=okKg&&okM;
  return `<div class="screen">${nav(0,'Flood Watch','Earth · Mission 3')}<div class="build">
@@ -917,7 +909,7 @@ V.lops=()=>{const o=S.l,ch=chx('flood',o.ci),r=lScan(),c=o.choice[o.ci];let body
  } else {
   body=`<div class="glass decision"><div class="dhead"><div class="ic">!</div><div><h3>${ch.title}</h3><p>${ch.sub}</p></div></div>
    <div class="opts">${ch.groups.map((g,gi)=>`<div class="og"><div class="lab">${g.lab}</div>${g.opts.map(op=>`<button class="opt ${c[gi]===op[0]?'on':''}" data-a="lopt" data-g="${gi}" data-v="${op[0]}"><div class="rd"></div><div><b>${op[1]}</b><span>${op[2]}</span></div></button>`).join('')}</div>`).join('')}</div>
-   ${predChips()}<div class="dfoot"><div class="pred"><b>Prediction:</b> ${lPredict()} <span style="opacity:.6">(estimates)</span></div><button class="btn blue" data-a="lrun">Confirm & run 6 hours</button></div></div>`;
+   ${predChips()}<div class="dfoot" style="justify-content:flex-end"><button class="btn blue" data-a="lrun">Confirm & run 6 hours</button></div></div>`;
  }
  if(o.phase==='playing')body=journeyPanel();
  return `<div class="screen">${nav(2,'Flood Watch','Earth · Mission 3')}<div class="ops"><div>
