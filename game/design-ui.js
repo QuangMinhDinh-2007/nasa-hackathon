@@ -111,32 +111,25 @@
     const foot = `<div class="bf-foot"><span class="muted" style="font-size:12.5px">${sel ? '' : 'Choose a goal to continue.'}</span>
         <button class="btn good" data-a="briefGo" ${sel ? '' : 'disabled'}>Build Your Satellite →</button></div>`;
 
-    if (m === 'storm') {
-      // Compact Storm Watch briefing: a student should understand the mission and pick a bonus goal
-      // in 5-10 seconds. Mandatory requirements and the full narrative move into one collapsed
-      // "Mission Details" section; the target cards, their ids, thresholds and measure() logic are
-      // the exact same TARGETS.storm entries used everywhere else (build screen, report).
-      return `<div class="screen page brief bf-compact">
-        <button class="linkback" data-a="go" data-to="missions">← All missions</button>
-        <div class="eyebrow" style="margin-top:14px">Mission briefing · ${D.NAME[m]}</div>
-        <h1 class="display">A Hurricane Is Coming!</h1>
-        <p class="lead">Track the storm and send images to forecasters before it's too late.</p>
-        <div class="bf-sec"><h2>Choose a Bonus Goal</h2><p>Pick one extra challenge.</p>${targetCards}</div>
-        <details class="bf-more"><summary>Mission Details</summary>
-          <div class="bf-req" style="margin-bottom:18px">${Q.req.map(r => `<div><b>Mandatory</b>${r}</div>`).join('')}</div>
-          <div class="bf-grid">${B.cards.map(c => `<div class="bf-card"><h3>${c[0]}</h3><p>${c[1]}</p><p class="muted">${c[2]}</p></div>`).join('')}</div>
-          <p class="muted" style="margin-top:10px;font-size:12.5px">${D.WHY_ORBIT[m]}</p></details>
-        ${foot}</div>`;
-    }
-    return `<div class="screen page brief">
+    // Compact briefing, all three missions: a student should understand the mission and pick a bonus
+    // goal in 5-10 seconds. Mandatory requirements and the full narrative move into one collapsed
+    // "Mission Details" section; the target cards, their ids, thresholds and measure() logic are the
+    // exact same TARGETS[m] entries used everywhere else (build screen, report). The orbit picker
+    // (Wildfire only; archPicker returns '' when a mission has just one orbit) stays visible, not
+    // collapsed, since it's a real decision, not narrative.
+    const HEADLINE = { storm: 'A Hurricane Is Coming!', fire: 'A Wildfire Is Spreading!', flood: 'A River Is Flooding!' };
+    const LEAD = { storm: "Track the storm and send images to forecasters before it's too late.", fire: "Track the fire and warn responders before it's too late.", flood: "Map the flood and warn the town before it's too late." };
+    return `<div class="screen page brief bf-compact">
       <button class="linkback" data-a="go" data-to="missions">← All missions</button>
       <div class="eyebrow" style="margin-top:14px">Mission briefing · ${D.NAME[m]}</div>
-      <h1 class="display">${Q.what}</h1>
-      <div class="bf-row"><div class="glass bf-mini"><b>Who needs you</b>${Q.who}</div><div class="glass bf-mini"><b>What makes it hard</b>${Q.hard}</div></div>
-      <div class="bf-chips"><span class="bf-lab">To succeed</span>${Q.req.map(r => `<span class="chip">${r}</span>`).join('')}</div>
-      <details class="bf-more"><summary>Read more</summary><div class="bf-grid">${B.cards.map(c => `<div class="bf-card"><h3>${c[0]}</h3><p>${c[1]}</p><p class="muted">${c[2]}</p></div>`).join('')}</div><p class="muted" style="margin-top:10px;font-size:12.5px">${D.WHY_ORBIT[m]}</p></details>
+      <h1 class="display">${HEADLINE[m]}</h1>
+      <p class="lead">${LEAD[m]}</p>
       ${archPicker(m)}
-      <div class="bf-sec"><h2>Pick your target</h2><p>One extra goal, measured after the flight. No points, just proof.</p>${targetCards}</div>
+      <div class="bf-sec"><h2>Choose a Bonus Goal</h2><p>Pick one extra challenge.</p>${targetCards}</div>
+      <details class="bf-more"><summary>Mission Details</summary>
+        <div class="bf-req" style="margin-bottom:18px">${Q.req.map(r => `<div><b>Mandatory</b>${r}</div>`).join('')}</div>
+        <div class="bf-grid">${B.cards.map(c => `<div class="bf-card"><h3>${c[0]}</h3><p>${c[1]}</p><p class="muted">${c[2]}</p></div>`).join('')}</div>
+        <p class="muted" style="margin-top:10px;font-size:12.5px">${D.WHY_ORBIT[m]}</p></details>
       ${foot}</div>`; };
 
   /* ================= 2. builder: target strip, part links, change note, redo banner ================= */

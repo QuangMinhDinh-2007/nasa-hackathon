@@ -65,47 +65,36 @@ const RV_GOALS = {
   fire: ['Warn about a new hotspot within 2 hours of detecting it.', 'Deliver at least 3 science points.', 'Deliver a final fire image by the end of the mission.', 'Keep the satellite powered.'],
   flood: ['Map all 3 zones of the valley.', 'Deliver at least 5 map points.', 'Deliver a fresh map of the town by the end.', 'Keep the satellite powered.'],
 };
-/* Short caution label by row key, for Storm Watch's single-caution popup line. The sentence itself is
- * still the engine's own dc row .risk text; this only supplies the short "Watch your ___" lead-in. */
-const RV_CAU_LABEL = { flow: 'Watch your data link', storage: 'Watch your storage', battery: 'Watch your battery', fault: 'Watch your battery' };
+/* Short caution label by row key, for the single-caution popup line, across all three missions. The
+ * sentence itself is still the engine's own dc row .risk text; this only supplies the short lead-in. */
+const RV_CAU_LABEL = { flow: 'Watch your data link', storage: 'Watch your storage', battery: 'Watch your battery', fault: 'Watch your battery', detect: 'Watch your detection strength', passes: 'Watch your usable passes' };
 
 mrr = function (m) { const X = MX[m], D = MissionDesign, dc = D.designCheck(m, X.design(), archOf(m)), L = dc.launch;
   const sum = dc.summary, tid = (S.target || {})[m], t = D.targetDef(m, tid), arch = m === 'fire' && typeof archLabel === 'function' ? archLabel() : '';
   const feas = dc.rows.filter(r => r.kind === 'feasibility'), risk = dc.cautions, info = dc.rows.filter(r => r.kind === 'info');
-  const launchLine = `${L.profile.name} to ${L.profile.orbit}${arch ? ` (${arch})` : ''}${L.ok ? ` — ${L.marginKg.toLocaleString()} kg of margin.` : '.'}`;
+  const launchLine = `${L.profile.name} to ${L.profile.orbit}${arch ? ` (${arch})` : ''}${L.ok ? `, ${L.marginKg.toLocaleString()} kg of margin.` : '.'}`;
 
-  let body;
-  if (m === 'storm') {
-    // Storm Watch: goal-focused layout. All four circles are empty here — nothing has launched yet,
-    // so no gate can be confirmed true. The same four goals update live once the mission is underway,
-    // in the Operate sidebar's Mission checklist (index.html, goalChecklist()), computed from the real
-    // simulation state (ENG.score(M).gates) after every challenge — never hand-set.
-    const hero = sum[0] === 'ok'
-      ? `<div class="rv-hero ok" role="status"><div class="ic" aria-hidden="true">✓</div><div><b>Ready to Launch!</b><p>Your satellite is ready. Complete these goals during your mission!</p><p class="rv-scope" style="margin-top:4px">${launchLine}</p></div></div>`
-      : `<div class="rv-hero ${sum[0]}" role="status"><div class="ic" aria-hidden="true">${RV[sum[0]][1]}</div><div><b>${sum[1]}</b><p>${sum[2]}</p><p class="rv-scope" style="margin-top:4px">${launchLine}</p></div></div>`;
-    const goals = `<p class="rv-h">Mission Goals</p><ul class="rv-cl">${RV_GOALS.storm.map(g => `<li><span class="o" aria-hidden="true"></span><span>${g}</span></li>`).join('')}</ul>${t ? `<div class="rv-tgt"><b style="color:#fff">Your target:</b> ${t.statement} <span class="muted">(${t.unit})</span></div>` : ''}`;
-    const checks = feas.every(r => r.st === 'ok')
-      ? `<p class="rv-sumline">✓ Mass, budget, storage and power checks passed.</p>`
-      : `<p class="rv-h">Checks Passed</p><div class="rv-chips">${feas.map(r => `<div class="rv-chip ${r.st}"><span class="dot" aria-hidden="true"></span><span>${r.label}</span><b>${r.val}</b></div>`).join('')}</div><p class="rv-facts">${feas.filter(r => r.st !== 'ok').map(r => `<b style="color:var(--bad)">${r.label}:</b> ${r.risk}`).join(' ')}</p>`;
-    const top = risk[0];
-    const caution = top ? `<div class="rv-cau-1"><span aria-hidden="true">⚠</span><span><b>${RV_CAU_LABEL[top.key] || 'Watch this'}</b> — ${top.risk}</span></div>` : '';
-    body = `${hero}${goals}${checks}${caution}`;
-  } else {
-    const hero = `<div class="rv-hero ${sum[0]}" role="status"><div class="ic" aria-hidden="true">${RV[sum[0]][1]}</div><div><b>${sum[1]}</b><p>${sum[2]}</p><p class="rv-scope" style="margin-top:4px">${launchLine}</p></div></div>`;
-    const goals = `<p class="rv-h">Mission Goals</p><ul class="rv-goals">${RV_GOALS[m].map((g, i) => `<li><i aria-hidden="true">${i + 1}</i>${g}</li>`).join('')}</ul>${t ? `<div class="rv-tgt"><b style="color:#fff">Your target:</b> ${t.statement} <span class="muted">(${t.unit})</span></div>` : ''}`;
-    const chip = r => `<div class="rv-chip ${r.st}"><span class="dot" aria-hidden="true"></span><span>${r.label}</span><b>${r.val}</b></div>`;
-    const checks = `<p class="rv-h">Checks Passed</p><div class="rv-chips">${feas.map(chip).join('')}</div>${feas.some(r => r.st !== 'ok') ? `<p class="rv-facts">${feas.filter(r => r.st !== 'ok').map(r => `<b style="color:var(--bad)">${r.label}:</b> ${r.risk}`).join(' ')}</p>` : ''}
-    <p class="rv-facts">${info.map(r => `${r.label}: ${r.val}`).join(' · ')}</p>`;
-    const watch = `<p class="rv-h">Things to Watch</p>${risk.length ? `<div class="rv-cau-grid">${risk.map(r => `<div class="rv-cau-card"><span class="ic" aria-hidden="true">⚠</span><div><b>${r.label}</b><p>${r.risk}</p></div></div>`).join('')}</div>` : `<p class="rv-none">✓ No cautions for this design.</p>`}`;
-    body = `${hero}${goals}${checks}${watch}`;
-  }
+  // Goal-focused layout, all three missions. All circles are empty here — nothing has launched yet, so
+  // no gate can be confirmed true. The same goals update live once the mission is underway, in the
+  // Operate sidebar's Mission checklist (index.html, goalChecklist()/fireGoalChecklist()/floodGoalChecklist()),
+  // computed from the real simulation state (eng.score(M).gates) after every challenge — never hand-set.
+  const hero = sum[0] === 'ok'
+    ? `<div class="rv-hero ok" role="status"><div class="ic" aria-hidden="true">✓</div><div><b>Ready to Launch!</b><p>Your satellite is ready. Complete these goals during your mission!</p><p class="rv-scope" style="margin-top:4px">${launchLine}</p></div></div>`
+    : `<div class="rv-hero ${sum[0]}" role="status"><div class="ic" aria-hidden="true">${RV[sum[0]][1]}</div><div><b>${sum[1]}</b><p>${sum[2]}</p><p class="rv-scope" style="margin-top:4px">${launchLine}</p></div></div>`;
+  const goals = `<p class="rv-h">Mission Goals</p><ul class="rv-cl">${RV_GOALS[m].map(g => `<li><span class="o" aria-hidden="true"></span><span>${g}</span></li>`).join('')}</ul>${t ? `<div class="rv-tgt"><b style="color:#fff">Your target:</b> ${t.statement} <span class="muted">(${t.unit})</span></div>` : ''}`;
+  const checks = feas.every(r => r.st === 'ok')
+    ? `<p class="rv-sumline">✓ Mass, budget, storage and power checks passed.</p>`
+    : `<p class="rv-h">Checks Passed</p><div class="rv-chips">${feas.map(r => `<div class="rv-chip ${r.st}"><span class="dot" aria-hidden="true"></span><span>${r.label}</span><b>${r.val}</b></div>`).join('')}</div><p class="rv-facts">${feas.filter(r => r.st !== 'ok').map(r => `<b style="color:var(--bad)">${r.label}:</b> ${r.risk}`).join(' ')}</p>`;
+  const top = risk[0];
+  const caution = top ? `<div class="rv-cau-1"><span aria-hidden="true">⚠</span><span><b>${RV_CAU_LABEL[top.key] || 'Watch this'}:</b> ${top.risk}</span></div>` : '';
+  const body = `${hero}${goals}${checks}${caution}`;
 
   // View Engineering Details — the full table, formulas, causes, launch margin and scope note, collapsed for every mission
   const tr = r => `<tr><td>${r.label}</td><td><b>${r.val}</b></td><td class="rv-st ${RV[r.st][0]}"><span aria-hidden="true">${RV[r.st][1]}</span> ${RV[r.st][2]}</td><td class="muted">${r.st === 'ok' ? r.note : `${r.risk}<span class="rv-cause">Cause: ${r.cause}</span>`}</td></tr>`;
   const tbl = rows => `<div style="overflow:auto"><table class="xtab"><tr><th>Check</th><th>Your design</th><th>Status</th><th>Why it matters</th></tr>${rows.map(tr).join('')}</table></div>`;
   const details = `<details class="rv-details"><summary>View Engineering Details</summary><div class="inner">
     <p class="rv-scope"><b style="color:#fff">Launch:</b> ${L.profile.name} to ${L.profile.orbit}${arch ? ` (${arch})` : ''}. ${L.ok ? `${L.marginKg.toLocaleString()} kg of margin.` : ''} ${L.profile.note} ${D.LAUNCH_COST_NOTE}</p>
-    ${tbl(feas)}${tbl(m === 'storm' ? dc.rows.filter(r => r.kind === 'risk') : (risk.length ? risk : dc.rows.filter(r => r.kind === 'risk')))}${tbl(info)}
+    ${tbl(feas)}${tbl(dc.rows.filter(r => r.kind === 'risk'))}${tbl(info)}
     <div class="rv-tgt"><b>What the mission must do:</b> ${D.GATES[m].map(g => g.threshold).join('; ')}.</div>
     <p class="rv-scope">${dc.scope} Mission Code: <b>${S.scn[m].code}</b>.</p></div></details>`;
 

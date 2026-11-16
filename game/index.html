@@ -700,9 +700,17 @@ function fPredict(){const o=S.f,c=o.choice[o.ci],ci=o.ci,P=o.M.P;
   if(ci===2)return `Battery drain ${c[0]==='normal'?(c[1]==='image'?'high':'medium'):(c[1]==='image'?'medium':'low')} · ${c[1]==='image'?'keeps watching the fire':'no images at 14:00'}`;
   const det=P.instrument.sens*WC.mode[o.choice[0][1]].detect*WC.footprint[c[0]].detect;
   return `${c[0]==='wide'?`Region C in view · detection strength ${det.toFixed(2)}`:'Region C not in view'} · sending ${c[1]==='fast'?'fast, more power':'half speed, less power'}`;}
+function fireGoalChecklist(){const o=S.f,M=o.M,sc=WF.score(M),x=live(fD());
+ const g4=M.failed?'x':(x.t>=24-1e-9&&sc.gates.G4)?'ok':'';
+ const items=[['Warn about a new hotspot within 2 hours of detecting it.',sc.gates.G2?'ok':''],['Deliver at least 3 science points.',sc.gates.G1?'ok':''],['Deliver a final fire image by the end of the mission.',sc.gates.G3?'ok':''],['Keep the satellite powered.',g4]];
+ const dot=s=>s==='ok'?'<span class="gl-dot ok" aria-hidden="true">✓</span>':s==='x'?'<span class="gl-dot x" aria-hidden="true">✕</span>':'<span class="gl-dot" aria-hidden="true"></span>';
+ const n=items.filter(i=>i[1]==='ok').length;
+ return `<div class="glass dash"><details open><summary class="gl-sum"><h4 style="margin:0"><i></i>Mission checklist</h4><span class="n">${n} / 4</span></summary>
+  <ul class="gl-list">${items.map(i=>`<li class="${i[1]}">${dot(i[1])}<span>${i[0]}</span></li>`).join('')}</ul></details></div>`;}
 function fDash(){const o=S.f,d=o.delta,x=live(fD()),M=o.M;
  const col=v=>v.startsWith('Delivered on')||v==='Delivered'?'var(--good)':v==='Missed'||v==='Not detected'||v==='Delivered late'?'var(--bad)':v==='Pending'?'var(--warn)':'#fff';
  return `<div class="side">
+  ${fireGoalChecklist()}
   <div class="glass dash"><h4><i></i>Mission goal</h4>
    ${meter('Passes covered',x.coveredPasses,4,v=>`<b>${v} / 4 passes</b>`,x.coveredPasses>=3?'':'warn',dlt(d.cov))}
    ${meter('Useful data delivered',x.deliveredScience,WC.requiredScience,v=>`<b>${fmt(v)} / ${WC.requiredScience} pts</b>`,x.deliveredScience>=WC.requiredScience?'':'warn',dlt(d.pts,' pts'))}</div>
@@ -874,9 +882,17 @@ function lPredict(){const o=S.l,c=o.choice[o.ci],ci=o.ci,P=o.M.P,opt=P.instrumen
   if(ci===1)return opt?`Clouds: 70% and 85% · ${c[0]==='mask'?'cloudy maps screened before storage':'cloudy maps stored anyway'}`:`Radar sees through clouds · ${c[0]==='mask'?'maps shrink to 30%':'2 GB-class maps fill storage fast'}`;
   if(ci===2)return opt?'Camera cannot map at night: focus on the battery and sending the backlog':`Radar night maps cost ${P.instrument.imgKW} kW each · battery drain ${c[0]==='normal'?'high':'lower'}`;
   return `${c[0]==='relay'?'Relay windows right after each pass':'Wait for the 06:30 and 09:30 contacts'} · sending ${c[1]==='eco'?'slower, less power':'full speed'}`;}
+function floodGoalChecklist(){const o=S.l,M=o.M,sc=FL.score(M),x=live(lD());
+ const g4=M.failed?'x':(x.t>=24-1e-9&&sc.gates.G4)?'ok':'';
+ const items=[['Map all 3 zones of the valley.',sc.gates.G2?'ok':''],['Deliver at least 5 map points.',sc.gates.G1?'ok':''],['Deliver a fresh map of the town by the end.',sc.gates.G3?'ok':''],['Keep the satellite powered.',g4]];
+ const dot=s=>s==='ok'?'<span class="gl-dot ok" aria-hidden="true">✓</span>':s==='x'?'<span class="gl-dot x" aria-hidden="true">✕</span>':'<span class="gl-dot" aria-hidden="true"></span>';
+ const n=items.filter(i=>i[1]==='ok').length;
+ return `<div class="glass dash"><details open><summary class="gl-sum"><h4 style="margin:0"><i></i>Mission checklist</h4><span class="n">${n} / 4</span></summary>
+  <ul class="gl-list">${items.map(i=>`<li class="${i[1]}">${dot(i[1])}<span>${i[0]}</span></li>`).join('')}</ul></details></div>`;}
 function lDash(){const o=S.l,d=o.delta,x=live(lD());
  const col=v=>v==='Delivered'?'var(--good)':v==='Missed'?'var(--bad)':v==='Pending'?'var(--warn)':'#fff';
  return `<div class="side">
+  ${floodGoalChecklist()}
   <div class="glass dash"><h4><i></i>Mission goal</h4>
    ${meter('Flood map coverage',x.coveredZones,3,v=>`<b>${v} / 3 zones</b>`,x.coveredZones>=3?'':'warn',dlt(d.cov))}
    ${meter('Useful maps delivered',x.delivered,LC.requiredMaps,v=>`<b>${fmt(v)} / ${LC.requiredMaps} map pts</b>`,x.delivered>=LC.requiredMaps?'':'warn',dlt(d.pts,' pts'))}</div>
@@ -1052,6 +1068,7 @@ render();
 <script src="floodui.js"></script>
 <script src="design-ui.js"></script>
 <script src="report.js"></script>
+<script src="report-ff.js"></script>
 <script src="ops-layout.js"></script>
 </body>
 </html>

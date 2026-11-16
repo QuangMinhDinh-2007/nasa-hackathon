@@ -1,5 +1,6 @@
 /* report.js — Storm Watch Final Mission Report, one full-height, no-clutter screen.
- * Replaces V.report (index.html) only. Fire/Flood reports are untouched.
+ * Replaces V.report (index.html) only. Fire/Flood use the same layout via report-ff.js,
+ * which reuses this file's .cr-* CSS and crBestChange/crPickLine/crBreakdownModal.
  * Uses only existing, already-computed data: scoreCard() (index.html), replayRun/chx
  * (upgrade.js), patchSvg/parScore (fun.js), SCORE_TEXT (final.js). No engine, score
  * formula, gate, or replay logic is touched — this file only changes what is displayed.
@@ -72,14 +73,15 @@ function crBestChange(m) {
   return { best, total: sc.total };
 }
 
-function crBreakdownModal() {
-  const s = scoreCard(), T = SCORE_TEXT.storm, pts = [s.sci, s.tim, s.res, s.rel], max = [35, 35, 20, 10];
+function crBreakdownModal(m) {
+  m = m || 'storm';
+  const sc = MX[m].eng.score(MX[m].st().M), T = SCORE_TEXT[m], pts = [sc.sci, sc.del, sc.eff, sc.rel].map(v => Math.round(v * 10) / 10), max = [35, 35, 20, 10];
   $('#layer').innerHTML = `<div class="modal-wrap"><div class="glass modal" style="max-width:640px;width:92vw" role="dialog" aria-label="How your score was calculated">
    <div class="eyebrow">Score breakdown</div><h2>How was my score calculated?</h2>
    ${T.names.map((n, i) => `<div class="cr-bd-row"><b>${n}: ${pts[i].toFixed(1)} / ${max[i]}</b><span>${T.how[i]}</span></div>`).join('')}
    <div class="acts" style="margin-top:16px"><button class="btn blue" data-a="closeLayer">Close</button></div></div></div>`;
 }
-document.addEventListener('click', e => { if (e.target.closest('[data-a="crBreakdown"]')) crBreakdownModal(); });
+document.addEventListener('click', e => { const b = e.target.closest('[data-a="crBreakdown"]'); if (b) crBreakdownModal(b.dataset.m); });
 
 V.report = () => {
   const o = S.ops, s = scoreCard(), chip = s.outcome === 'Mission Success' ? 'good' : s.outcome === 'Partial Success' ? 'warn' : 'bad';
@@ -104,7 +106,7 @@ V.report = () => {
    <div class="cr-right">
     <div class="glass cr-panel cr-decs-panel"><h3>Your Decisions</h3><div class="cr-decs">${o.log.map((L, i) => `<div class="cr-dec"><b>${i + 1}. ${CH[i].title}</b><span class="ch">${L.choices}</span><p>${crPickLine(L.good, L.trade)}</p></div>`).join('')}</div></div>
     <div class="glass cr-panel cr-try"><h3>Try Changing One Thing</h3>${tryHtml}</div>
-    <div class="glass cr-panel"><button class="cr-bd-btn" data-a="crBreakdown">How was my score calculated? ▸</button></div>
+    <div class="glass cr-panel"><button class="cr-bd-btn" data-a="crBreakdown" data-m="storm">How was my score calculated? ▸</button></div>
    </div>
   </div>
   <div class="acts-row" style="margin-top:12px"><button class="btn blue" data-a="retry">Try Again</button><button class="btn primary" data-a="nextMission">Next Mission →</button></div>
