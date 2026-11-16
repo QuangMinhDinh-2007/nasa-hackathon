@@ -54,6 +54,13 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .rv-cau-1{display:flex;align-items:flex-start;gap:9px;padding:10px 14px;border-radius:12px;background:#ffc85712;border:1px solid #ffc85744;font-size:13px;color:var(--muted);margin-top:8px}
 .rv-cau-1 b{color:var(--warn)}
 .rv-sumline{margin-top:8px;font-size:13px;color:var(--good)}
+.rv-pass{display:flex;align-items:center;gap:10px;margin:4px 0 2px;padding:10px 14px;border-radius:14px;background:#3ddc9722;border:2px solid var(--good);color:var(--good);font-size:16px;font-weight:700}
+.rv-pass span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--good);color:#032015;font-size:14px}
+.rv-block{margin:4px 0 2px;padding:12px 16px;border-radius:14px;background:#ff7a6b1f;border:2px solid var(--bad);color:#fff;font-size:15px}
+.rv-block b{color:var(--bad)}.rv-block ul{margin:6px 0 0 18px}.rv-block li{margin-top:4px;line-height:1.45}.rv-block li b{color:#fff}
+.rv-one{margin-top:6px;font-size:15px;line-height:1.45}.rv-watch{color:#ffe2a0}
+.rv-more{margin:4px 0 0 18px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.modal .rv-h{margin-top:16px;font-size:12.5px}.modal .rv-cl li{font-size:15px}
 </style>`);
 const RV = { ok: ['ok', '✓', 'Ready'], cau: ['cau', '⚠', 'Caution'], no: ['no', '✕', 'Not Ready'] };
 
@@ -74,31 +81,30 @@ mrr = function (m) { const X = MX[m], D = MissionDesign, dc = D.designCheck(m, X
   const feas = dc.rows.filter(r => r.kind === 'feasibility'), risk = dc.cautions, info = dc.rows.filter(r => r.kind === 'info');
   const launchLine = `${L.profile.name} to ${L.profile.orbit}${arch ? ` (${arch})` : ''}${L.ok ? `, ${L.marginKg.toLocaleString()} kg of margin.` : '.'}`;
 
-  // Goal-focused layout, all three missions. All circles are empty here — nothing has launched yet, so
-  // no gate can be confirmed true. The same goals update live once the mission is underway, in the
-  // Operate sidebar's Mission checklist (index.html, goalChecklist()/fireGoalChecklist()/floodGoalChecklist()),
-  // computed from the real simulation state (eng.score(M).gates) after every challenge — never hand-set.
-  const hero = sum[0] === 'ok'
-    ? `<div class="rv-hero ok" role="status"><div class="ic" aria-hidden="true">✓</div><div><b>Ready to Launch!</b><p>Your satellite is ready. Complete these goals during your mission!</p><p class="rv-scope" style="margin-top:4px">${launchLine}</p></div></div>`
-    : `<div class="rv-hero ${sum[0]}" role="status"><div class="ic" aria-hidden="true">${RV[sum[0]][1]}</div><div><b>${sum[1]}</b><p>${sum[2]}</p><p class="rv-scope" style="margin-top:4px">${launchLine}</p></div></div>`;
-  const goals = `<p class="rv-h">Mission Goals</p><ul class="rv-cl">${RV_GOALS[m].map(g => `<li><span class="o" aria-hidden="true"></span><span>${g}</span></li>`).join('')}</ul>${t ? `<div class="rv-tgt"><b style="color:#fff">Your target:</b> ${t.statement} <span class="muted">(${t.unit})</span></div>` : ''}`;
-  const checks = feas.every(r => r.st === 'ok')
-    ? `<p class="rv-sumline">✓ Mass, budget, storage and power checks passed.</p>`
-    : `<p class="rv-h">Checks Passed</p><div class="rv-chips">${feas.map(r => `<div class="rv-chip ${r.st}"><span class="dot" aria-hidden="true"></span><span>${r.label}</span><b>${r.val}</b></div>`).join('')}</div><p class="rv-facts">${feas.filter(r => r.st !== 'ok').map(r => `<b style="color:var(--bad)">${r.label}:</b> ${r.risk}`).join(' ')}</p>`;
-  const top = risk[0];
-  const caution = top ? `<div class="rv-cau-1"><span aria-hidden="true">⚠</span><span><b>${RV_CAU_LABEL[top.key] || 'Watch this'}:</b> ${top.risk}</span></div>` : '';
-  const body = `${hero}${goals}${checks}${caution}`;
+  // Main screen, all three missions, in this order: heading, one status line, goals (empty circles; they tick live
+  // in the Operate sidebar once flying), bonus goal, the single most important caution. Everything else is in details.
+  const ok = dc.canLaunch, top = risk[0];
+  const blockers = feas.filter(r => r.st === 'no').map(r => `<li><b>${r.label}:</b> ${r.risk}</li>`);
+  if (!L.ok) blockers.push(`<li><b>Rocket:</b> the satellite is too heavy for the launch vehicle.</li>`);
+  const status = ok
+    ? `<p class="rv-pass"><span aria-hidden="true">✓</span> Your satellite passed all launch checks.</p>`
+    : `<div class="rv-block" role="alert"><b>Launch is blocked. Fix this first:</b><ul>${blockers.length ? blockers.join('') : `<li>${sum[2]}</li>`}</ul></div>`;
+  const goals = `<p class="rv-h">Your Mission Goals</p><ul class="rv-cl">${RV_GOALS[m].map(g => `<li><span class="o" aria-hidden="true"></span><span>${g}</span></li>`).join('')}</ul>`;
+  const bonus = t ? `<p class="rv-h">Bonus Goal</p><p class="rv-one"><b>${t.title}:</b> ${t.statement}</p>` : '';
+  const caution = ok && top ? `<p class="rv-h">Watch Out</p><p class="rv-one rv-watch"><span aria-hidden="true">⚠</span> ${top.risk}</p>` : '';
+  const body = `<h2>${ok ? 'Ready to Launch!' : 'Not Ready to Launch'}</h2>${status}${goals}${bonus}${caution}`;
 
   // View Engineering Details — the full table, formulas, causes, launch margin and scope note, collapsed for every mission
   const tr = r => `<tr><td>${r.label}</td><td><b>${r.val}</b></td><td class="rv-st ${RV[r.st][0]}"><span aria-hidden="true">${RV[r.st][1]}</span> ${RV[r.st][2]}</td><td class="muted">${r.st === 'ok' ? r.note : `${r.risk}<span class="rv-cause">Cause: ${r.cause}</span>`}</td></tr>`;
   const tbl = rows => `<div style="overflow:auto"><table class="xtab"><tr><th>Check</th><th>Your design</th><th>Status</th><th>Why it matters</th></tr>${rows.map(tr).join('')}</table></div>`;
   const details = `<details class="rv-details"><summary>View Engineering Details</summary><div class="inner">
+    <p class="rv-scope"><b style="color:#fff">Check summary:</b> ${sum[1]}. ${sum[2]}</p>
+    ${risk.length > 1 ? `<p class="rv-scope"><b style="color:#fff">Other cautions:</b></p><ul class="rv-more">${risk.slice(1).map(r => `<li><b>${RV_CAU_LABEL[r.key] || r.label}:</b> ${r.risk}</li>`).join('')}</ul>` : ''}
+    ${t ? `<p class="rv-scope"><b style="color:#fff">Bonus goal measured as:</b> ${t.definition} (${t.unit})</p>` : ''}
     <p class="rv-scope"><b style="color:#fff">Launch:</b> ${L.profile.name} to ${L.profile.orbit}${arch ? ` (${arch})` : ''}. ${L.ok ? `${L.marginKg.toLocaleString()} kg of margin.` : ''} ${L.profile.note} ${D.LAUNCH_COST_NOTE}</p>
     ${tbl(feas)}${tbl(dc.rows.filter(r => r.kind === 'risk'))}${tbl(info)}
     <div class="rv-tgt"><b>What the mission must do:</b> ${D.GATES[m].map(g => g.threshold).join('; ')}.</div>
     <p class="rv-scope">${dc.scope} Mission Code: <b>${S.scn[m].code}</b>.</p></div></details>`;
 
-  $('#layer').innerHTML = `<div class="modal-wrap"><div class="glass modal" style="max-width:900px;width:94vw;max-height:92vh;overflow:auto" role="dialog" aria-label="Mission Readiness Review"><div class="eyebrow">Mission Readiness Review · ${X.name}</div>
-    <h2>Ready to Launch?</h2>
-    ${body}${details}
+  $('#layer').innerHTML = `<div class="modal-wrap"><div class="glass modal" style="max-width:900px;width:94vw;max-height:92vh;overflow:auto" role="dialog" aria-label="Mission Readiness Review, ${X.name}">${body}${details}
     <div class="acts" style="margin-top:18px"><button class="btn ghost" data-a="mrrBack">Change Design</button><button class="btn good" data-a="goLaunch" data-m="${m}" ${dc.canLaunch ? '' : 'disabled aria-disabled="true"'}>Launch Mission</button></div></div></div>`; };

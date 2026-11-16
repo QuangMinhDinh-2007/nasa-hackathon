@@ -128,7 +128,7 @@
     return `<div class="screen e-room m-${m}"><div class="room-stage" id="roomStage">${svg}
       ${Object.keys(HOT).map(k => { const p = HOT[k], on = k === act, L = doneHot[k];
         return `<button class="rhot ${on ? 'is-go' : ''} ${L ? 'is-done' : ''}" data-e="hot" data-hot="${k}" style="left:${p[0]}%;top:${p[1]}%;width:${p[2]}%;height:${p[3]}%" aria-label="${T.hotName[k]}${on ? ' (next step)' : ''}">
-          <span class="rhot-lab">${T.hotName[k]}</span>${on ? '<span class="rhot-arrow" aria-hidden="true"></span>' : ''}
+          <span class="rhot-lab">${T.hotName[k]}</span>${on ? '<span class="rhot-arrow" aria-hidden="true"><svg viewBox="0 0 48 52"><path d="M14 4h20v18h10L24 48 4 22h10z" fill="#ff8f7a" stroke="#4a3b63" stroke-width="4" stroke-linejoin="round"/></svg></span>' : ''}
           ${L && !on ? `<span class="rhot-badge ${L.met ? 'ok' : 'no'}" title="${esc(L.badge)}">${L.met ? '✓' : '!'}</span>` : ''}${tag[k] ? `<span class="rhot-tag">${tag[k]}</span>` : ''}</button>`; }).join('')}
       <button class="room-echo" data-e="hint" style="left:${ex}%;top:${ey}%" aria-label="Ask ECHO for a hint">${A.echo(g === 'report' ? 'cheer' : 'happy')}</button>
       <div class="room-goal" role="status"><small>${T.episodes[m].tag}${flying ? ' · ' + esc(S.scn[m].code) : ''}</small>${esc(objective(m))}</div>
@@ -302,6 +302,21 @@
     if (scr === 'room') roomFocus();
     hud(); }
   const _render = render; render = function () { _render(); dress(); };
+  // Gameplay sidebar: the checklist, goal and status boxes become one "Mission Overview" panel. String in, string out,
+  // so live updates during playback (which re-render the sidebar from dash()/fDash()/lDash()) keep the same layout.
+  function overview(html) { const t = document.createElement('div'); t.innerHTML = html; const side = t.querySelector('.side'); if (!side) return html;
+    const boxes = [...side.children].filter(c => c.classList.contains('dash') && !c.querySelector('.mini-globe')); if (!boxes.length) return html;
+    const sec = { check: '', prog: '', stat: '' };
+    boxes.forEach(b => { const h = b.querySelector(':scope > h4'), name = h ? h.textContent.trim() : '';
+      if (b.querySelector(':scope > details')) sec.check += b.innerHTML;
+      else if (/goal/i.test(name)) { h.remove(); sec.prog += b.innerHTML; }
+      else if (/status/i.test(name)) { h.remove(); sec.stat = b.innerHTML + sec.stat; }
+      else sec.stat += `<div class="mo-extra">${b.innerHTML}</div>`; b.remove(); });
+    side.insertAdjacentHTML('beforeend', `<div class="glass dash mo"><h3 class="mo-title">Mission Overview</h3>
+      ${sec.check ? `<div class="mo-sec mo-check">${sec.check}</div>` : ''}<div class="mo-sec"><h4>Mission Progress</h4>${sec.prog}</div><div class="mo-sec"><h4>Satellite Status</h4>${sec.stat}</div></div>`);
+    return t.innerHTML; }
+  const wrapDash = f => function () { return overview(f.apply(this, arguments)); };
+  dash = wrapDash(dash); fDash = wrapDash(fDash); lDash = wrapDash(lDash);
   const _mrr = mrr; mrr = function (m) { _mrr(m); const h = document.querySelector('#layer .modal h2, #layer h2'); const ok = !(document.querySelector('#layer [data-a="goLaunch"]') || {}).disabled;
     const box = document.querySelector('#layer .modal-wrap > *'); if (box && !box.querySelector('.er-dir')) box.insertAdjacentHTML('afterbegin', `<div class="er-dir"><div class="et-face">${A.director()}</div><p><b>Flight Director</b>${ok ? T.ui.reviewOk : T.ui.reviewNo}</p></div>`); };
 
