@@ -216,3 +216,54 @@ body.echo #layer .cls.A{background:#17704a!important}body.echo #layer .cls.C{bac
 /* briefing: text that sits on the blue page stays light; only the cards are paper */
 body.echo:is([data-scr="brief"]) #app{--text:#fff;--muted:rgba(255,255,255,.9);--dim:rgba(255,255,255,.82);color:#fff}
 body.echo:is([data-scr="brief"]) :is(.tg,.bf-more[open]){--text:var(--p-ink);--muted:var(--p-ink2);--dim:var(--p-dim)}
+/* Storm Watch Challenge 4: ranking cards, Kim's tip, settings, transmission plan */
+body.echo .ix.c4{display:flex;flex-direction:column;gap:12px}
+body.echo .c4kim{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:16px;background:#fff;border:2px solid var(--p-ink);color:var(--p-ink)}
+body.echo .c4face{flex:none;width:56px;height:56px}body.echo .c4face svg{width:100%;height:100%}
+body.echo .c4kim b{font-family:var(--e-display,inherit);font-size:18px;color:var(--p-blue)}body.echo .c4kim p{margin:4px 0 0;font-size:16px;line-height:1.45;color:var(--p-ink)}
+body.echo .c4kim .c4coach{font-weight:700}
+body.echo .c4hint{margin:0;font-size:16px;font-weight:800;color:var(--p-ink)}
+body.echo .c4why{margin:0;font-size:15px;line-height:1.4;color:var(--p-ink2)}
+body.echo .c4q{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+body.echo .c4c{display:grid;grid-template-columns:34px 44px 1fr auto auto;align-items:center;gap:10px;min-height:60px;padding:6px 10px;border-radius:14px;background:#fff;border:2px solid var(--p-ink);color:var(--p-ink);transition:transform .15s ease,box-shadow .15s}
+body.echo .c4q.sorting .c4c:not(.dragging){transition:transform .15s ease}
+body.echo .c4c.dragging{transition:none;z-index:5;position:relative;box-shadow:0 10px 24px #4a3b6355;background:#fff8d6;border-color:var(--p-blue)}
+body.echo .c4n{display:grid;place-items:center;width:32px;height:32px;border-radius:50%;background:var(--p-ink);color:#fff;font-weight:800;font-size:16px}
+body.echo .c4h{width:44px;height:44px;border-radius:10px;border:2px solid var(--p-ink);background:var(--p-tint,#f3ead8);color:var(--p-ink);font-size:22px;cursor:grab;touch-action:none}
+body.echo .c4h:active{cursor:grabbing}
+body.echo .c4m{display:flex;flex-direction:column;min-width:0}body.echo .c4m b{font-size:17px}body.echo .c4m span{font-size:15px;color:var(--p-ink2)}
+body.echo .c4eta{font-size:15px;font-weight:800}body.echo .c4c.ok .c4eta{color:var(--p-good)}body.echo .c4c.late .c4eta{color:var(--p-bad)}
+body.echo .c4ud{display:flex;gap:6px}
+body.echo .c4b{width:44px;height:44px;border-radius:10px;border:2px solid var(--p-ink);background:#fff;color:var(--p-ink);font-size:20px;font-weight:800;cursor:pointer}
+body.echo .c4b:disabled{opacity:.35;cursor:default}
+body.echo :is(.c4h,.c4b,.c4all,.c4seg button,.c4det summary):focus-visible{outline:3px solid var(--p-blue);outline-offset:2px}
+body.echo .c4more{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font-size:15px;color:var(--p-ink2)}
+body.echo .c4all{min-height:40px;padding:6px 14px;border-radius:12px;border:2px solid var(--p-ink);background:#fff;color:var(--p-ink);font:inherit;font-size:16px;font-weight:800;cursor:pointer}
+body.echo .c4sets{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+body.echo .c4set{display:flex;flex-direction:column;gap:6px}
+body.echo .c4lab{font-size:15px;font-weight:800;color:var(--p-ink)}
+body.echo .c4seg{display:flex;border:2px solid var(--p-ink);border-radius:12px;overflow:hidden;background:#fff}
+body.echo .c4seg button{flex:1;min-height:44px;border:0;background:transparent;color:var(--p-ink2);font:inherit;font-size:16px;font-weight:800;cursor:pointer;padding:4px 6px}
+body.echo .c4seg button+button{border-left:2px solid var(--p-ink)}
+body.echo .c4seg button.on{background:var(--p-ink);color:#fff}
+body.echo .c4plan{padding:10px 14px;border-radius:14px;background:#fff;border:2px solid var(--p-ink);color:var(--p-ink)}
+body.echo .c4plan h4{margin:0 0 4px;font-size:17px}body.echo .c4plan ul{margin:0;padding-left:20px;font-size:16px;line-height:1.5}
+body.echo .c4plan li.good b{color:var(--p-good)}body.echo .c4plan li.bad,body.echo .c4warn{color:var(--p-bad);font-weight:700}
+body.echo .c4det{margin-top:4px;font-size:15px}body.echo .c4det summary{cursor:pointer;font-weight:800;color:var(--p-blue)}body.echo .c4det ol{margin:6px 0;padding-left:22px}
+body.echo .c4go{display:flex;justify-content:flex-end}
+@media(max-width:1000px){body.echo .c4sets{grid-template-columns:1fr}body.echo .c4c{grid-template-columns:30px 44px 1fr auto}body.echo .c4eta{grid-column:3;grid-row:2;font-size:14px}}
+/* Kim below "Full Engineering Report": own block, bubble on Kim's right */
+body.echo .e-kimhint{display:flex;align-items:center;gap:14px;margin:12px 0 0;background:none;border:0;padding:0}
+body.echo .e-kimhint .e-kf{width:112px;height:112px;flex:none}body.echo .e-kimhint .e-kf svg{width:100%;height:100%}
+body.echo .e-kimhint .e-kb{position:relative;padding:10px 16px;border-radius:16px;background:#fff;border:2.5px solid var(--p-ink);color:var(--p-ink);font-size:17px;font-weight:800;line-height:1.35;max-width:340px}
+body.echo .e-kimhint .e-kb::before{content:"";position:absolute;left:-12px;top:50%;margin-top:-9px;border:9px solid transparent;border-right-color:var(--p-ink);border-left:0}
+body.echo .e-kimhint .e-kb::after{content:"";position:absolute;left:-8px;top:50%;margin-top:-7px;border:7px solid transparent;border-right-color:#fff;border-left:0}
+@media(max-width:600px){body.echo .e-kimhint .e-kf{width:84px;height:84px}}
+/* Kim under Mission Overview during challenges */
+body.echo .e-sidekim{display:flex;align-items:flex-start;gap:10px;margin-top:12px}
+body.echo .e-sk-face{flex:none;width:64px;height:64px;padding:0;border:0;background:none;cursor:pointer;border-radius:50%}
+body.echo .e-sk-face svg{width:100%;height:100%}body.echo .e-sk-face:focus-visible{outline:3px solid var(--p-blue);outline-offset:2px}
+body.echo .e-sk-say{position:relative;flex:1;min-width:0;margin:6px 0 0;padding:8px 12px;border-radius:14px;background:var(--p-card);border:2px solid var(--p-ink);color:var(--p-ink);font-size:16px;line-height:1.4}
+body.echo .e-sk-say b{display:block;font-size:14px;color:var(--p-blue)}
+body.echo .e-sk-say::before{content:"";position:absolute;left:-10px;top:18px;border:8px solid transparent;border-right-color:var(--p-ink);border-left:0}
+body.echo .e-navplain:empty{display:none}

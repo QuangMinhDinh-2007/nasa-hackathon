@@ -274,6 +274,7 @@
       case 'flDelYes': { const fid = E.flDelAsk; E.flDelAsk = null; Saves.drop(fid); delete lastSig[fid]; MS.forEach(m => { if (E.fid[m] === fid) E.closed = fid; }); account(); if (['title', 'missions'].includes(S.screen)) render(); break; }
       case 'resume': Sfx.confirm(); S.mission = b.dataset.m; E.cur = b.dataset.m; toRoom(); break;
       case 'hot': hotClick(b.dataset.hot); break;
+      case 'sideHint': { const m = mOfScreen(S.screen); Sfx.chirp(); if (m) talk([{ who: 'echo', say: tipFor(S.screen, m), mood: 'think' }]); break; }
       case 'hint': { const m = S.mission, g = stage(m), M = T.missions[m]; Sfx.chirp();
         talk([{ who: 'echo', say: g === 'goal' ? M.goalHint : g === 'design' ? M.designHint : g === 'review' ? M.reviewHint : g === 'report' ? T.ui.report : M.ch[+g[1]].lines[M.ch[+g[1]].lines.length - 1].say, mood: 'think' }]); break; }
       case 'note': Sfx.page(); notebook(b.dataset.tab); break; case 'noteClose': Sfx.click(); elNote.hidden = true; elNote.innerHTML = ''; break;
@@ -490,7 +491,7 @@
     hudEl.hidden = true; hudEl.innerHTML = '';
     if (scr === 'room' || scr === 'title' || scr === 'missions') return;
     if (navEl && m) { const steps = navEl.querySelector('.steps'), who = navEl.querySelector('.who'), hs = scr === OPS[m] && st(m) ? T.hot[m][st(m).ci] : scr === BUILD[m] ? 'bench' : scr === REPORT[m] ? 'board' : '';
-      if (steps) { steps.className = 'steps e-navtip'; steps.innerHTML = `<span class="e-navface">${A.echo('happy')}</span><span class="e-navsay" role="status">${hs ? `<b>${T.hotName[hs]}</b>` : ''}${esc(tipFor(scr, m))}</span>`; }
+      if (steps) { steps.className = 'steps e-navtip'; steps.innerHTML = scr === OPS[m] ? `<span class="e-navsay e-navplain" role="status">${hs ? `<b>${T.hotName[hs]}</b>` : ''}</span>` : `<span class="e-navface">${A.echo('happy')}</span><span class="e-navsay" role="status">${hs ? `<b>${T.hotName[hs]}</b>` : ''}${esc(tipFor(scr, m))}</span>`; }
       if (who) who.innerHTML = bookBtn(); return; }
     hudEl.hidden = false; hudEl.innerHTML = bookBtn(); }
   // the compact final report stays as it is; ECHO adds one short line under the score, chosen by the engine's outcome and gates
@@ -499,6 +500,11 @@
     const fs = parseFloat(getComputedStyle(el).fontSize); if (!(fs < 14)) return;
     const body = /^(P|LI|TD)$/.test(el.tagName) && !/muted|lab|rv-st|ms|chip/.test(el.className) && !el.closest('th');
     el.style.fontSize = (body ? 16 : 14) + 'px'; }); }
+  // Kim beside the "Full Engineering Report" button; gone for good once the report is opened
+  function kimHint(m) { const d = document.querySelector('#app details.cr-full'), sm = d && d.querySelector(':scope > summary'), s = st(m); if (!sm || !s || s.kimSeen || d.open) return;
+    if (d.nextElementSibling && d.nextElementSibling.classList.contains('e-kimhint')) return;
+    d.insertAdjacentHTML('afterend', `<div class="e-kimhint" role="note"><span class="e-kf" aria-hidden="true">${A.echo('happy')}</span><span class="e-kb">Want to see the full engineering report? Click here!</span></div>`);
+    d.addEventListener('toggle', () => { if (d.open) { s.kimSeen = true; const h = d.nextElementSibling; if (h && h.classList.contains('e-kimhint')) h.remove(); } }); }
   function reportDress(m) { const hero = document.querySelector('#app .cr-hero'); if (!hero || hero.querySelector('.e-rline')) return; const s = st(m); if (!s || !s.M) return;
     const sc = MX[m].eng.score(s.M), M = T.missions[m], k = sc.outcome === 'Mission Success' ? 'success' : sc.outcome === 'Partial Success' ? 'partial' : 'fail';
     const missed = ['G1', 'G2', 'G3', 'G4'].filter(g => !sc.gates[g]), line = k === 'success' ? M.end[k][1] : missed.length ? M.gateLine[missed[0]] : M.end[k][1];
@@ -511,7 +517,7 @@
       const g = document.querySelector('#app [data-a="briefGo"]'); if (g) g.textContent = 'Lock in this goal ▸';
       const h = document.querySelector('#app .brief h1'); if (h && !document.querySelector('.e-brief-art')) h.insertAdjacentHTML('beforebegin', `<div class="e-brief-art" aria-hidden="true">${A.scene({ storm: 'storm1', fire: 'fire1', flood: 'flood1' }[S.mission] || 'storm1', S.mission)}</div>`); }
     if (m && scr === BUILD[m]) document.querySelectorAll('#app [data-a="mrr"]').forEach(x => { x.textContent = 'Done! Take it to launch ▸'; });
-    if (m && scr === REPORT[m]) { reportDress(m); saveResult(m); const s = st(m); if (s && s.record && (s.echoSaved || !P.cur())) closeFlight(m); bumpSmall(document.querySelector('#app .cr-full-in')); }
+    if (m && scr === REPORT[m]) { reportDress(m); kimHint(m); saveResult(m); const s = st(m); if (s && s.record && (s.echoSaved || !P.cur())) closeFlight(m); bumpSmall(document.querySelector('#app .cr-full-in')); }
     else checkpoint(m || S.mission);
     if (scr === 'room') roomFocus();
     hud(); }
@@ -531,8 +537,11 @@
     const n = (tmp.querySelector('.gl-sum .n') || {}).textContent || '';
     const mini = `<div class="mo-mini">${[['Goals', n], ['Data on Earth', val(/delivered/i)], ['Battery', val(/^battery/i)], ['Storage', val(/^storage/i)]].map(x => `<div><span>${x[0]}</span><b>${x[1]}</b></div>`).join('')}</div>`;
     side.insertAdjacentHTML('beforeend', `<div class="glass dash mo ${open ? '' : 'mo-closed'}"><div class="mo-top"><h3 class="mo-title">Mission Overview</h3><button class="mo-tog" data-e="moToggle" aria-expanded="${open}">${open ? 'Show less ▴' : 'Show all ▾'}</button></div>
-      ${open ? `${sec.check ? `<div class="mo-sec mo-check">${sec.check}</div>` : ''}<div class="mo-sec"><h4>Mission Progress</h4>${sec.prog}</div><div class="mo-sec"><h4>Satellite Status</h4>${sec.stat}</div>` : mini}</div>`);
+      ${open ? `${sec.check ? `<div class="mo-sec mo-check">${sec.check}</div>` : ''}<div class="mo-sec"><h4>Mission Progress</h4>${sec.prog}</div><div class="mo-sec"><h4>Satellite Status</h4>${sec.stat}</div>` : mini}</div>${sideKim()}`);
     return t.innerHTML; }
+  // Kim during a challenge: under Mission Overview, with the current hint. Clicking Kim repeats it.
+  function sideKim() { const m = mOfScreen(S.screen); if (!m || S.screen !== OPS[m]) return ''; const t = tipFor(S.screen, m); if (!t) return '';
+    return `<div class="e-sidekim"><button class="e-sk-face" data-e="sideHint" aria-label="Ask Kim to repeat the hint">${A.echo('happy')}</button><p class="e-sk-say" role="status"><b>Kim</b>${esc(t)}</p></div>`; }
   const wrapDash = f => function () { return overview(f.apply(this, arguments)); };
   dash = wrapDash(dash); fDash = wrapDash(fDash); lDash = wrapDash(lDash);
   const _mrr = mrr; mrr = function (m) { _mrr(m); const h = document.querySelector('#layer .modal h2, #layer h2'); const ok = !(document.querySelector('#layer [data-a="goLaunch"]') || {}).disabled;

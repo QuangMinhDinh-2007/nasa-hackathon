@@ -61,6 +61,7 @@ const A = {
     st.choice[ci] = chx(m, ci).groups.map((g, gi) => g.opts[(alt ? g.opts.length - 1 : set === 0 ? 0 : set === 1 ? Math.min(1, g.opts.length - 1) : (ci + gi) % Math.min(2, g.opts.length))][0]);
     if (m === 'storm' && ci === 0) { ixGet(); ixSetBox(alt ? { x: .3, y: .3, w: .9 } : { x: .46, y: .42, w: .6 }); }
     if (m === 'fire' && (ci === 0 || ci === 3)) { fireTask(); S.f.task[ci].regions = alt ? ['C'] : ci === 0 ? ['A', 'B'] : ['B']; fireTask(); }
+    if (m === 'storm' && ci === 3 && q('[data-a="c4Move"]')) { const b = q(alt ? '[data-a="c4Move"][data-k="1"][data-d="-1"]' : '[data-a="c4Move"][data-k="0"][data-d="1"]'); if (b) b.click(); const u = qa('[data-a="c4Move"][data-d="-1"]:not([disabled])').pop(); if (u && !alt) u.click(); }
     if (m === 'flood' && ci === 0) { floodTask(); S.l.task[0].zones = alt ? ['ALL', 'ALL'] : S.l.M.C.targets[0].slice(); floodTask(); }
     render(); await sleep(30); },
   ch: async (m, a) => { const ci = a.ci; await hot(); await until(() => q(ACC), 5000, 'alert ' + ci); q(ACC).click(); await sleep(60); await A.decide(m, ci, a.set);
@@ -141,7 +142,7 @@ const rewindSame = (m, opt) => flight(m, opt).slice(0, -1).concat([
   { do: [['report'], ['improve', { part: 0 }]], rec: 'first' }, { do: [['launch']] },
   { do: [['redo', { same: true }], ['report']], rec: 'end' }]);
 
-const CASES = [
+const CASES = process.env.C4ONLY ? [] : [
   ['storm', 'PRACTICE', { set: 0 }, flight], ['storm', 'ECHO-TEST-1', { set: 2, t: 1 }, flight],
   ['fire', 'ECHO-TEST-1', { set: 0, arch: 'dawn-dusk-sso' }, flight], ['fire', 'PRACTICE', { set: 2 }, flight],
   ['flood', 'ECHO-TEST-2', { set: 2, t: 2 }, flight], ['flood', 'PRACTICE', { set: 0, t: 1 }, flight],
@@ -274,6 +275,56 @@ window.addEventListener('load', () => setTimeout(async () => { try {
   q('[data-e="begin"]').click(); await sleep(60); ok('a refreshed guest is asked again', q('#echoAcct:not([hidden])'));
   done(); } catch (e) { fail(e); } }, 400));`;
 
+
+/* ---- Storm Watch Challenge 4 ranking ---- */
+const C4CASE = LIB + `
+window.addEventListener('load', () => setTimeout(async () => { try {
+  const Q = sel => { const e = q(sel); if (!e) throw new Error('missing ' + sel + ' screen ' + S.screen); return e; }; ECHO.test.fast(); const m = 'storm'; await A.profile(null, 'Di'); await A.code(m, 'ECHO-TEST-2'); await A.start(m); await A.code(m, 'ECHO-TEST-2'); await A.goal(m); await A.design(m, 2); await A.launch(m);
+  for (let ci = 0; ci < 3; ci++) await A.ch(m, { ci, set: 1 });
+  await hot(); await until(() => q(ACC), 5000, 'alert'); q(ACC).click(); await sleep(80);
+  const st = MX.storm.st(), x = st.ix[3], n = x.order.length, base = x.order.slice(), five = C4UI.fiveIds(st.M), s0 = simCalls, sorted = a => a.slice().sort((p, q) => p - q).join();
+  ok('queue has more than five images', n > 5, n); if (n <= 5) { done(); return; } ok('the ranking edits the engine structure', st.M.ext[3] === x);
+  ok('exactly five cards', qa('.c4c').length === Math.min(5, n), qa('.c4c').length);
+  ok('the five: default top picks plus the newest image', five.length === 5 && onboard(st.M).slice(0, 4).every(r => five.includes(r.id)) && five.includes(onboard(st.M).slice().sort((a, b) => b.t - a.t || b.id - a.id)[0].id));
+  ok('explains why these five', /scientific value and freshness/.test(q('#ixPanel').textContent));
+  ok('Kim\\'s tip with both ways to move', /Drag and drop the images.*↑ and ↓/.test(q('.c4kim').textContent) && /Drag to reorder, or use ↑ ↓/.test(q('.c4hint').textContent));
+  ok('first ↑ and last ↓ disabled', Q('.c4c:first-child [data-d="-1"]').disabled && Q('.c4c:last-child [data-d="1"]').disabled);
+  const nums = () => qa('.c4n').map(e => +e.textContent), idsShown = () => qa('.c4m b').map(e => +e.textContent.replace(/\\D/g, ''));
+  ok('cards show their real queue positions', JSON.stringify(nums()) === JSON.stringify(C4UI.shown().map(v => v[1] + 1)));
+  const hidden = base.map((id, i) => [id, i]).filter(v => !five.includes(v[0]));
+  const id0 = idsShown()[0], id1 = idsShown()[1];
+  Q('.c4c:first-child [data-d="1"]').click(); await sleep(30); const viaBtn = x.order.slice();
+  ok('↓ moves the first card one place down', idsShown()[0] === id1 && idsShown()[1] === id0 && JSON.stringify(nums()) === JSON.stringify(C4UI.shown().map(v => v[1] + 1)));
+  x.order.splice(0, n, ...base); ECHO.test.fast(); render(); await sleep(30);
+  // drag the first card down by one step
+  const h = Q('.c4c:first-child [data-c4="grab"]'), r0 = Q('.c4c:nth-child(1)').getBoundingClientRect(), r1 = Q('.c4c:nth-child(2)').getBoundingClientRect(), y = r0.top + 10;
+  h.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientY: y, pointerId: 1 })); document.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientY: y + (r1.top - r0.top), pointerId: 1 }));
+  ok('while dragging the card is highlighted', Q('.c4c.dragging')); document.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 })); await sleep(30);
+  ok('drag and buttons give the same queue', JSON.stringify(x.order) === JSON.stringify(viaBtn), JSON.stringify(x.order) + ' vs ' + JSON.stringify(viaBtn));
+  x.order.splice(0, n, ...base); render(); await sleep(30);
+  Q('.c4c:first-child [data-c4="grab"]').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); await sleep(30);
+  ok('keyboard gives the same queue', JSON.stringify(x.order) === JSON.stringify(viaBtn));
+  // move the newest (5th card) to the top in the five view: hidden images keep their places
+  for (let k = 4; k > 0; k--) { Q('.c4c:nth-child(' + (k + 1) + ') [data-d="-1"]').click(); await sleep(20); }
+  ok('hidden images never move in the five-card view', hidden.every(v => x.order[v[1]] === v[0]));
+  ok('no image removed or duplicated', sorted(x.order) === sorted(base) && x.order.length === n);
+  const keep = x.order.slice(); Q('[data-a="c4All"]').click(); await sleep(30);
+  ok('Show all lists every image', qa('.c4c').length === n && JSON.stringify(x.order) === JSON.stringify(keep));
+  Q('.c4c:last-child [data-d="-1"]').click(); await sleep(30); const full = x.order.slice();
+  ok('full view moves any image', JSON.stringify(full) !== JSON.stringify(keep) && sorted(full) === sorted(base));
+  Q('[data-a="c4All"]').click(); await sleep(30); ok('switching views keeps the ranking', JSON.stringify(x.order) === JSON.stringify(full) && qa('.c4c').length === 5);
+  Q('[data-a="opt"][data-g="0"][data-v="fast"]').click(); await sleep(30); Q('[data-a="ixNew"][data-v="0"]').click(); await sleep(30);
+  ok('settings still work and keep the ranking', st.choice[3][0] === 'fast' && x.newFirst === false && JSON.stringify(x.order) === JSON.stringify(full));
+  ok('plan shows delivery, fresh image and battery', /of \\d+ waiting/.test(q('.c4plan').textContent) && /storm image/.test(q('.c4plan').textContent) && /Lowest battery/.test(q('.c4plan').textContent));
+  ok('Kim sits under Mission Overview, not in the top bar', q('.side .mo + .e-sidekim .e-sk-say') && !q('.nav .e-navface'));
+  ok('nothing ran before Confirm', simCalls === s0 && st.phase === 'choose' && st.ci === 3);
+  const want = x.order.slice(); q(RUN).click(); await until(() => st.phase === 'result', 120000, 'run');
+  ok('Confirm runs once with the chosen ranking', simCalls === s0 + 1 && JSON.stringify(st.M.ext[3].order) === JSON.stringify(want));
+  q(NEXT).click(); await sleep(400); await A.report(m);
+  const sm = q('details.cr-full > summary'); const kh = q('details.cr-full + .e-kimhint'); ok('Kim stands beside the report button, outside it', kh && !sm.querySelector('.e-kimhint') && /Click here/.test(kh.textContent));
+  sm.click(); await sleep(30); ok('opening the report hides Kim for good', q('details.cr-full').open && !q('.e-kimhint')); sm.click(); render(); await sleep(30); ok('closing does not bring Kim back', !q('.e-kimhint'));
+  done(); } catch (e) { fail(e); } }, 400));`;
+
 /* ---- run ---- */
 let pass = 0, failN = 0; const bad = [];
 const tally = (tag, res) => res.checks.forEach(c => { if (c[1]) pass++; else { failN++; bad.push(tag + ': ' + c[0] + (c[2] ? ' (' + c[2] + ')' : '')); } });
@@ -288,8 +339,8 @@ for (const [m, code, opt, make] of CASES) {
   if (make !== flight) { if (e.compare && e.attempt && e.attempt.n === 2) pass++; else { failN++; bad.push(tag + ': before/after comparison missing or attempt not 2: ' + JSON.stringify(e.attempt)); } }
   console.log(`${tag}: ${a.checks.length + b.checks.length} checks, ${segs.length - 1} reloads, score ${e.total} ${e.outcome}`);
 }
-const p = runPage(PLAYERS, 3000000); tally('players', p); console.log(`players / limit / damaged saves: ${p.checks.length} checks`);
-const n = runPage(NOSTORE, 3000000, NOSTORE_HEAD); tally('storage off', n); console.log(`storage off: ${n.checks.length} checks`);
-for (const [name, page] of [['per-player XP', XPCASE], ['leave earlier XP unassigned', LEAVE], ['guest', GUESTCASE]]) { const r = runPage(page, 3000000); tally(name, r); console.log(`${name}: ${r.checks.length} checks`); }
+if (!process.env.C4ONLY) { const p = runPage(PLAYERS, 3000000); tally('players', p); console.log(`players / limit / damaged saves: ${p.checks.length} checks`);
+const n = runPage(NOSTORE, 3000000, NOSTORE_HEAD); tally('storage off', n); console.log(`storage off: ${n.checks.length} checks`); }
+for (const [name, page] of [['challenge 4 ranking', C4CASE], ['per-player XP', XPCASE], ['leave earlier XP unassigned', LEAVE], ['guest', GUESTCASE]]) { const r = runPage(page, 3000000); tally(name, r); console.log(`${name}: ${r.checks.length} checks`); }
 bad.forEach(x => console.log('FAIL ' + x));
 console.log(`${pass} resume checks passed, ${failN} failed`); process.exit(failN ? 1 : 0);
