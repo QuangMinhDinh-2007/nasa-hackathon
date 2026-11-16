@@ -65,7 +65,9 @@ function c3Panel(o, M, p, x) {
   const d = p.d, skipped = p.snap.missed > 0;
   const status = d.batteryPct < 15 ? 'Critical' : d.batteryPct < 30 ? 'Low' : 'Safe';
   const sc = status === 'Safe' ? 'good' : status === 'Low' ? 'warn' : 'bad';
+  const hurt = d.health < M.health; // health v2: a deep discharge (battery below 25%) or an unpowered hour costs health
   const warn = skipped ? 'Battery too low! An image had to be skipped — try saving more power.'
+    : hurt ? `Battery runs below 25%: health ${M.health}% → ${d.health}%. Try saving more power.`
     : status !== 'Safe' ? 'Low battery! Try saving more power.' : '';
   return `<h3>Power Emergency!</h3>
   <p class="sub">Only ${solar}% solar power. Choose when to take images or save battery.</p>

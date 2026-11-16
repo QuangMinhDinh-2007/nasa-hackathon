@@ -10,7 +10,7 @@ const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion:
 /* ---------------- mission adapters ---------------- */
 const MX = {
   storm: { key: 'storm', name: 'Storm Watch', orbit: 'GEO', eng: ENG, CH: CH, st: () => S.ops, design: () => S.design, sim: () => simulate(), dashFn: () => dash(), basePct: '35%',
-    runFull: (d, dec, scn, ext) => ENG.runFull(d, dec, 'v34', scn, ext), pts: 'deliveredScience', cov: 'coveredPhases', target: 12,
+    runFull: (d, dec, scn, ext) => ENG.runFull(d, dec, 'v35', scn, ext), pts: 'deliveredScience', cov: 'coveredPhases', target: 12,
     events: M => M.events.map(e => ({ h: e.t, msg: e.msg, type: e.type })), clock: h => fmtH(h),
     planScn: M => M.scn ? { anomalySolar: M.scn.anomalySolar, link: [], eclipseHour: null } : null, pctOf: p => p.anomalySolar,
     sci: (c, d) => d.collectedScience, sciUnit: 'science pts collected',
@@ -26,7 +26,7 @@ const MX = {
     gates: ['Delivered science ≥ 3', 'New-hotspot alert within 2 h', 'Final update delivered', 'No critical failure'],
     fp: { 0: 0, 3: 0 }, screens: ['fbuild', 'fops', 'freport'] },
   flood: { key: 'flood', name: 'Flood Watch', orbit: 'LEO', eng: FL, CH: LCH, st: () => S.l, design: () => S.ldesign, sim: () => lsim(), dashFn: () => lDash(), basePct: '25%',
-    runFull: (d, dec, scn, ext) => FL.runFull(d, dec, 'v41', scn, ext), pts: 'delivered', cov: 'coveredZones', target: 5,
+    runFull: (d, dec, scn, ext) => FL.runFull(d, dec, 'v42', scn, ext), pts: 'delivered', cov: 'coveredZones', target: 5,
     events: M => M.log, clock: h => `${fmtH(h)} (${lt(h)} local)`,
     planScn: M => M.scn ? { anomalyFactor: M.scn.anomalyFactor, contactCut: null } : null, pctOf: p => p.anomalyFactor,
     sci: (c, d) => d.collected, sciUnit: 'map pts collected',
@@ -54,7 +54,7 @@ function chx(m, ci) { const X = MX[m], ch = X.CH[ci], scn = S.scn[m]; if (ci !==
  * one (pass k, contact k); sentences that describe the schedule's shape are replaced. The default profile returns the text untouched. */
 const ARCH_TEXT = { 'dawn-dusk-sso': {
   2: { alert: 'A fault cuts solar generation to 15% for six hours. Your dawn-dusk orbit stays in sunlight, so no eclipse adds to the problem, but 15% is still less than the satellite uses. Essential systems always come first.',
-       lesson: 'Even with no eclipse, a solar fault makes the battery decide what you can do. Below 5% the satellite enters safe mode.' },
+       lesson: 'Even with no eclipse, a solar fault makes the battery decide what you can do. Below 25% the battery wears out (health −5 per hour); below 5% the satellite enters safe mode.' },
   3: { win: 'Pass 21:30 · contact 22:30–24:00', alert: 'Responders report new fire activity near the community in region C. One pass left at 21:30, then one long contact from 22:30 until the deadline.' } } };
 function fireChText(ch) { const A = fA(), D0 = WF.archProfile(); if (A.id === D0.id) return ch;
   const map = {}; D0.passes.forEach((p, i) => { map[fmtH(p.h)] = fmtH(A.passes[i].h); }); D0.contacts.slice(0, 4).forEach((c, i) => { map[fmtH(c[0])] = fmtH(A.contacts[i][0]); map[fmtH(c[1])] = fmtH(A.contacts[i][1]); });

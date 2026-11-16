@@ -24,7 +24,12 @@
     },
     baselineKW: 1.0, powerSaveBaselineKW: 0.8, safeModeBaselineKW: 0.5,
     imagingMin: 10, reservePct: 0.10, safeEnterPct: 0.05, safeExitPct: 0.30,
-    safeModeHealthLoss: 10, unpoweredHealthLoss: 20, failAfterUnpoweredSteps: 12,
+    // Health v2: safe mode is protective (power-positive, loads shed), so entering it costs no health; the deep discharge
+    // that leads to it does. Each powered hour that dips below 25% battery costs 5 health. Reliability counts final health.
+    safeModeHealthLoss: 0, unpoweredHealthLoss: 20, failAfterUnpoweredSteps: 12,
+    deepDischargePct: 0.25, deepDischargeLoss: 5, relHealthWeight: 0.5,
+    // Rules before health v2 (fire-3.3 and older): used only to replay records saved with those versions.
+    legacyHealth: { safeModeHealthLoss: 10, deepDischargeLoss: 0, relHealthWeight: 0 },
     eclipse: { cycleSteps: 10, eclipseSteps: [7, 8, 9] },   // ~70 min sunlit / 30 min eclipse per ~100-min orbit
     anomaly: { from: 12, to: 18, solarFactor: 0.15 },
     passes: [{ h: 2 }, { h: 8 }, { h: 14 }, { h: 20 }],       // start of 30-min observation windows
@@ -92,10 +97,12 @@
   function totals(design) { let kg = CONFIG.bus.kg, cr = CONFIG.bus.credits; for (const k in CONFIG.parts) { kg += CONFIG.parts[k][design[k]].kg; cr += CONFIG.parts[k][design[k]].credits; } return { kg, credits: cr, valid: kg <= CONFIG.limits.kg && cr <= CONFIG.limits.credits }; }
   const timing = (lat) => { for (const [l, f] of CONFIG.sciTiming) if (lat <= l + 1e-9) return f; return 0; };
 
-  function newMission(design, scn, archId) { const A = archProfile(archId);
+  // rules: undefined = current; 'health-v1' = rules before health v2 (only for replaying old records).
+  const rulesFor = r => r === 'health-v1' ? Object.assign({}, CONFIG, CONFIG.legacyHealth) : CONFIG;
+  function newMission(design, scn, archId, rules) { const A = archProfile(archId);
     const P = {}; for (const k in CONFIG.parts) P[k] = CONFIG.parts[k][design[k]];
-    return { scn: (scn && scn.params) || null, scenarioId: scn ? scn.id : 'fire:PRACTICE', trace: [], traceOn: false, A, arch: { id: A.id, version: A.version }, P, design: Object.assign({}, design), step: 0, battery: P.power.battKWh, health: 100, safe: false, failed: false, unpoweredRun: 0,
-      opHours: 0, minBatt: 100, items: [], nextId: 1, detected: new Set(), decisions: [null, null, null, null], ext: [null, null, null, null], events: [], missed: 0,
+    return { scn: (scn && scn.params) || null, scenarioId: scn ? scn.id : 'fire:PRACTICE', trace: [], traceOn: false, rules: rules || null, A, arch: { id: A.id, version: A.version }, P, design: Object.assign({}, design), step: 0, battery: P.power.battKWh, health: 100, safe: false, failed: false, unpoweredRun: 0,
+      deepHours: new Set(), unpoweredHrs: new Set(), opHours: 0, minBatt: 100, items: [], nextId: 1, detected: new Set(), decisions: [null, null, null, null], ext: [null, null, null, null], events: [], missed: 0,
       energy: { imaging: 0, comms: 0 }, generatedGB: 0 };
   }
   const hourOf = s => s * CONFIG.stepMin / 60;
@@ -158,7 +165,7 @@
   }
 
   function step(M) {
-    const C = CONFIG, P = M.P, h = hourOf(M.step), dt = C.stepMin / 60;
+    const C = rulesFor(M.rules), P = M.P, h = hourOf(M.step), dt = C.stepMin / 60;
     let s = settings(M, h);
     // compression applies to undelivered, untouched images once policy is active
     if (s.compress) for (const i of M.items) if (i.kind === 'image' && i.status === 'stored' && !i.compressed && i.remainingGB === i.sizeGB) {
@@ -171,9 +178,15 @@
     M.battery = Math.min(P.power.battKWh, e);
     M.minBatt = Math.min(M.minBatt, 100 * M.battery / P.power.battKWh);
     if (!M.failed) {
-      if (!powered) { M.unpoweredRun++; if (M.unpoweredRun === 1) M.health = Math.max(0, M.health - C.unpoweredHealthLoss);
+      const hr = Math.floor(h + 1e-9);
+      if (!powered) { if (M.deepHours.delete(hr)) { M.health = Math.min(100, M.health + C.deepDischargeLoss); // charged once per hour
+          const i = M.events.findIndex(e => Math.floor(e.h + 1e-9) === hr && /^Battery below/.test(e.msg)); if (i >= 0) M.events.splice(i, 1); }
+        M.unpoweredHrs.add(hr); M.unpoweredRun++; if (M.unpoweredRun === 1) M.health = Math.max(0, M.health - C.unpoweredHealthLoss);
         if (M.unpoweredRun >= C.failAfterUnpoweredSteps) { M.failed = true; M.health = 0; M.events.push({ h, msg: 'Critical failure' }); } }
-      else M.unpoweredRun = 0;
+      else { M.unpoweredRun = 0;
+        if (C.deepDischargeLoss && M.battery < C.deepDischargePct * P.power.battKWh - 1e-9 && !M.deepHours.has(hr) && !M.unpoweredHrs.has(hr)) {
+          M.deepHours.add(hr); M.health = Math.max(0, M.health - C.deepDischargeLoss);
+          M.events.push({ h, msg: `Battery below ${Math.round(100 * C.deepDischargePct)}%: health −${C.deepDischargeLoss}` }); } }
       if (!M.safe && M.battery < C.safeEnterPct * P.power.battKWh) { M.safe = true; M.health = Math.max(0, M.health - C.safeModeHealthLoss); M.events.push({ h, msg: 'Safe mode entered' }); }
       else if (M.safe && M.battery >= C.safeExitPct * P.power.battKWh) { M.safe = false; M.events.push({ h, msg: 'Safe mode exited' }); }
       if (!M.safe && powered) M.opHours += dt;
@@ -221,13 +234,13 @@
     return { collectedByPass, deliveredByPass, coveredPasses: covered.size, deliveredScience: deliveredByPass.reduce((a, b) => a + b, 0),
       collectedScience: collectedByPass.reduce((a, b) => a + b, 0), initialOnTime, initialDelivered: !!(initAlert && initAlert.status === 'delivered'),
       finalUpdate: !!finalObs, newHotspotAlert: !!(critAlert && critAlert.status === 'delivered'), criticalOnTime, criticalDetected: !!critAlert, detectedWeight: foundW / truthW,
-      batteryPct: 100 * M.battery / M.P.power.battKWh, storagePct: 100 * stored(M) / M.P.storage.capGB, health: M.health, failed: M.failed,
+      batteryPct: 100 * M.battery / M.P.power.battKWh, storagePct: 100 * stored(M) / M.P.storage.capGB, health: M.health, failed: M.failed, deepHours: M.deepHours.size, unpoweredHours: M.unpoweredHrs.size,
       alertsDelivered: alerts.filter(a => a.status === 'delivered').length, alertsTotal: alerts.length, missed: M.missed,
       onboard: imgs.filter(i => i.status === 'stored').length };
   }
 
   function score(M) {
-    const C = CONFIG, d = derive(M);
+    const C = rulesFor(M.rules), d = derive(M);
     const cP = d.collectedByPass.map(v => clamp01(v / C.perPassTarget)), dP = d.deliveredByPass.map(v => clamp01(v / C.perPassTarget));
     const sci = 35 * (0.50 * cP.reduce((a, b) => a + b, 0) / 4 + 0.25 * d.coveredPasses / 4 + 0.25 * d.detectedWeight);
     const del = 35 * (0.70 * dP.reduce((a, b) => a + b, 0) / 4 + 0.15 * (d.criticalOnTime ? 1 : 0) + 0.15 * (d.finalUpdate ? 1 : 0));
@@ -238,14 +251,15 @@
     const prodE = delivered.reduce((a, i) => a + (i.imgKWh + i.commKWh) * w(i), 0);
     const prodGB = delivered.reduce((a, i) => a + i.origGB * w(i), 0);
     const eff = 20 * activity * (0.5 * (optE > 0 ? clamp01(prodE / optE) : 0) + 0.5 * (M.generatedGB > 0 ? clamp01(prodGB / M.generatedGB) : 0));
-    const rel = 10 * clamp01(M.opHours / 24) * (M.failed ? 0 : 1);
+    const hw = C.relHealthWeight || 0;
+    const rel = 10 * ((1 - hw) * clamp01(M.opHours / 24) + hw * M.health / 100) * (M.failed ? 0 : 1);
     const gates = { G1: d.deliveredScience >= C.requiredScience - 1e-9, G2: d.criticalOnTime, G3: d.finalUpdate, G4: !M.failed };
     const outcome = (M.failed || d.deliveredScience < C.failBelowDelivered) ? 'Mission Failure' : (gates.G1 && gates.G2 && gates.G3 && gates.G4) ? 'Mission Success' : 'Partial Success';
     return { sci, del, eff, rel, total: Math.round(sci + del + eff + rel), gates, outcome, derived: d };
   }
 
-  function runFull(design, decisions, scn, ext, archId) { const M = newMission(design, scn, archId); if (ext) M.ext = JSON.parse(JSON.stringify(ext)); for (let ci = 0; ci < 4; ci++) runChallenge(M, ci, decisions[ci]); return { M, s: score(M) }; }
+  function runFull(design, decisions, scn, ext, archId, rules) { const M = newMission(design, scn, archId, rules); if (ext) M.ext = JSON.parse(JSON.stringify(ext)); for (let ci = 0; ci < 4; ci++) runChallenge(M, ci, decisions[ci]); return { M, s: score(M) }; }
 
-  const API = { VERSION: 'fire-3.3.0', CONFIG, ARCH, DEFAULT_ARCH, archProfile, scenarioView, CHALLENGES, totals, newMission, runChallenge, derive, score, runFull };
+  const API = { VERSION: 'fire-3.4.0', CONFIG, ARCH, DEFAULT_ARCH, archProfile, scenarioView, CHALLENGES, totals, newMission, runChallenge, derive, score, runFull };
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.WFEngine = API;
 })(typeof window !== 'undefined' ? window : globalThis);

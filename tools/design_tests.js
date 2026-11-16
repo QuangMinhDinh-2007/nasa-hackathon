@@ -106,7 +106,8 @@ t('old v6.3 records (no version, no target, no architecture) still replay to the
   assert.strictEqual(+r.s.sci.toFixed(2), rec.result.science); assert.strictEqual(+r.s.del.toFixed(2), rec.result.delivery); assert.strictEqual(+r.s.eff.toFixed(2), rec.result.efficiency); assert.deepStrictEqual(r.s.gates, rec.result.gates); } });
 t('same code + same design + same decisions -> identical results (v1 and v2 records, with and without direct controls)', () => { for (const rec of FIX) { const c = MD.carry(rec.mission, rec, rec.design); assert.deepStrictEqual(c.resets, []); assert.ok(!c.hardwareChanged && c.compatible);
   assert.deepStrictEqual(c.decisions, rec.decisions); assert.deepStrictEqual(c.manipulations, rec.manipulations);
-  const a = MD.runFull(rec.mission, rec.design, c.decisions, scnOf(rec), c.manipulations), b = MD.runFull(rec.mission, rec.design, c.decisions, scnOf(rec), c.manipulations);
+  const old = MD.usesOldHealth(rec.mission, rec.engineVersion), arch = rec.architecture ? rec.architecture.id : undefined; // fixtures predate health v2
+  const a = MD.runFull(rec.mission, rec.design, c.decisions, scnOf(rec), c.manipulations, arch, old), b = MD.runFull(rec.mission, rec.design, c.decisions, scnOf(rec), c.manipulations, arch, old);
   assert.strictEqual(scoreSig(a.s), scoreSig(b.s)); assert.strictEqual(J(MD.summarize(rec.mission, a.M, a.s)), J(MD.summarize(rec.mission, b.M, b.s))); assert.strictEqual(a.s.total, rec.result.score); } });
 t('same code + changed hardware -> same external events, re-computed outcome', () => { let changed = 0; for (const rec of FIX) for (const k of K) { const d2 = Object.assign({}, rec.design, { [k]: rec.design[k] === 'std' ? 'adv' : 'std' }); if (!MD.totals(rec.mission, d2).valid) continue;
   const c = MD.carry(rec.mission, rec, d2), scn = scnOf(rec), a = MD.runFull(rec.mission, rec.design, rec.decisions, scnOf(rec), rec.manipulations), b = MD.runFull(rec.mission, d2, c.decisions, scn, c.manipulations);
@@ -136,9 +137,9 @@ t('every new player decision has a real engine effect: each target is evaluated;
 
 console.log('Wildfire architecture (P1)');
 const ARCH2 = 'dawn-dusk-sso', FDEC = [['wide', 'high'], ['alerts', 'full'], ['normal', 'image'], ['wide', 'fast']];
-t('the default profile reproduces every v6.3 baseline run exactly (26,880 runs, same hash), with or without naming it', () => { const base = require('./fixtures/fire_baseline_v63.json'), crypto = require('crypto');
+t('the default profile reproduces every v6.3 baseline run exactly under the pre-health-v2 rules (26,880 runs, same hash), with or without naming it', () => { const base = require('./fixtures/fire_baseline_v63.json'), crypto = require('crypto');
   for (const arch of [undefined, 'pm-sso']) { const h = crypto.createHash('sha256'); let c = 0;
-    for (const sd of ['PRACTICE', '7K3QX', 'AB2CD', 'M4RSH', 'ZZ999']) { const scn = Sc.generate('fire', sd); for (const d of designs()) { if (!WF.totals(d).valid) continue; for (const dd of decsOf('fire')) { const r = arch ? WF.runFull(d, dd, scn, null, arch) : WF.runFull(d, dd, scn); c++;
+    for (const sd of ['PRACTICE', '7K3QX', 'AB2CD', 'M4RSH', 'ZZ999']) { const scn = Sc.generate('fire', sd); for (const d of designs()) { if (!WF.totals(d).valid) continue; for (const dd of decsOf('fire')) { const r = arch ? WF.runFull(d, dd, scn, null, arch, 'health-v1') : WF.runFull(d, dd, scn, null, undefined, 'health-v1'); c++; // baseline predates health v2
       h.update(JSON.stringify([r.s.total, r.s.outcome, r.s.sci.toFixed(9), r.s.del.toFixed(9), r.s.eff.toFixed(9), r.s.rel.toFixed(9), r.M.battery.toFixed(9), r.M.items.map(x => [x.id, x.kind, x.t, x.status, x.deliveredAt])])); } } }
     assert.strictEqual(c, base.runs); assert.strictEqual(h.digest('hex'), base.sha256); }
   assert.strictEqual(WF.ARCH['pm-sso'].passes, WF.CONFIG.passes); assert.strictEqual(WF.ARCH['pm-sso'].contacts, WF.CONFIG.contacts); assert.strictEqual(WF.ARCH['pm-sso'].eclipse, WF.CONFIG.eclipse); });

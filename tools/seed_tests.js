@@ -5,9 +5,9 @@ const SC = G('scenario.js'), SW = G('engine.js'), WF = G('wildfire-engine.js'), 
 const KEYS = ['instrument', 'observation', 'power', 'comms', 'storage'];
 const designOf = hw => { const d = {}; KEYS.forEach((k, i) => d[k] = (hw >> i) & 1 ? 'adv' : 'std'); return d; };
 const MIS = {
-  storm: { ch: SW.CHALLENGES, valid: d => SW.designTotals(d, SW.makeConfig('v34')).valid, run: (d, dec, scn) => SW.runFull(d, dec, 'v34', scn) },
+  storm: { ch: SW.CHALLENGES, valid: d => SW.designTotals(d, SW.makeConfig('v35')).valid, run: (d, dec, scn) => SW.runFull(d, dec, 'v35', scn) },
   fire: { ch: WF.CHALLENGES, valid: d => WF.totals(d).valid, run: (d, dec, scn) => WF.runFull(d, dec, scn) },
-  flood: { ch: FL.challengesFor(FL.makeConfig('v41')), valid: d => FL.totals(d, FL.makeConfig('v41')).valid, run: (d, dec, scn) => FL.runFull(d, dec, 'v41', scn) },
+  flood: { ch: FL.challengesFor(FL.makeConfig('v42')), valid: d => FL.totals(d, FL.makeConfig('v42')).valid, run: (d, dec, scn) => FL.runFull(d, dec, 'v42', scn) },
 };
 const decOf = (m, dec) => MIS[m].ch.map((c, ci) => { const b = (dec >> (ci * 2)) & 3; return c.controls.map((o, gi) => o[(b >> gi) & 1]); });
 const sig = r => JSON.stringify([r.s.total, r.s.outcome, r.s.sci, r.s.del, r.s.eff, r.s.rel, r.s.gates]);

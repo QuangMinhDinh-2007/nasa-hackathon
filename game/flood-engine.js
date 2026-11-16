@@ -24,6 +24,7 @@
     essentialKW: 1.10, standbyKW: 0.40, sunFactor: 0.62,
     anomaly: { from: 12, to: 18, factor: 0.25 },
     reservePct: 0.10, safeEnter: 0.10, safeExit: 0.30, incidentLoss: 20, failHours: 2,
+    deepDischargePct: 0, deepDischargeLoss: 0, relHealthWeight: 0,   // health v2: off in BASE (spec40 and v41 unchanged), on in v42
     imagingMin: 5,
     passes: [ { h: 1, illum: 1.0, cloud: 0.10 }, { h: 4, illum: 1.0, cloud: 0.20 }, { h: 7, illum: 1.0, cloud: 0.70 }, { h: 10, illum: 0.6, cloud: 0.85 },
               { h: 13, illum: 0, cloud: 0.60 }, { h: 16, illum: 0, cloud: 0.40 }, { h: 19, illum: 0, cloud: 0.30 }, { h: 22, illum: 1.0, cloud: 0.25 } ],
@@ -45,6 +46,10 @@
     // ("newest first" was dominated: better in 31 paired runs, worse in 539, never improved an outcome).
     v41: { timeliness: null, perZoneTarget: false, efficiency: 'productiveYield', noPreemption: false, c2: ['processing', 'storage'] },
   };
+  // v4.2 = v4.1 + health v2: each powered hour that dips below 25% battery costs 5 health (deep discharge wears the battery).
+  // Safe mode itself costs no health: it is the spacecraft protecting itself. Reliability counts final health.
+  // v41 stays as it was so records made before health v2 replay to the same score.
+  PROFILES.v42 = Object.assign({}, PROFILES.v41, { deepDischargePct: 0.25, deepDischargeLoss: 5, relHealthWeight: 0.5 });
   function makeConfig(profile) { const p = PROFILES[profile || 'v41']; const C = Object.assign({}, BASE, p, { profile: profile || 'v41' }); return C; }
   function challengesFor(C) {
     return [
@@ -61,11 +66,14 @@
   function newMission(design, profile, scn) {
     const C = makeConfig(profile); const P = {}; for (const k in C.parts) P[k] = C.parts[k][design[k]];
     return { scn: (scn && scn.params) || null, scenarioId: scn ? scn.id : 'flood:PRACTICE', trace: [], traceOn: false,  C, P, design: Object.assign({}, design), step: 0, battery: P.power.battKWh, health: 100, safe: false, failed: false,
-      essentialSteps: 0, safeSteps: 0, unpoweredHours: new Set(), lastUnpoweredHour: -9, consecUnpowered: 0,
+      essentialSteps: 0, safeSteps: 0, unpoweredHours: new Set(), deepHours: new Set(), lastUnpoweredHour: -9, consecUnpowered: 0,
       items: [], nextId: 1, decisions: [null, null, null, null], ext: [null, null, null, null], log: [], skipped: { dark: 0, energy: 0, storage: 0, screened: 0, safe: 0 },
       energy: { imaging: 0, processing: 0, comms: 0 }, generatedGB: 0, rejectedGB: 0, minBatt: 100 };
   }
   const hourOf = s => s * 5 / 60;
+  // An hour is charged once: if it goes unpowered after a deep-discharge charge, the unpowered loss replaces the deep one.
+  function undoDeep(M, hr, C) { if (!M.deepHours.delete(hr)) return; M.health = Math.min(100, M.health + C.deepDischargeLoss);
+    const i = M.log.findIndex(l => Math.floor(l.h + 1e-9) === hr && /^Battery below/.test(l.msg)); if (i >= 0) M.log.splice(i, 1); }
   const stored = M => M.items.filter(i => i.status === 'stored').reduce((a, i) => a + i.sizeGB, 0);
 
   function settings(M, h) {
@@ -147,10 +155,13 @@
     M.battery = Math.min(P.power.battKWh, e);
     M.minBatt = Math.min(M.minBatt, 100 * M.battery / P.power.battKWh);
     const hr = Math.floor(h);
-    if (!powered) { if (!M.unpoweredHours.has(hr)) { M.unpoweredHours.add(hr); M.health = Math.max(0, M.health - C.incidentLoss);
+    if (!powered) { if (!M.unpoweredHours.has(hr)) { M.unpoweredHours.add(hr); undoDeep(M, hr, C); M.health = Math.max(0, M.health - C.incidentLoss);
         M.consecUnpowered = (M.lastUnpoweredHour === hr - 1) ? M.consecUnpowered + 1 : 1; M.lastUnpoweredHour = hr;
         if (M.consecUnpowered >= C.failHours) { M.failed = true; M.health = 0; } } }
-    else M.essentialSteps++;
+    else { M.essentialSteps++;
+      if (C.deepDischargeLoss && M.battery < C.deepDischargePct * P.power.battKWh - 1e-9 && !M.deepHours.has(hr) && !M.unpoweredHours.has(hr) && !M.failed) {
+        M.deepHours.add(hr); M.health = Math.max(0, M.health - C.deepDischargeLoss);
+        M.log.push({ h, msg: `Battery below ${Math.round(100 * C.deepDischargePct)}%: health −${C.deepDischargeLoss}` }); } }
     if (!M.safe && M.battery < C.safeEnter * P.power.battKWh) { M.safe = true; M.log.push({ h, msg: 'Safe mode entered' }); }
     else if (M.safe && M.battery >= C.safeExit * P.power.battKWh) { M.safe = false; M.log.push({ h, msg: 'Safe mode exited' }); }
     if (M.safe) M.safeSteps++;
@@ -201,7 +212,7 @@
     return { t, coveredZones: zonesQ.size, zonesQ: [...zonesQ], collected: live.reduce((a, i) => a + i.pts, 0),
       delivered: del.reduce((a, i) => a + val(i), 0), deliveredRaw: del.reduce((a, i) => a + i.pts, 0), zoneCollected, zoneDelivered,
       town: !!town, townRec: town || null, townStatus: t < 18 ? 'Not yet required' : town ? 'Delivered' : t >= 24 - 1e-9 ? 'Missed' : 'Pending',
-      batteryPct: 100 * M.battery / M.P.power.battKWh, storagePct: 100 * stored(M) / M.P.storage.capGB, health: M.health, safe: M.safe,
+      batteryPct: 100 * M.battery / M.P.power.battKWh, storagePct: 100 * stored(M) / M.P.storage.capGB, health: M.health, safe: M.safe, deepHours: M.deepHours.size, unpoweredHours: M.unpoweredHours.size,
       safeHours: M.safeSteps * 5 / 60, nCaptured: maps.length, nDelivered: del.length, nLost: maps.filter(i => i.status === 'lost').length,
       nOnboard: maps.filter(i => i.status === 'stored').length, generatedGB: M.generatedGB };
   }
@@ -231,12 +242,13 @@
       eff = 20 * activity * (0.5 * (1 - ew) + 0.5 * (1 - dw)); detail = { dataWaste: dw };
     }
     const essentialH = M.essentialSteps * 5 / 60, safeH = M.safeSteps * 5 / 60;
-    const rel = 10 * clamp01((essentialH - 0.5 * safeH) / 24) * (M.failed ? 0 : 1);
+    const hw = C.relHealthWeight || 0;
+    const rel = 10 * ((1 - hw) * clamp01((essentialH - 0.5 * safeH) / 24) + hw * M.health / 100) * (M.failed ? 0 : 1);
     const gates = { G1: d.delivered >= C.requiredMaps - 1e-9, G2: d.coveredZones === 3, G3: d.town, G4: !M.failed };
     const outcome = (M.failed || d.delivered < C.failBelow) ? 'Mission Failure' : (gates.G1 && gates.G2 && gates.G3 && gates.G4) ? 'Mission Success' : 'Partial Success';
     return { sci: mapping, del: delivery, eff, rel, total: Math.round(mapping + delivery + eff + rel), gates, outcome, derived: d, detail };
   }
   function runFull(design, decisions, profile, scn, ext) { const M = newMission(design, profile, scn); if (ext) M.ext = JSON.parse(JSON.stringify(ext)); for (let ci = 0; ci < 4; ci++) runChallenge(M, ci, decisions[ci]); return { M, s: score(M) }; }
-  const API = { VERSION: 'flood-4.3.0', BASE, PROFILES, ZONES, ZNAME, makeConfig, challengesFor, totals, newMission, runChallenge, derive, score, runFull, timeliness };
+  const API = { VERSION: 'flood-4.4.0', BASE, PROFILES, ZONES, ZNAME, makeConfig, challengesFor, totals, newMission, runChallenge, derive, score, runFull, timeliness };
   if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.FLEngine = API;
 })(typeof window !== 'undefined' ? window : globalThis);

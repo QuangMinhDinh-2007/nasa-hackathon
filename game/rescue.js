@@ -187,7 +187,7 @@ function ixAfter(ci) { const o = S.ops, M = o.M, x = o.ix && o.ix[ci], sn = M.ch
 /* report: "change one thing" for the direct controls */
 function ixReport() { const o = S.ops, M = o && o.M; if (!M || !o.ix) return; const h2 = [...document.querySelectorAll('.panel h2')].find(e => /Change one decision/.test(e.textContent)); if (!h2) return;
   const base = ENG.score(M).total, d = M.design, dec = o.choice.map(c => c.slice()), ext = () => JSON.parse(JSON.stringify(M.ext)), C = M.C, dev = ENG.trackDev(M), rows = [];
-  const add = (label, mut) => { const e = ext(), dd = dec.map(c => c.slice()); if (mut(e, dd) === false) return; const r = ENG.runFull(d, dd, 'v34', S.scn.storm, e).s; rows.push([label, r.total - base, r.total, r.outcome]); };
+  const add = (label, mut) => { const e = ext(), dd = dec.map(c => c.slice()); if (mut(e, dd) === false) return; const r = ENG.runFull(d, dd, 'v35', S.scn.storm, e).s; rows.push([label, r.total - base, r.total, r.outcome]); };
   if (o.ix[0]) { add('Challenge 1: scan the whole disk', e => { e[0] = { box: { x: .5, y: .5, w: 1 } }; }); add('Challenge 1: same box size, centred on the real storm path', e => { const a = ENG.trackPoint(C, 2.5, dev); e[0] = { box: { x: a[0], y: a[1], w: e[0].box.w } }; }); }
   add('Challenge 1: other image quality', (e, dd) => { dd[0][0] = dd[0][0] === 'std' ? 'high' : 'std'; });
   if (o.ix[1]) add('Challenge 2: no manual sorting', e => { if (!e[1].first.length && !e[1].drop.length) return false; e[1] = null; });
