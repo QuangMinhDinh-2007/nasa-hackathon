@@ -139,3 +139,40 @@ body.echo:is([data-scr$="ops"]) :is(.decision,.side) .slot.one{background:#d7f5e
 body.echo:is([data-scr$="ops"]) .pk.late{border-color:var(--p-bad)}
 body.echo:is([data-scr$="ops"]) :is(.decision,.side) :is(input[type=range]){accent-color:var(--p-ink)}
 body.echo:is([data-scr$="ops"]) :is(.decision,.side) .call .row button{background:#fff;border:2px solid var(--p-ink);color:var(--p-ink)}
+
+/* ===== 4. Final report (report / freport / lreport) incl. Full Engineering Report and score breakdown ===== */
+body.echo:is([data-scr="report"],[data-scr="freport"],[data-scr="lreport"]) #app,body.echo:is([data-scr$="report"]) #layer .modal{
+  --text:var(--p-ink);--muted:var(--p-ink2);--dim:var(--p-dim);--line:rgba(74,59,99,.3);--line2:rgba(74,59,99,.6);
+  --glass:var(--p-card);--glass2:#fffbe9;--blue:var(--p-blue);--blue2:#3b7be0;--good:var(--p-good);--warn:var(--p-warn);--bad:var(--p-bad);color:var(--p-ink)}
+/* the score card keeps its dark illustrated look */
+body.echo:is([data-scr$="report"]) .cr-hero{--text:#fff;--muted:rgba(255,255,255,.85);--good:#8be8cb;--warn:#ffd66e;--bad:#ffa494;color:#fff;border:3px solid var(--p-ink)}
+body.echo:is([data-scr$="report"]) .cr-panel,body.echo:is([data-scr$="report"]) .cr-full-in>.glass,body.echo:is([data-scr$="report"]) .cr-full-in .panel{background:var(--p-card);border:3px solid var(--p-ink);box-shadow:0 6px 0 rgba(30,22,60,.45);color:var(--p-ink)}
+body.echo:is([data-scr$="report"]) .cr-panel h3,body.echo:is([data-scr$="report"]) .cr-full-in h2,body.echo:is([data-scr$="report"]) .cr-full-in h3,body.echo:is([data-scr$="report"]) .cr-full-in h4{color:var(--p-ink)!important}
+body.echo:is([data-scr$="report"]) .cr-g,body.echo:is([data-scr$="report"]) .cr-bonus .cr-g,body.echo:is([data-scr$="report"]) .cr-dec{background:#fff;border:2px solid rgba(74,59,99,.35);color:var(--p-ink)}
+body.echo:is([data-scr$="report"]) .cr-g.y i{background:var(--p-good);color:#fff}body.echo:is([data-scr$="report"]) .cr-g.n i{background:var(--p-bad);color:#fff}
+body.echo:is([data-scr$="report"]) .cr-dec .ch{color:var(--p-blue)}body.echo:is([data-scr$="report"]) .cr-dec p,body.echo:is([data-scr$="report"]) .cr-bv{color:var(--p-ink2)}
+body.echo:is([data-scr$="report"]) .cr-try{background:#fff0c7;border:3px solid var(--p-ink)}
+body.echo:is([data-scr$="report"]) .cr-try .r1{color:var(--p-ink)}body.echo:is([data-scr$="report"]) .cr-try .r2{color:var(--p-good)}body.echo:is([data-scr$="report"]) .cr-try .scope{color:var(--p-ink2)}
+body.echo:is([data-scr$="report"]) .cr-bd-btn{color:#fff}
+/* inside the Full Engineering Report: tables and notes on white */
+body.echo:is([data-scr$="report"]) .cr-full-in :is(table,.xtab){background:#fff;color:var(--p-ink);border-collapse:collapse}
+body.echo:is([data-scr$="report"]) .cr-full-in :is(th){background:var(--p-tint);color:var(--p-ink)}
+body.echo:is([data-scr$="report"]) .cr-full-in :is(td,th){border-color:rgba(74,59,99,.2)!important}
+body.echo:is([data-scr$="report"]) .cr-full-in :is(b,strong,span,td,div)[style*="#fff"]{color:var(--p-ink)!important}
+body.echo:is([data-scr$="report"]) .cr-full-in [style*="color:#cfd8ea"],body.echo:is([data-scr$="report"]) .cr-full-in [style*="color:#cfe0ff"],body.echo:is([data-scr$="report"]) .cr-full-in [style*="#9cc9ff"]{color:var(--p-ink2)!important}
+body.echo:is([data-scr$="report"]) .cr-full-in [style*="background:#0"]{background:#fff!important}
+body.echo:is([data-scr$="report"]) .cr-full-in textarea{background:#fff!important;color:var(--p-ink)!important;border:2px solid rgba(74,59,99,.4)!important}
+body.echo:is([data-scr$="report"]) .cr-full-in :is(.vr-body,.cmp-note,.md-link,.vr-chain div){color:var(--p-ink2)}
+body.echo:is([data-scr$="report"]) .cr-full-in .vr-chain div{background:#fff;border-color:rgba(74,59,99,.3)}
+body.echo:is([data-scr$="report"]) .cr-full-in .navbtn{background:#fff;color:var(--p-ink);border:2px solid var(--p-ink)}
+/* score breakdown popup */
+body.echo:is([data-scr$="report"]) #layer .modal{background:var(--p-card)!important;border:4px solid var(--p-ink)!important}
+body.echo:is([data-scr$="report"]) #layer .modal h2{color:var(--p-ink)}body.echo:is([data-scr$="report"]) #layer .modal .eyebrow{color:var(--p-blue)}
+body.echo:is([data-scr$="report"]) #layer .cr-bd-row{border-bottom-color:rgba(74,59,99,.2)}body.echo:is([data-scr$="report"]) #layer .cr-bd-row b{color:var(--p-ink)}body.echo:is([data-scr$="report"]) #layer .cr-bd-row span{color:var(--p-ink2)}
+body.echo:is([data-scr$="report"]) .chain span{color:var(--p-ink2);background:#fff;border:1.5px solid rgba(74,59,99,.35)}
+body.echo:is([data-scr$="report"]) .chain span.done{color:var(--p-ink);background:#d7f5ea}body.echo:is([data-scr$="report"]) .chain span.on{color:#fff;background:var(--p-blue);border-color:var(--p-ink)}
+body.echo:is([data-scr$="report"]) .cr-full-in .pstars{color:#c28400;text-shadow:0 1px 0 var(--p-ink)}body.echo:is([data-scr$="report"]) .cr-full-in .pstars i{color:rgba(74,59,99,.3)}
+body.echo:is([data-scr$="report"]) .cr-full-in span[style*="background:#1f6f43"]{color:#fff!important}
+/* nav hint label: darker blue for contrast on white (all screens) */
+.e-navsay b{color:var(--p-blue)!important}
+body.echo:is([data-scr$="report"]) .cr-full-in .pstars{color:#9a6a00}
