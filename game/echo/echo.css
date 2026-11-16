@@ -341,3 +341,17 @@ body.echo .cr-decs{align-content:start}
 .ac-del{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:10px 0;padding:10px 12px;border-radius:12px;background:#ffe3dc;border:2px solid #d9402b}
 .e-who{font-size:16px;margin:-8px 0 12px}.e-who .eb-link{padding:4px 6px;font-size:16px}
 @media(max-width:700px){.ac-best{grid-template-columns:1fr}}
+
+/* ---------- title card: name, account link and buttons each get their own row ---------- */
+.e-title-card .e-who{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px 12px;margin:0 auto 16px;max-width:100%;font-size:17px;line-height:1.3}
+.e-title-card .e-who b{overflow-wrap:anywhere}
+.e-title-card .e-who .eb-link{display:inline-flex;align-items:center;min-height:40px;margin:0;font-size:16px}
+.e-title-acts{display:flex;flex-direction:column;align-items:center;gap:14px}
+.e-title-acts .e-continue{margin-top:0}
+.e-title{padding-block:24px}
+/* ---------- report: Your Decisions fits its four rows ---------- */
+body.echo .cr-right .cr-panel.cr-decs-panel{flex:0 0 auto}
+body.echo .cr-right{justify-content:flex-start}
+/* engineering details: readable line spacing for the raised text */
+body.echo .cr-full-in,body.echo #layer .rv-details .inner{line-height:1.5}
+body.echo #layer .rv-details .inner table{font-size:15px}

@@ -105,9 +105,9 @@
       <div class="e-title-card"><div class="e-title-echo">${A.echo('cheer')}</div><div class="e-kicker">A space mission design game</div>
         <h1 class="e-logo-big"><i>PROJECT</i><b>ECHO</b></h1>
         <p>Design a satellite. Fly the mission. Help Earth.</p>
-        <button class="eb eb-sun eb-big" data-e="begin">Start Adventure <span aria-hidden="true">▸</span></button>
-        ${P.cur() ? `<p class="e-who">Playing as <b>${esc(P.cur().name)}</b> · <button class="eb-link" data-e="acct">My Account</button></p>` : ''}
-        ${E.cur ? `<button class="eb eb-sky e-continue" data-e="resume" data-m="${E.cur}">Continue ${T.episodes[E.cur].tag}</button>` : ''}</div></div>`;
+        ${P.cur() ? `<div class="e-who"><span>Playing as <b>${esc(P.cur().name)}</b></span><button class="eb-link" data-e="acct">My Account</button></div>` : ''}
+        <div class="e-title-acts"><button class="eb eb-sun eb-big" data-e="begin">Start Adventure <span aria-hidden="true">▸</span></button>
+        ${E.cur ? `<button class="eb eb-sky e-continue" data-e="resume" data-m="${E.cur}">Continue ${T.episodes[E.cur].tag}</button>` : ''}</div></div></div>`;
   V.signin = V.title; V.ready = V.title; V.dest = V.title;   // the old sign-in / welcome / destination pages are replaced by the title scene
 
   const _missions = V.missions;
@@ -367,6 +367,11 @@
       if (who) who.innerHTML = bookBtn(); return; }
     hudEl.hidden = false; hudEl.innerHTML = bookBtn(); }
   // the compact final report stays as it is; ECHO adds one short line under the score, chosen by the engine's outcome and gates
+  // Text below 14px in the engineering detail areas is raised: labels and notes to 14px, body text to 16px. Larger text is left alone.
+  function bumpSmall(root) { if (!root) return; root.querySelectorAll('*').forEach(el => { if (el.closest('svg') || ![...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) return;
+    const fs = parseFloat(getComputedStyle(el).fontSize); if (!(fs < 14)) return;
+    const body = /^(P|LI|TD)$/.test(el.tagName) && !/muted|lab|rv-st|ms|chip/.test(el.className) && !el.closest('th');
+    el.style.fontSize = (body ? 16 : 14) + 'px'; }); }
   function reportDress(m) { const hero = document.querySelector('#app .cr-hero'); if (!hero || hero.querySelector('.e-rline')) return; const s = st(m); if (!s || !s.M) return;
     const sc = MX[m].eng.score(s.M), M = T.missions[m], k = sc.outcome === 'Mission Success' ? 'success' : sc.outcome === 'Partial Success' ? 'partial' : 'fail';
     const missed = ['G1', 'G2', 'G3', 'G4'].filter(g => !sc.gates[g]), line = k === 'success' ? M.end[k][1] : missed.length ? M.gateLine[missed[0]] : M.end[k][1];
@@ -379,7 +384,7 @@
       const g = document.querySelector('#app [data-a="briefGo"]'); if (g) g.textContent = 'Lock in this goal ▸';
       const h = document.querySelector('#app .brief h1'); if (h && !document.querySelector('.e-brief-art')) h.insertAdjacentHTML('beforebegin', `<div class="e-brief-art" aria-hidden="true">${A.scene({ storm: 'storm1', fire: 'fire1', flood: 'flood1' }[S.mission] || 'storm1', S.mission)}</div>`); }
     if (m && scr === BUILD[m]) document.querySelectorAll('#app [data-a="mrr"]').forEach(x => { x.textContent = 'Done! Take it to launch ▸'; });
-    if (m && scr === REPORT[m]) { reportDress(m); saveResult(m); }
+    if (m && scr === REPORT[m]) { reportDress(m); saveResult(m); bumpSmall(document.querySelector('#app .cr-full-in')); }
     if (scr === 'room') roomFocus();
     hud(); }
   const _render = render; render = function () { const bd = document.body; bd.dataset.scr = S.screen; bd.toggleAttribute('data-ws', !['room', 'title', 'missions'].includes(S.screen)); _render(); dress(); };   // theme markers first, so new elements never fade in from the old colours
@@ -403,6 +408,7 @@
   const wrapDash = f => function () { return overview(f.apply(this, arguments)); };
   dash = wrapDash(dash); fDash = wrapDash(fDash); lDash = wrapDash(lDash);
   const _mrr = mrr; mrr = function (m) { _mrr(m); const h = document.querySelector('#layer .modal h2, #layer h2'); const ok = !(document.querySelector('#layer [data-a="goLaunch"]') || {}).disabled;
+    bumpSmall(document.querySelector('#layer .rv-details .inner'));
     const box = document.querySelector('#layer .modal-wrap > *'); if (box && !box.querySelector('.er-dir')) box.insertAdjacentHTML('afterbegin', `<div class="er-dir"><div class="et-face">${A.director()}</div><p><b>Flight Director</b>${ok ? T.ui.reviewOk : T.ui.reviewNo}</p></div>`); };
 
   /* ================= public handle + test hooks (used by tools/echo_parity.js and tools/echo_e2e.js) ================= */
