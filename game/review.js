@@ -59,6 +59,7 @@ document.head.insertAdjacentHTML('beforeend', `<style>
 .rv-block{margin:4px 0 2px;padding:12px 16px;border-radius:14px;background:#ff7a6b1f;border:2px solid var(--bad);color:#fff;font-size:15px}
 .rv-block b{color:var(--bad)}.rv-block ul{margin:6px 0 0 18px}.rv-block li{margin-top:4px;line-height:1.45}.rv-block li b{color:#fff}
 .rv-one{margin-top:6px;font-size:15px;line-height:1.45}.rv-watch{color:#ffe2a0}
+.rv-flag{flex:none;width:22px;height:22px;color:#fff6e6;pointer-events:none}.rv-flag svg{width:100%;height:100%;display:block}
 .rv-more{margin:4px 0 0 18px;font-size:12.5px;color:var(--muted);line-height:1.5}
 .modal .rv-h{margin-top:16px;font-size:12.5px}.modal .rv-cl li{font-size:15px}
 </style>`);
@@ -89,7 +90,7 @@ mrr = function (m) { const X = MX[m], D = MissionDesign, dc = D.designCheck(m, X
   const status = ok
     ? `<p class="rv-pass"><span aria-hidden="true">✓</span> Your satellite passed all launch checks.</p>`
     : `<div class="rv-block" role="alert"><b>Launch is blocked. Fix this first:</b><ul>${blockers.length ? blockers.join('') : `<li>${sum[2]}</li>`}</ul></div>`;
-  const goals = `<p class="rv-h">Your Mission Goals</p><ul class="rv-cl">${RV_GOALS[m].map(g => `<li><span class="o" aria-hidden="true"></span><span>${g}</span></li>`).join('')}</ul>`;
+  const goals = `<p class="rv-h">Your Mission Goals</p><ul class="rv-cl">${RV_GOALS[m].map(g => `<li><span class="rv-flag" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M5 2.5v15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6 3.5h9l-2.2 3.2L15 10H6z" fill="#ffd166" stroke="#4a3b63" stroke-width="1.4" stroke-linejoin="round"/></svg></span><span>${g}</span></li>`).join('')}</ul>`;
   const bonus = t ? `<p class="rv-h">Bonus Goal</p><p class="rv-one"><b>${t.title}:</b> ${t.statement}</p>` : '';
   const caution = ok && top ? `<p class="rv-h">Watch Out</p><p class="rv-one rv-watch"><span aria-hidden="true">⚠</span> ${top.risk}</p>` : '';
   const body = `<h2>${ok ? 'Ready to Launch!' : 'Not Ready to Launch'}</h2>${status}${goals}${bonus}${caution}`;
