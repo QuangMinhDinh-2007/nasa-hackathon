@@ -67,9 +67,9 @@ const E2E = mission => COMMON + `
 window.addEventListener('load', () => setTimeout(async () => { try {
   const m = ${JSON.stringify(mission)}, T = EchoStory, E = ECHO.state, checks = window.__c = [], ok = (name, cond, info) => checks.push([name, !!cond, cond ? '' : String(info === undefined ? '' : info)]);
   const START = { storm: 'startMission', fire: 'fstart', flood: 'lstart' }[m], BUILD = { storm: 'build', fire: 'fbuild', flood: 'lbuild' }[m], OPS = { storm: 'ops', fire: 'fops', flood: 'lops' }[m], REPORT = { storm: 'report', fire: 'freport', flood: 'lreport' }[m];
-  let lastComic = '', panels = 0;
-  const story = async () => { for (let i = 0; i < 80; i++) { const c = q('#echoComic:not([hidden]) [data-e="comicNext"]'), t = q('#echoTalk:not([hidden]) [data-e="talkNext"]');
-    if (c) { const tt = q('.ec-title'); lastComic = tt ? tt.textContent : ''; panels++; c.click(); } else if (t) t.click(); else return; await sleep(60); } throw new Error('story never ended'); };
+  let lastComic = '', panels = 0, tours = 0;
+  const story = async () => { for (let i = 0; i < 80; i++) { const c = q('#echoComic:not([hidden]) [data-e="comicNext"]'), t = q('#echoTalk:not([hidden]) [data-e="talkNext"]'), tr = q('#echoTour:not([hidden]) [data-e="tourNext"]');
+    if (tr) { tours++; tr.click(); } else if (c) { const tt = q('.ec-title'); lastComic = tt ? tt.textContent : ''; panels++; c.click(); } else if (t) t.click(); else return; await sleep(60); } throw new Error('story never ended'); };
   // engine-facing state only: the simulation, the clock, the log, the committed decisions, the design, the goal and the Mission Code
   const snap = () => { const st = MX[m].st(); return JSON.stringify([st ? [MX[m].eng.derive(st.M), st.M.trace.length, MX[m].events(st.M).length, st.ci, st.log, st.choice] : null, MX[m].design(), S.target[m], S.scn[m].code, simCalls]); };
   const hot = k => q('.rhot[data-hot="' + k + '"]'), active = () => ECHO.activeHot(m), glow = () => qa('.rhot.is-go').map(x => x.dataset.hot).join(',');
@@ -89,7 +89,9 @@ window.addEventListener('load', () => setTimeout(async () => { try {
       ok(tag + ' c' + (ci + 1) + ': backing out returns to the room unchanged', S.screen === 'room' && snap() === s0);
       hot(want).click(); await sleep(100); q(ACC).click(); await sleep(60); ok(tag + ' c' + (ci + 1) + ': notebook reachable on the gameplay screen', q('#app .e-navnote'));
       q('#app .e-navnote').click(); await sleep(30); ok(tag + ' c' + (ci + 1) + ': notebook opens and changes nothing', !q('#echoNote').hidden && snap() === s0); q('[data-e="noteClose"]').click();
+      if (ci === 1) { const s1 = snap(); q('[data-e="moToggle"]').click(); await sleep(30); ok(tag + ' overview collapses to essentials', q('.mo.mo-closed .mo-mini') && qa('.mo-mini > div').length === 4 && snap() === s1); }
       q(RUN).click(); await until(() => MX[m].st().phase === 'result' && q(NEXT), 120000, 'result');
+      if (ci === 1) { ok(tag + ' overview stays collapsed through playback', !!q('.mo.mo-closed')); q('[data-e="moToggle"]').click(); await sleep(30); ok(tag + ' overview expands again', q('.mo:not(.mo-closed) .mo-sec')); }
       ok(tag + ' c' + (ci + 1) + ': engine ran exactly once', simCalls - n0 === ci + 1, simCalls - n0);
       ok(tag + ' c' + (ci + 1) + ': result is shown before the room', S.screen === OPS && MX[m].st().phase === 'result' && q(NEXT));
       carry = JSON.stringify(MX[m].eng.derive(MX[m].st().M)); const L = MX[m].st().log[ci], dv = MX[m].eng.derive(MX[m].st().M);
@@ -105,13 +107,21 @@ window.addEventListener('load', () => setTimeout(async () => { try {
   const openReport = async (tag) => { ok(tag + ': Report Board glows', glow() === 'board', glow()); hot('board').click(); await sleep(100);
     ok(tag + ': compact report opens with ECHO line', S.screen === REPORT && q('.cr') && q('.e-rline'));
     ok(tag + ': report offers Rewind, Fly Again, All Missions', q('.acts-row [data-a="improve"]') && q('.acts-row [data-a$="retry"]') && qa('.acts-row button').length === 3);
-    ok(tag + ': report score is the engine score', q('.cr-sc').textContent === MX[m].eng.score(MX[m].st().M).total + '/100'); return record(m); };
+    ok(tag + ': report score is the engine score', q('.cr-sc').textContent === MX[m].eng.score(MX[m].st().M).total + '/100');
+    ok(tag + ': report has bonus goal and collapsed full report', q('.cr-bonus') && q('details.cr-full:not([open])') && q('details.cr-full #verifyPanel, details.cr-full .cr-full-in').children.length > 0);
+    const sv = ECHO.profiles.cur().results[0], sc = MX[m].eng.score(MX[m].st().M);
+    ok(tag + ': saved result matches the engine', sv && sv.m === m && sv.score === sc.total && sv.outcome === sc.outcome && sv.code === S.scn[m].code, JSON.stringify(sv));
+    savedN++; ok(tag + ': one saved entry per flight', ECHO.profiles.cur().results.length === savedN, ECHO.profiles.cur().results.length); return record(m); };
+  let savedN = 0;
 
   // title, prologue, episode select, episode brief
   ok('starts on the title screen', S.screen === 'title' && q('[data-e="begin"]')); q('[data-e="begin"]').click(); await sleep(60);
+  ok('first start asks for a player name', q('#echoAcct:not([hidden]) #acctName')); q('#acctName').value = 'Test ' + m; q('[data-e="acctNew"]').click(); await sleep(60);
+  ok('player created and adventure continues', ECHO.profiles.cur() && ECHO.profiles.cur().name === 'Test ' + m && q('#echoAcct').hidden);
   panels = 0; await story(); ok('prologue has four panels', panels === 4, panels); ok('episode select shows three missions', S.screen === 'missions' && qa('.e-ep').length === 3);
   q('[data-a="' + START + '"]').click(); await sleep(60); S.scn[m] = Scenario.generate(m, 'PRACTICE'); const code = S.scn[m].code;
   panels = 0; await story(); ok('episode brief has three panels', panels === 3, panels);
+  ok('five-step tour shown once', tours === 5, tours);
   ok('Mission Room: Earth hologram glows first', S.screen === 'room' && glow() === 'holo', glow());
   hot('power').click(); await sleep(30); await story(); ok('wrong object does not navigate', S.screen === 'room' && active() === 'holo');
   hot('holo').click(); await sleep(60); ok('hologram opens the existing goal screen', S.screen === 'brief' && qa('[data-a="pickTarget"]').length === 3); if (m === 'fire') ok('wildfire keeps its orbit choice', qa('[data-a="pickArch"]').length >= 2); q('[data-a="pickTarget"]').click(); await sleep(30); q('[data-a="briefGo"]').click(); await sleep(60); await story();

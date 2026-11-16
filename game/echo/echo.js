@@ -106,6 +106,7 @@
         <h1 class="e-logo-big"><i>PROJECT</i><b>ECHO</b></h1>
         <p>Design a satellite. Fly the mission. Help Earth.</p>
         <button class="eb eb-sun eb-big" data-e="begin">Start Adventure <span aria-hidden="true">▸</span></button>
+        ${P.cur() ? `<p class="e-who">Playing as <b>${esc(P.cur().name)}</b> · <button class="eb-link" data-e="acct">My Account</button></p>` : ''}
         ${E.cur ? `<button class="eb eb-sky e-continue" data-e="resume" data-m="${E.cur}">Continue ${T.episodes[E.cur].tag}</button>` : ''}</div></div>`;
   V.signin = V.title; V.ready = V.title; V.dest = V.title;   // the old sign-in / welcome / destination pages are replaced by the title scene
 
@@ -121,8 +122,9 @@
           ${best ? `<div class="e-best">Best so far: <b>${best}</b></div>` : ''}
           <div class="e-ep-btns"><button class="eb eb-sun" data-a="${act[m]}" aria-label="Play ${ep.title}">${E.briefed[m] ? 'New game' : 'Play'} <span aria-hidden="true">▸</span></button>${E.briefed[m] ? `<button class="eb eb-sky" data-e="resume" data-m="${m}">Continue</button>` : ''}</div></div></div>`; }).join('')}</div></div>`; };
   const bestOf = m => { const r = S.last && S.last[m]; return r && r.result ? `${r.result.score} · ${r.result.outcome}` : ''; };
-  const topBtns = () => `<button class="eb-icon" data-e="note" aria-label="Engineering notebook" title="Engineering notebook">${ICON.book}</button><button class="eb-icon" data-e="sound" aria-label="Sound ${E.sound ? 'on' : 'off'}" aria-pressed="${E.sound}" title="Button sounds">${E.sound ? ICON.snd : ICON.mute}</button>`;
-  const ICON = { book: '<svg viewBox="0 0 48 48"><path d="M8 10q8-4 16 2q8-6 16-2v26q-8-4-16 2q-8-6-16-2z" fill="#6cc4ff" stroke="#4a3b63" stroke-width="3" stroke-linejoin="round"/><path d="M24 12v26" stroke="#4a3b63" stroke-width="3"/><path d="M12 18h8M12 24h8M28 18h8M28 24h8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>',
+  const topBtns = () => `<button class="eb-icon" data-e="acct" aria-label="My Account" title="My Account">${ICON.user}</button><button class="eb-icon" data-e="note" aria-label="Engineering notebook" title="Engineering notebook">${ICON.book}</button><button class="eb-icon" data-e="sound" aria-label="Sound ${E.sound ? 'on' : 'off'}" aria-pressed="${E.sound}" title="Button sounds">${E.sound ? ICON.snd : ICON.mute}</button>`;
+  const ICON = { user: '<svg viewBox="0 0 48 48"><circle cx="24" cy="17" r="9" fill="#ffb3c7" stroke="#4a3b63" stroke-width="3"/><path d="M8 42q2-14 16-14t16 14z" fill="#7fe0c2" stroke="#4a3b63" stroke-width="3" stroke-linejoin="round"/></svg>',
+    book: '<svg viewBox="0 0 48 48"><path d="M8 10q8-4 16 2q8-6 16-2v26q-8-4-16 2q-8-6-16-2z" fill="#6cc4ff" stroke="#4a3b63" stroke-width="3" stroke-linejoin="round"/><path d="M24 12v26" stroke="#4a3b63" stroke-width="3"/><path d="M12 18h8M12 24h8M28 18h8M28 24h8" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>',
     snd: '<svg viewBox="0 0 48 48"><path d="M8 19h8l10-9v28l-10-9h-8z" fill="#ffd166" stroke="#4a3b63" stroke-width="3" stroke-linejoin="round"/><path d="M32 17q6 7 0 14M37 12q10 12 0 24" fill="none" stroke="#4a3b63" stroke-width="3" stroke-linecap="round"/></svg>',
     mute: '<svg viewBox="0 0 48 48"><path d="M8 19h8l10-9v28l-10-9h-8z" fill="#e7e2f2" stroke="#4a3b63" stroke-width="3" stroke-linejoin="round"/><path d="M32 18l10 12M42 18l-10 12" stroke="#4a3b63" stroke-width="3" stroke-linecap="round"/></svg>' };
 
@@ -153,7 +155,7 @@
   // plays the story beat that belongs to the current step, once per attempt. Skipping it changes nothing.
   function enterRoom(after) { const m = S.mission, g = stage(m), M = T.missions[m], key = `${m}:${g}:${E.run[m]}`, done = () => { if (after) after(); };
     if (E.seen[key]) return done(); E.seen[key] = 1;
-    if (g === 'goal') return talk([{ who: 'echo', say: M.goalHint, id: `${m}.goal` }], done);
+    if (g === 'goal') return talk([{ who: 'echo', say: M.goalHint, id: `${m}.goal` }], () => tour(false, done));
     if (g === 'design') return talk([{ who: 'echo', say: 'Goal locked in! ' + M.designHint, mood: 'cheer', id: `${m}.design` }], done);
     if (g === 'review') return talk([{ who: 'echo', say: M.reviewHint, id: `${m}.review` }], done);
     const ci = g === 'report' ? 4 : +g[1], beat = () => { if (ci > 3) return ending(m, done);
@@ -236,10 +238,18 @@
   // Project ECHO's own buttons
   document.addEventListener('click', e => { const b = e.target.closest('[data-e]'); if (!b) return; const a = b.dataset.e;
     switch (a) {
+      case 'moToggle': { E.moOpen = E.moOpen === false; const m = mOfScreen(S.screen), sd = document.querySelector('.ops .side'); if (m && sd) sd.outerHTML = MX[m].dashFn(); const t = document.querySelector('[data-e="moToggle"]'); if (t) t.focus(); break; }
+      case 'tourNext': tourStep(1); break; case 'tourBack': tourStep(-1); break; case 'tourSkip': tourEnd(); break;
+      case 'tourReplay': elNote.hidden = true; elNote.innerHTML = ''; if (S.screen !== 'room') toRoom(() => tour(true)); else tour(true); break;
+      case 'acct': account(); break; case 'acctClose': elAcct.hidden = true; elAcct.innerHTML = ''; break;
+      case 'acctNew': { const i = document.getElementById('acctName'), v = (i && i.value || '').trim().slice(0, 24); if (!v) { if (i) i.focus(); break; } P.create(v); account(); if (E.afterAcct) { const f = E.afterAcct; E.afterAcct = null; elAcct.hidden = true; elAcct.innerHTML = ''; f(); } break; }
+      case 'acctUse': P.use(b.dataset.id); account(); render(); break;
+      case 'acctDel': E.delAsk = b.dataset.id; account(); break; case 'acctDelNo': E.delAsk = null; account(); break;
+      case 'acctDelYes': P.remove(E.delAsk); E.delAsk = null; account(); render(); break;
       case 'deployNext': Sfx.confirm(); E.deployOk = true; window.endLaunch(); break;
       case 'talkNext': Sfx.click(); talkNext(); break; case 'talkSkip': Sfx.click(); talkEnd(); break;
       case 'comicNext': comicNext(); break; case 'comicSkip': Sfx.click(); comicEnd(); break;
-      case 'begin': Sfx.confirm(); if (LS.get('prologue')) go('missions'); else { LS.set('prologue', '1'); comic(T.prologue, () => go('missions'), { title: 'Project ECHO' }); } break;
+      case 'begin': Sfx.confirm(); if (!P.cur() && !E.fast) { E.afterAcct = () => b.click(); account(true); break; } if (P.flag('prologue') || LS.get('prologue')) go('missions'); else { P.flag('prologue', 1); comic(T.prologue, () => go('missions'), { title: 'Project ECHO' }); } break;
       case 'replayIntro': elNote.hidden = true; comic(T.prologue, null, { title: 'Project ECHO' }); break;
       case 'replayBrief': elNote.hidden = true; comic(T.missions[b.dataset.m].brief, null, { m: b.dataset.m, title: T.episodes[b.dataset.m].title }); break;
       case 'toTitle': Sfx.click(); go('title'); break; case 'toMissions': Sfx.click(); go('missions'); break;
@@ -255,8 +265,55 @@
       case 'sound': E.sound = !E.sound; LS.set('sound', E.sound ? 'on' : 'off'); Sfx.confirm(); render(); hud(); break;
     } });
   elTalk.addEventListener('click', e => { if (e.target === elTalk) talkNext(); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (E.q) return talkEnd(); if (E.cm) return comicEnd(); if (!elNote.hidden) { elNote.hidden = true; elNote.innerHTML = ''; } } });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (E.q) return talkEnd(); if (E.cm) return comicEnd(); if (E.tour) return tourEnd(); if (!elAcct.hidden && P.cur()) { elAcct.hidden = true; elAcct.innerHTML = ''; return; } if (!elNote.hidden) { elNote.hidden = true; elNote.innerHTML = ''; } } });
   document.addEventListener('mousemove', e => { const r = document.getElementById('roomStage'); if (!r || reduced()) return; r.style.setProperty('--px', ((e.clientX / innerWidth) - 0.5).toFixed(3)); r.style.setProperty('--py', ((e.clientY / innerHeight) - 0.5).toFixed(3)); });
+
+  /* ================= five-step room tour ================= */
+  const elTour = document.createElement('div'); elTour.id = 'echoTour'; elTour.hidden = true; host.appendChild(elTour);
+  const TOUR = [['.room-goal', 'Your mission objective', 'Your next job is always written here.'],
+    ['.rhot.is-go', 'Follow the glow', 'Click the glowing object to take the next step. Only the glowing one moves the mission on.'],
+    ['.room-echo', 'Meet Kim', 'Kim is your guide. Click Kim any time to hear the current hint again.'],
+    ['.room-steps', 'Progress and notebook', 'This bar shows how far you are. The notebook button (top right) has goals, numbers, words and a full guide.'],
+    [null, 'Back to the room', 'After every step you come back to this room. Follow the glow until the Report Board lights up.']];
+  function tour(force, done) { if (!force && (E.fast || P.flag('tour'))) { if (done) done(); return; } P.flag('tour', 1); E.tour = { i: 0, done }; drawTour(); }
+  function tourStep(d) { const t = E.tour; if (!t) return; t.i += d; if (t.i < 0) t.i = 0; if (t.i >= TOUR.length) return tourEnd(); drawTour(); }
+  function tourEnd() { const t = E.tour; E.tour = null; elTour.hidden = true; elTour.innerHTML = ''; if (t && t.done) t.done(); }
+  function drawTour() { const t = E.tour, st = TOUR[t.i], el = st[0] && document.querySelector('#app ' + st[0]), r = el && el.getBoundingClientRect(), last = t.i === TOUR.length - 1;
+    const ring = r && r.width ? `<div class="tour-ring" style="left:${r.left - 8}px;top:${r.top - 8}px;width:${r.width + 16}px;height:${r.height + 16}px"></div>` : '<div class="tour-dim"></div>';
+    let pos = 'left:50%;top:50%;transform:translate(-50%,-50%)';
+    if (r && r.width) { const w = Math.min(420, innerWidth - 32), below = r.bottom + 230 < innerHeight, x = Math.max(16, Math.min(innerWidth - w - 16, r.left + r.width / 2 - w / 2));
+      pos = `left:${x}px;${below ? `top:${r.bottom + 18}px` : `bottom:${innerHeight - r.top + 18}px`};width:${w}px`; }
+    elTour.hidden = false; elTour.innerHTML = `${ring}<div class="tour-card" role="dialog" aria-label="Tour step ${t.i + 1} of ${TOUR.length}" style="${pos}">
+      <div class="tour-k">Tour · ${t.i + 1} of ${TOUR.length}</div><h3>${st[1]}</h3><p>${st[2]}</p>
+      <div class="tour-btns">${t.i ? '<button class="eb-link" data-e="tourBack">Back</button>' : '<button class="eb-link" data-e="tourSkip">Skip tour</button>'}<span style="flex:1"></span><button class="eb eb-sun" data-e="tourNext" autofocus>${last ? 'Got it!' : 'Next ▸'}</button></div></div>`;
+    const n = elTour.querySelector('[data-e="tourNext"]'); if (n) n.focus({ preventScroll: true }); }
+
+  /* ================= local player profiles and My Account (this browser only) ================= */
+  const P = { k: 'profiles', load() { try { return JSON.parse(LS.get(this.k) || '') || null; } catch (e) { return null; } },
+    data() { const d = this.load() || { cur: null, list: [] }; return d; }, save(d) { LS.set(this.k, JSON.stringify(d)); },
+    cur() { const d = this.data(); return d.list.find(p => p.id === d.cur) || null; },
+    create(name) { const d = this.data(), p = { id: 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, made: Date.now(), flags: {}, results: [] }; d.list.push(p); d.cur = p.id; this.save(d); return p; },
+    use(id) { const d = this.data(); if (d.list.some(p => p.id === id)) { d.cur = id; this.save(d); } },
+    remove(id) { const d = this.data(); d.list = d.list.filter(p => p.id !== id); if (d.cur === id) d.cur = d.list[0] ? d.list[0].id : null; this.save(d); },
+    flag(k, v) { const d = this.data(), p = d.list.find(x => x.id === d.cur); if (!p) return v === undefined ? !!E['f_' + k] : (E['f_' + k] = v);
+      p.flags = p.flags || {}; if (v === undefined) return !!p.flags[k]; p.flags[k] = v; this.save(d); },
+    add(r) { const d = this.data(), p = d.list.find(x => x.id === d.cur); if (!p) return false; p.results.unshift(r); p.results = p.results.slice(0, 200); this.save(d); return true; } };
+  // saves one entry per finished flight, straight from the engine's score and the mission record
+  function saveResult(m) { const s = st(m); if (!s || !s.M || !s.record || s.echoSaved) return; const sc = MX[m].eng.score(s.M), tid = (S.target || {})[m], t = tid && MD.targetDef(m, tid), tr = t ? MD.evaluateTarget(m, tid, s.M) : null;
+    s.echoSaved = P.add({ t: Date.now(), m, code: S.scn[m].code, score: sc.total, outcome: sc.outcome, goals: ['G1', 'G2', 'G3', 'G4'].filter(g => sc.gates[g]).length, bonus: t ? t.title : '', bonusMet: tr ? tr.status === 'Met' : null, attempt: s.attempt ? s.attempt.n : 1 }); }
+  const elAcct = document.createElement('div'); elAcct.id = 'echoAcct'; elAcct.hidden = true; host.appendChild(elAcct);
+  const MN = { storm: 'Storm Watch', fire: 'Wildfire Watch', flood: 'Flood Watch' }, day = t => new Date(t).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  function account(firstRun) { const d = P.data(), me = P.cur(), others = d.list.filter(p => !me || p.id !== me.id);
+    const newForm = `<div class="ac-new"><label for="acctName">${me ? 'Add another player' : 'What should we call you?'}</label><div class="ac-row"><input id="acctName" maxlength="24" placeholder="Your first name or nickname" autocomplete="off"><button class="eb eb-sun" data-e="acctNew">${me ? 'Add player' : 'Create player'}</button></div><p class="en-dim">Saved only in this browser. No sign-in, nothing is sent anywhere.</p></div>`;
+    const best = me ? ['storm', 'fire', 'flood'].map(m => { const r = me.results.filter(x => x.m === m); return `<div><span>${MN[m]}</span><b>${r.length ? Math.max(...r.map(x => x.score)) : '–'}</b><small>${r.length} flight${r.length === 1 ? '' : 's'}</small></div>`; }).join('') : '';
+    const rows = me && me.results.length ? `<div class="ac-tab"><table><thead><tr><th>When</th><th>Mission</th><th>Mission Code</th><th>Score</th><th>Result</th><th>Goals</th><th>Bonus goal</th></tr></thead><tbody>${me.results.map(r => `<tr><td>${day(r.t)}</td><td>${MN[r.m]}</td><td><code>${esc(r.code)}</code></td><td><b>${r.score}</b></td><td>${esc(r.outcome)}</td><td>${r.goals} / 4</td><td>${r.bonus ? `${r.bonusMet ? '✓' : '✕'} ${esc(r.bonus)}` : '–'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="en-dim">No finished missions yet. Results appear here after each final report.</p>';
+    const del = E.delAsk ? `<div class="ac-del" role="alert">Delete <b>${esc((d.list.find(p => p.id === E.delAsk) || {}).name || '')}</b> and all their saved results? <button class="eb eb-sun" data-e="acctDelYes">Yes, delete</button><button class="eb eb-ghost" data-e="acctDelNo">Keep</button></div>` : '';
+    elAcct.hidden = false; elAcct.innerHTML = `<div class="en-book ac" role="dialog" aria-label="My Account"><div class="en-head"><span class="en-ic">${ICON.user}</span><h2>${me ? esc(me.name) : 'Welcome, Designer!'}</h2>${firstRun ? '' : '<button class="eb-icon" data-e="acctClose" aria-label="Close My Account">✕</button>'}</div>
+      <div class="en-body">${me ? `<div class="ac-best">${best}</div><h3>Saved missions</h3>${rows}` : ''}${del}
+      ${others.length ? `<h3>Other players on this computer</h3><div class="ac-players">${others.map(p => `<div><b>${esc(p.name)}</b><span>${p.results.length} flights</span><button class="eb eb-sky" data-e="acctUse" data-id="${p.id}">Switch</button><button class="eb-link" data-e="acctDel" data-id="${p.id}">Delete</button></div>`).join('')}</div>` : ''}
+      ${newForm}${me && !firstRun ? `<p><button class="eb-link" data-e="acctDel" data-id="${me.id}">Delete ${esc(me.name)}</button></p>` : ''}</div></div>`;
+    const f = elAcct.querySelector(me ? '[data-e="acctClose"]' : '#acctName'); if (f) f.focus({ preventScroll: true }); }
+  document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target && e.target.id === 'acctName') { e.preventDefault(); const b = elAcct.querySelector('[data-e="acctNew"]'); if (b) b.click(); } });
 
   /* ================= Engineering Notebook: the details layer (numbers, requirements, words, sources) ================= */
   function notebook(tab) { const m = S.mission || mOfScreen(S.screen) || 'storm'; tab = tab || 'mission'; const X = MX[m], s = st(m), flying = !!E.launched[m] && s && s.M;
@@ -277,6 +334,9 @@
         ${f ? `<h3>Live numbers (from the simulation)</h3><div class="en-gauges">${[['Battery', f.batt, '%'], ['Storage used', f.stor, '%'], ['Health', f.health, '%']].map(g => `<div><span>${g[0]}</span><b>${g[1]}${g[2]}</b><div class="en-bar"><i style="width:${Math.max(0, Math.min(100, g[1]))}%"></i></div></div>`).join('')}<div><span>Useful data on Earth</span><b>${f.pts} / ${f.need} pts</b><div class="en-bar"><i style="width:${Math.min(100, parseFloat(f.pts) / f.need * 100)}%"></i></div></div></div>
           ${s.log.filter(Boolean).length ? `<h3>Challenge log</h3>${s.log.map((L, i) => L ? `<details class="en-log"><summary><span class="et-chip ${L.met ? 'ok' : 'no'}">${esc(L.badge)}</span> ${i + 1}. ${X.CH[i].title}</summary><p><b>You chose:</b> ${L.choices}</p><p>${L.good}</p><p>${L.trade}</p></details>` : '').join('')}` : ''}` : '<p class="en-dim">Live mission numbers appear here after launch.</p>'}`; }
     else if (tab === 'words') body = `<h3>Space words</h3><dl class="en-gloss">${T.glossary.map(g => `<dt>${g[0]}</dt><dd>${g[1]}</dd>`).join('')}</dl>`;
+    else if (tab === 'guide') body = `<h3>Mission Room guide</h3><p class="en-row"><button class="eb eb-sun" data-e="tourReplay">Replay the room tour</button></p>
+        <dl class="en-gloss">${[['Earth hologram', 'Pick your mission goal and bonus goal (and orbit for Wildfire Watch).'], ['Workbench', 'Build your satellite: five parts, each Standard or Advanced. Watch mass and budget.'], ['Launch console', 'Readiness check by the Flight Director, then launch.'], ['Observation monitor', 'Aim the camera or choose where the satellite looks.'], ['Data storage', 'Decide what the satellite keeps when storage fills.'], ['Power console', 'Get through power faults and dark hours.'], ['Comms dish', 'Choose what is sent to Earth first.'], ['Report board', 'Your final report, then Rewind & Redesign or Fly Again.']].map(x => `<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join('')}</dl>
+        <h3>Controls</h3><dl class="en-gloss">${[['The glow', 'Only the glowing object moves the mission on. Other objects give a hint.'], ['Kim', 'Click Kim for the current hint.'], ['Progress bar', 'Goal, Build, Check, four challenges, Report.'], ['Notebook', 'This book: goals, numbers, words, story and sources.'], ['My Account', 'Your player name and saved mission results.'], ['‹ Missions', 'Back to the three missions. Your mission waits for you.'], ['Sound', 'Turn button sounds on or off.']].map(x => `<dt>${x[0]}</dt><dd>${x[1]}</dd>`).join('')}</dl>`;
     else if (tab === 'story') body = `<h3>Story</h3><p>Watch the comics again. Replaying a story never changes your mission.</p>
         <p class="en-row"><button class="eb eb-sky" data-e="replayIntro">Prologue</button>${MS.map(x => `<button class="eb eb-ghost" data-e="replayBrief" data-m="${x}">${T.episodes[x].tag}</button>`).join('')}</p>
         <h3>How to play</h3><ol class="en-how"><li>In the Mission Room, click the glowing object.</li><li>Pick a goal, build your satellite, pass the launch check.</li><li>Fly four challenges. Each one covers six hours.</li><li>Read your report. Then rewind and test a new idea.</li></ol>
@@ -287,7 +347,7 @@
         <h4>How Kim works</h4><p class="en-dim">Kim only reads what the simulation measured. Kim cannot change a result.</p>`;
     elNote.hidden = false; elNote.innerHTML = `<div class="en-wrap" role="dialog" aria-label="Engineering notebook"><div class="en-book">
       <div class="en-head"><span class="en-ic">${ICON.book}</span><h2>Engineering Notebook</h2><button class="eb-icon" data-e="noteClose" aria-label="Close notebook">✕</button></div>
-      <div class="en-tabs" role="tablist">${[['mission', 'Mission'], ['numbers', 'Numbers'], ['words', 'Words'], ['story', 'Story'], ['nasa', 'NASA data']].map(x => `<button role="tab" aria-selected="${x[0] === tab}" data-e="noteTab" data-tab="${x[0]}">${x[1]}</button>`).join('')}</div>
+      <div class="en-tabs" role="tablist">${[['mission', 'Mission'], ['guide', 'Guide'], ['numbers', 'Numbers'], ['words', 'Words'], ['story', 'Story'], ['nasa', 'NASA data']].map(x => `<button role="tab" aria-selected="${x[0] === tab}" data-e="noteTab" data-tab="${x[0]}">${x[1]}</button>`).join('')}</div>
       <div class="en-body">${body}</div></div></div>`;
     const c = elNote.querySelector('[data-e="noteClose"]'); if (c) c.focus({ preventScroll: true }); }
 
@@ -319,7 +379,7 @@
       const g = document.querySelector('#app [data-a="briefGo"]'); if (g) g.textContent = 'Lock in this goal ▸';
       const h = document.querySelector('#app .brief h1'); if (h && !document.querySelector('.e-brief-art')) h.insertAdjacentHTML('beforebegin', `<div class="e-brief-art" aria-hidden="true">${A.scene({ storm: 'storm1', fire: 'fire1', flood: 'flood1' }[S.mission] || 'storm1', S.mission)}</div>`); }
     if (m && scr === BUILD[m]) document.querySelectorAll('#app [data-a="mrr"]').forEach(x => { x.textContent = 'Done! Take it to launch ▸'; });
-    if (m && scr === REPORT[m]) reportDress(m);
+    if (m && scr === REPORT[m]) { reportDress(m); saveResult(m); }
     if (scr === 'room') roomFocus();
     hud(); }
   const _render = render; render = function () { _render(); dress(); };
@@ -333,8 +393,12 @@
       else if (/goal/i.test(name)) { h.remove(); sec.prog += b.innerHTML; }
       else if (/status/i.test(name)) { h.remove(); sec.stat = b.innerHTML + sec.stat; }
       else sec.stat += `<div class="mo-extra">${b.innerHTML}</div>`; b.remove(); });
-    side.insertAdjacentHTML('beforeend', `<div class="glass dash mo"><h3 class="mo-title">Mission Overview</h3>
-      ${sec.check ? `<div class="mo-sec mo-check">${sec.check}</div>` : ''}<div class="mo-sec"><h4>Mission Progress</h4>${sec.prog}</div><div class="mo-sec"><h4>Satellite Status</h4>${sec.stat}</div></div>`);
+    const open = E.moOpen !== false, tmp = document.createElement('div'); tmp.innerHTML = sec.check + sec.prog + sec.stat;
+    const val = re => { const r = [...tmp.querySelectorAll('.meter .row')].find(x => re.test(x.firstElementChild.textContent)); return r ? r.lastElementChild.textContent.replace(/[+±-][\d.]+\s*(%|pts)?$/, '').trim() : ''; };
+    const n = (tmp.querySelector('.gl-sum .n') || {}).textContent || '';
+    const mini = `<div class="mo-mini">${[['Goals', n], ['Data on Earth', val(/delivered/i)], ['Battery', val(/^battery/i)], ['Storage', val(/^storage/i)]].map(x => `<div><span>${x[0]}</span><b>${x[1]}</b></div>`).join('')}</div>`;
+    side.insertAdjacentHTML('beforeend', `<div class="glass dash mo ${open ? '' : 'mo-closed'}"><div class="mo-top"><h3 class="mo-title">Mission Overview</h3><button class="mo-tog" data-e="moToggle" aria-expanded="${open}">${open ? 'Show less ▴' : 'Show all ▾'}</button></div>
+      ${open ? `${sec.check ? `<div class="mo-sec mo-check">${sec.check}</div>` : ''}<div class="mo-sec"><h4>Mission Progress</h4>${sec.prog}</div><div class="mo-sec"><h4>Satellite Status</h4>${sec.stat}</div>` : mini}</div>`);
     return t.innerHTML; }
   const wrapDash = f => function () { return overview(f.apply(this, arguments)); };
   dash = wrapDash(dash); fDash = wrapDash(fDash); lDash = wrapDash(lDash);
@@ -342,7 +406,7 @@
     const box = document.querySelector('#layer .modal-wrap > *'); if (box && !box.querySelector('.er-dir')) box.insertAdjacentHTML('afterbegin', `<div class="er-dir"><div class="et-face">${A.director()}</div><p><b>Flight Director</b>${ok ? T.ui.reviewOk : T.ui.reviewNo}</p></div>`); };
 
   /* ================= public handle + test hooks (used by tools/echo_parity.js and tools/echo_e2e.js) ================= */
-  window.ECHO = { state: E, stage, activeHot, talk, comic, notebook, facts, voice: null, sfx: Sfx,
+  window.ECHO = { state: E, stage, activeHot, talk, comic, notebook, facts, profiles: P, tour, account, voice: null, sfx: Sfx,
     test: { fast() { E.fast = true; talkEnd(); comicEnd(); },
       // skip any open story, then click the glowing hotspot (navigation only)
       advance() { if (E.q) return talkEnd(); if (E.cm) return comicEnd(); if (S.screen === 'room') { const h = document.querySelector('.rhot.is-go'); if (h) h.click(); } },
